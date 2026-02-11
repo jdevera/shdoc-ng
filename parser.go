@@ -23,6 +23,7 @@ type Parser struct {
 	multiLineIndentRegex   *regexp.Regexp
 
 	functionDeclaration string
+	isInternal          bool
 
 	lineNum int
 }
@@ -78,13 +79,13 @@ func (p *Parser) processFunction(text string) {
 		len(p.docblock.Sets) == 0 && len(p.docblock.ExitCodes) == 0 &&
 		len(p.docblock.Stdin) == 0 && len(p.docblock.Stdout) == 0 &&
 		len(p.docblock.Stderr) == 0 && len(p.docblock.See) == 0 &&
-		p.docblock.Example == "" && !p.docblock.Internal &&
+		p.docblock.Example == "" && !p.isInternal &&
 		p.description == "") || p.inExample {
 		return
 	}
 
-	if p.docblock.Internal {
-		p.docblock.Internal = false
+	if p.isInternal {
+		p.isInternal = false
 	} else {
 		// Extract function name
 		funcNameRegex := regexp.MustCompile(
@@ -170,7 +171,7 @@ func (p *Parser) ProcessLine(line string) {
 
 	// Rule 1: @internal
 	if internalRegex.MatchString(line) {
-		p.docblock.Internal = true
+		p.isInternal = true
 		return
 	}
 

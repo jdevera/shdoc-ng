@@ -24,7 +24,6 @@ type FuncDoc struct {
 	Stdout      []string
 	Stderr      []string
 	See         []string
-	Internal    bool
 }
 
 // OptionEntry represents a valid @option with its rendered term and description.
