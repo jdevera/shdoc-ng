@@ -8,7 +8,7 @@ This section has no functions after it.
 
 ## Index
 
-* [real_func](#realfunc)
+* [real_func](#real_func)
 
 ## Real Section
 

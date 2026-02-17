@@ -1,6 +1,6 @@
 ## Index
 
-* [desc_func](#descfunc)
+* [desc_func](#desc_func)
 
 ### desc_func
 

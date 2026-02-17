@@ -6,13 +6,13 @@ import (
 )
 
 // slug generates a GitHub-compatible anchor from text.
-// Matches the awk implementation: lowercase, remove chars except alphanumeric/space/dash,
-// remove underscores, replace spaces with dashes.
+// Lowercase, remove chars except alphanumeric/space/underscore/dash,
+// replace spaces with dashes. Underscores are preserved (GitHub keeps
+// them in heading anchors).
 func slug(text string) string {
 	s := strings.ToLower(text)
 
-	// Remove all chars except alphanumeric, space, underscore, and dash
-	// Then remove underscores separately (awk does gsub twice)
+	// Keep only alphanumeric, space, underscore, and dash
 	var b strings.Builder
 	for _, r := range s {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == ' ' || r == '_' || r == '-' {
@@ -20,9 +20,6 @@ func slug(text string) string {
 		}
 	}
 	s = b.String()
-
-	// Remove underscores
-	s = strings.ReplaceAll(s, "_", "")
 
 	// Replace spaces with dashes
 	s = strings.ReplaceAll(s, " ", "-")

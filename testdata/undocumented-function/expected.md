@@ -8,8 +8,8 @@ A documented function.
 
 ## Index
 
-* [documented_func](#documentedfunc)
-* [another_documented](#anotherdocumented)
+* [documented_func](#documented_func)
+* [another_documented](#another_documented)
 
 ### documented_func
 
