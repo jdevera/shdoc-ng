@@ -79,6 +79,7 @@ func (p *Parser) processFunction(text string) {
 		len(p.docblock.Sets) == 0 && len(p.docblock.ExitCodes) == 0 &&
 		len(p.docblock.Stdin) == 0 && len(p.docblock.Stdout) == 0 &&
 		len(p.docblock.Stderr) == 0 && len(p.docblock.See) == 0 &&
+		p.docblock.Deprecated == "" &&
 		p.docblock.Example == "" && !p.isInternal &&
 		p.description == "") || p.inExample {
 		return
@@ -113,8 +114,9 @@ func (p *Parser) processFunction(text string) {
 
 // Regex patterns
 var (
-	internalRegex = regexp.MustCompile(`^[\s]*# @internal`)
-	nameFileRegex = regexp.MustCompile(`^[\s]*# @(name|file) `)
+	internalRegex   = regexp.MustCompile(`^[\s]*# @internal`)
+	deprecatedRegex = regexp.MustCompile(`^[\s]*# @deprecated\s*(.*)`)
+	nameFileRegex   = regexp.MustCompile(`^[\s]*# @(name|file) `)
 	briefRegex    = regexp.MustCompile(`^[\s]*# @brief `)
 
 	descriptionTagRegex = regexp.MustCompile(`^[\s]*# @description`)
@@ -172,6 +174,18 @@ func (p *Parser) ProcessLine(line string) {
 	// Rule 1: @internal
 	if internalRegex.MatchString(line) {
 		p.isInternal = true
+		return
+	}
+
+	// Rule 1b: @deprecated
+	if deprecatedRegex.MatchString(line) {
+		m := deprecatedRegex.FindStringSubmatch(line)
+		reason := strings.TrimSpace(m[1])
+		if reason == "" {
+			p.docblock.Deprecated = " "
+		} else {
+			p.docblock.Deprecated = reason
+		}
 		return
 	}
 

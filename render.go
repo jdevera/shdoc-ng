@@ -124,6 +124,16 @@ func renderFuncDoc(f *FuncDoc, section *string, sectionDesc *string) string {
 		lines = append(lines, "### "+f.Name+"\n")
 	}
 
+	if f.Deprecated != "" {
+		reason := strings.TrimSpace(f.Deprecated)
+		if reason == "" {
+			lines = append(lines, "**DEPRECATED.**")
+		} else {
+			lines = append(lines, "**DEPRECATED:** "+reason)
+		}
+		lines = append(lines, "")
+	}
+
 	if f.Description != "" {
 		lines = append(lines, f.Description)
 		lines = append(lines, "")

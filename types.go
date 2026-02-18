@@ -23,7 +23,8 @@ type FuncDoc struct {
 	Stdin       []string
 	Stdout      []string
 	Stderr      []string
-	See         []string
+	See        []string
+	Deprecated string
 }
 
 // OptionEntry represents a valid @option with its rendered term and description.
