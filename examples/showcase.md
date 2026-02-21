@@ -1,0 +1,131 @@
+# mylib
+
+A showcase of every shdoc-ng annotation.
+
+## Overview
+
+This library demonstrates all supported tags.
+
+Features include:
+* Function documentation
+* Deprecation notices
+* Grouped sections
+
+## Index
+
+* [greet](#greet)
+* [farewell](#farewell)
+* [old_hello](#old_hello)
+* [old_noop](#old_noop)
+* [braceless_func](#braceless_func)
+* [subshell_func](#subshell_func)
+
+## String Utilities
+
+Common string operations.
+
+### greet
+
+Greet someone by name.
+
+Prints a friendly greeting to stdout. Returns non-zero
+if no name is provided.
+
+#### Example
+
+```bash
+greet "World"
+greet "$(whoami)"
+```
+
+#### Options
+
+* **-u** | **--uppercase**
+
+  Uppercase the name.
+
+* **-n \<count\>** | **--repeat=\<count\>**
+
+  Repeat the greeting.
+
+* **-r** | **--reverse**
+
+  Reverse the greeting.
+
+#### Arguments
+
+* **$1** (string): The name to greet.
+* **...** (string): Additional names.
+
+#### Variables set
+
+* **LAST_GREETED** (string): The last name that was greeted.
+
+#### Exit codes
+
+* **0**: If successful.
+* **1**: If no name was provided.
+
+#### Input on stdin
+
+* A fallback name, read if $1 is empty.
+
+#### Output on stdout
+
+* The greeting string.
+
+#### Output on stderr
+
+* A warning when no name is given.
+
+#### See also
+
+* [farewell()](#farewell)
+* [Bash scripting guide](https://tldp.org/LDP/abs/html/).
+
+### farewell
+
+Say goodbye.
+
+#### Arguments
+
+* **$1** (string): The name to bid farewell.
+
+#### Exit codes
+
+* **0**: Always.
+
+#### See also
+
+* [greet()](#greet)
+
+## Deprecated Utilities
+
+Functions kept for backwards compatibility.
+
+### old_hello
+
+**DEPRECATED:** Use greet() instead.
+
+This function is obsolete.
+
+### old_noop
+
+**DEPRECATED.**
+
+### braceless_func
+
+A function whose opening brace
+is on the next line.
+
+_Function has no arguments._
+
+### subshell_func
+
+A subshell function using parens
+instead of braces.
+
+#### Arguments
+
+* **$1** (string): A command to run in a subshell.
+
