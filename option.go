@@ -5,6 +5,18 @@ import (
 	"strings"
 )
 
+// optionSepNormalizer matches | or / separators (with optional surrounding
+// whitespace) followed by a dash, and normalizes them to " | -".
+// This allows users to write -s/--long, -s|--long, or -s / --long and have
+// them all treated equivalently to -s | --long.
+var optionSepNormalizer = regexp.MustCompile(`[ \t]*[|/][ \t]*(-)`)
+
+// normalizeOptionSeparators replaces / or | separators between flag-like
+// tokens with the canonical " | " form expected by the option regex.
+func normalizeOptionSeparators(text string) string {
+	return optionSepNormalizer.ReplaceAllString(text, " | $1")
+}
+
 // optionRegex matches valid @option formats.
 // Port of the awk regex:
 // ^(((-[[:alnum:]]([[:blank:]]*<[^>]+>)?|--[[:alnum:]][[:alnum:]-]*((=|[[:blank:]]+)<[^>]+>)?)([[:blank:]]*\|?[[:blank:]]+))+)([^[:blank:]|<-].*)?$
@@ -15,6 +27,7 @@ var optionRegex = regexp.MustCompile(
 // processAtOption validates and parses an @option entry.
 // Returns (term, definition, valid).
 func processAtOption(text string) (string, string, bool) {
+	text = normalizeOptionSeparators(text)
 	m := optionRegex.FindStringSubmatch(text)
 	if m == nil {
 		return "", "", false
