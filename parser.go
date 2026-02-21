@@ -147,9 +147,9 @@ var (
 	// Multi-line stdin/stdout/stderr
 	stdioRegex = regexp.MustCompile(`^([\t ]*#[\t ]+)@(stdin|stdout|stderr)[\t ]+(.*[^\t ])[\t ]*$`)
 
-	// Function declaration with opening brace
+	// Function declaration with opening brace or paren (subshell)
 	funcDeclWithBrace = regexp.MustCompile(
-		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.\-]+)[\t ]*(\([\t ]*\))?[\t ]*\{`,
+		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.\-]+)[\t ]*(\([\t ]*\))?[\t ]*[{(]`,
 	)
 
 	// Function declaration without opening brace (for multi-line)
@@ -157,8 +157,8 @@ var (
 		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.\-]+)[\t ]*(\([\t ]*\))?[\t ]*$`,
 	)
 
-	// Lone opening brace
-	loneBrace = regexp.MustCompile(`^[\t ]*\{`)
+	// Lone opening brace or paren (subshell)
+	loneBrace = regexp.MustCompile(`^[\t ]*[{(]`)
 
 	// Empty line
 	emptyLine = regexp.MustCompile(`^[\t ]*$`)
