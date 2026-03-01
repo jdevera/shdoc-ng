@@ -108,17 +108,15 @@ func concat(x, text string) string {
 }
 
 // renderFuncDoc renders the complete markdown for a single function.
-func renderFuncDoc(f *FuncDoc, section *string, sectionDesc *string) string {
+func renderFuncDoc(f *FuncDoc) string {
 	var lines []string
 
-	if *section != "" {
-		lines = append(lines, "## "+*section+"\n")
-		if *sectionDesc != "" {
-			lines = append(lines, *sectionDesc)
+	if f.Section != "" {
+		lines = append(lines, "## "+f.Section+"\n")
+		if f.SectionDesc != "" {
+			lines = append(lines, f.SectionDesc)
 			lines = append(lines, "")
 		}
-		*section = ""
-		*sectionDesc = ""
 		lines = append(lines, "### "+f.Name+"\n")
 	} else {
 		lines = append(lines, "### "+f.Name+"\n")
@@ -136,6 +134,14 @@ func renderFuncDoc(f *FuncDoc, section *string, sectionDesc *string) string {
 
 	if f.Description != "" {
 		lines = append(lines, f.Description)
+		lines = append(lines, "")
+	}
+
+	if len(f.Warnings) > 0 {
+		lines = append(lines, "#### Warnings\n")
+		for _, w := range f.Warnings {
+			lines = append(lines, "* "+w)
+		}
 		lines = append(lines, "")
 	}
 
@@ -192,6 +198,15 @@ func renderFuncDoc(f *FuncDoc, section *string, sectionDesc *string) string {
 		lines = append(lines, "#### Variables set\n")
 		for _, s := range f.Sets {
 			item := renderSet(s)
+			lines = append(lines, "* "+item)
+		}
+		lines = append(lines, "")
+	}
+
+	if len(f.Env) > 0 {
+		lines = append(lines, "#### Environment variables\n")
+		for _, e := range f.Env {
+			item := renderSet(e)
 			lines = append(lines, "* "+item)
 		}
 		lines = append(lines, "")
@@ -260,11 +275,35 @@ func renderDocument(doc *Document) string {
 			parts = append(parts, "## Overview\n")
 			parts = append(parts, doc.FileDescription+"\n")
 		}
+
+		if len(doc.Authors) > 0 {
+			parts = append(parts, "#### Authors\n")
+			for _, a := range doc.Authors {
+				parts = append(parts, "* "+a)
+			}
+			parts = append(parts, "")
+		}
+
+		if doc.License != "" {
+			parts = append(parts, "#### License\n")
+			parts = append(parts, doc.License+"\n")
+		}
+
+		if doc.Version != "" {
+			parts = append(parts, "#### Version\n")
+			parts = append(parts, doc.Version+"\n")
+		}
 	}
 
-	if len(doc.TOC) > 0 {
+	// Build TOC from stored functions
+	var tocItems []string
+	for i := range doc.Functions {
+		tocItems = append(tocItems, renderTocItem(doc.Functions[i].Name))
+	}
+
+	if len(tocItems) > 0 {
 		parts = append(parts, "## Index\n")
-		parts = append(parts, strings.Join(doc.TOC, "\n")+"\n")
+		parts = append(parts, strings.Join(tocItems, "\n")+"\n")
 	}
 
 	// Join header parts
@@ -273,7 +312,14 @@ func renderDocument(doc *Document) string {
 		header = fmt.Sprintf("%s%s\n", header, p)
 	}
 
+	// Build DocStr from stored functions
+	docStr := ""
+	for i := range doc.Functions {
+		rendered := renderFuncDoc(&doc.Functions[i])
+		docStr = concat(docStr, rendered)
+	}
+
 	// The final output is header + doc string + trailing newline
 	// awk: print doc (which adds \n)
-	return header + doc.DocStr + "\n"
+	return header + docStr + "\n"
 }

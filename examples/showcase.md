@@ -11,6 +11,19 @@ Features include:
 * Deprecation notices
 * Grouped sections
 
+#### Authors
+
+* Alice
+* Bob
+
+#### License
+
+MIT
+
+#### Version
+
+2.0.0
+
 ## Index
 
 * [greet](#greet)
@@ -30,6 +43,10 @@ Greet someone by name.
 
 Prints a friendly greeting to stdout. Returns non-zero
 if no name is provided.
+
+#### Warnings
+
+* Do not pass empty strings.
 
 #### Example
 
@@ -60,6 +77,10 @@ greet "$(whoami)"
 #### Variables set
 
 * **LAST_GREETED** (string): The last name that was greeted.
+
+#### Environment variables
+
+* **HOME** (string): The user's home directory.
 
 #### Exit codes
 

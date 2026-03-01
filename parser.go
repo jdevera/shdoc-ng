@@ -74,13 +74,7 @@ func (p *Parser) handleDescription() {
 }
 
 func (p *Parser) processFunction(text string) {
-	if (len(p.docblock.Options) == 0 && len(p.docblock.BadOptions) == 0 &&
-		len(p.docblock.Args) == 0 && !p.docblock.NoArgs &&
-		len(p.docblock.Sets) == 0 && len(p.docblock.ExitCodes) == 0 &&
-		len(p.docblock.Stdin) == 0 && len(p.docblock.Stdout) == 0 &&
-		len(p.docblock.Stderr) == 0 && len(p.docblock.See) == 0 &&
-		p.docblock.Deprecated == "" &&
-		p.docblock.Example == "" && !p.isInternal &&
+	if (!p.docblock.hasDocumentation() && !p.isInternal &&
 		p.description == "") || p.inExample {
 		return
 	}
@@ -101,12 +95,14 @@ func (p *Parser) processFunction(text string) {
 		p.docblock.Name = funcName
 		p.docblock.Description = p.description
 
-		// Render the function doc
-		rendered := renderFuncDoc(&p.docblock, &p.section, &p.sectionDesc)
-		p.doc.DocStr = concat(p.doc.DocStr, rendered)
+		// Copy section info to the FuncDoc
+		p.docblock.Section = p.section
+		p.docblock.SectionDesc = p.sectionDesc
+		p.section = ""
+		p.sectionDesc = ""
 
-		// Add TOC item
-		p.doc.TOC = append(p.doc.TOC, renderTocItem(funcName))
+		// Store the function doc for later rendering
+		p.doc.Functions = append(p.doc.Functions, p.docblock)
 	}
 
 	p.reset()
@@ -117,7 +113,10 @@ var (
 	internalRegex   = regexp.MustCompile(`^[\s]*# @internal`)
 	deprecatedRegex = regexp.MustCompile(`^[\s]*# @deprecated\s*(.*)`)
 	nameFileRegex   = regexp.MustCompile(`^[\s]*# @(name|file) `)
-	briefRegex    = regexp.MustCompile(`^[\s]*# @brief `)
+	briefRegex      = regexp.MustCompile(`^[\s]*# @brief `)
+	authorRegex     = regexp.MustCompile(`^[\s]*# @author `)
+	licenseRegex    = regexp.MustCompile(`^[\s]*# @license `)
+	versionRegex    = regexp.MustCompile(`^[\s]*# @version `)
 
 	descriptionTagRegex = regexp.MustCompile(`^[\s]*# @description`)
 
@@ -141,8 +140,10 @@ var (
 	noargsRegex     = regexp.MustCompile(`^[\s]*#[\t ]+@noargs[\t ]*$`)
 
 	setRegexLine      = regexp.MustCompile(`^[\s]*# @set `)
+	envRegexLine      = regexp.MustCompile(`^[\s]*# @env `)
 	exitcodeRegexLine = regexp.MustCompile(`^[\s]*# @exitcode `)
 	seeRegexLine      = regexp.MustCompile(`^[\s]*# @see `)
+	warningRegexLine  = regexp.MustCompile(`^[\s]*# @warning `)
 
 	// Multi-line stdin/stdout/stderr
 	stdioRegex = regexp.MustCompile(`^([\t ]*#[\t ]+)@(stdin|stdout|stderr)[\t ]+(.*[^\t ])[\t ]*$`)
@@ -189,6 +190,13 @@ func (p *Parser) ProcessLine(line string) {
 		return
 	}
 
+	// Rule 1c: @warning
+	if warningRegexLine.MatchString(line) {
+		stripped := warningRegexLine.ReplaceAllString(line, "")
+		p.docblock.Warnings = append(p.docblock.Warnings, stripped)
+		return
+	}
+
 	// Rule 2: @name/@file
 	if nameFileRegex.MatchString(line) {
 		stripped := nameFileRegex.ReplaceAllString(line, "")
@@ -200,6 +208,27 @@ func (p *Parser) ProcessLine(line string) {
 	if briefRegex.MatchString(line) {
 		stripped := briefRegex.ReplaceAllString(line, "")
 		p.doc.FileBrief = stripped
+		return
+	}
+
+	// Rule 3b: @author (file-level, list)
+	if authorRegex.MatchString(line) {
+		stripped := authorRegex.ReplaceAllString(line, "")
+		p.doc.Authors = append(p.doc.Authors, stripped)
+		return
+	}
+
+	// Rule 3c: @license (file-level, single)
+	if licenseRegex.MatchString(line) {
+		stripped := licenseRegex.ReplaceAllString(line, "")
+		p.doc.License = stripped
+		return
+	}
+
+	// Rule 3d: @version (file-level, single)
+	if versionRegex.MatchString(line) {
+		stripped := versionRegex.ReplaceAllString(line, "")
+		p.doc.Version = stripped
 		return
 	}
 
@@ -318,6 +347,13 @@ func (p *Parser) ProcessLine(line string) {
 	if setRegexLine.MatchString(line) {
 		stripped := setRegexLine.ReplaceAllString(line, "")
 		p.docblock.Sets = append(p.docblock.Sets, stripped)
+		return
+	}
+
+	// Rule 12b: @env
+	if envRegexLine.MatchString(line) {
+		stripped := envRegexLine.ReplaceAllString(line, "")
+		p.docblock.Env = append(p.docblock.Env, stripped)
 		return
 	}
 

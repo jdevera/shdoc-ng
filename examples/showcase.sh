@@ -1,6 +1,10 @@
 #!/bin/bash
 # @name mylib
 # @brief A showcase of every shdoc-ng annotation.
+# @author Alice
+# @author Bob
+# @license MIT
+# @version 2.0.0
 # @description
 #     This library demonstrates all supported tags.
 #
@@ -17,6 +21,8 @@
 # Prints a friendly greeting to stdout. Returns non-zero
 # if no name is provided.
 #
+# @warning Do not pass empty strings.
+#
 # @example
 #   greet "World"
 #   greet "$(whoami)"
@@ -29,6 +35,8 @@
 # @arg $@ string Additional names.
 #
 # @set LAST_GREETED string The last name that was greeted.
+#
+# @env HOME string The user's home directory.
 #
 # @exitcode 0 If successful.
 # @exitcode 1 If no name was provided.

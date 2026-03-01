@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -145,6 +146,192 @@ func TestConformance(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func TestJSONOutput(t *testing.T) {
+	input := `#!/bin/bash
+# @name mylib
+# @brief A brief description
+# @description The full description.
+
+# @section Utils
+# @description Helper functions.
+
+# @description Greet someone.
+#
+# @example
+#   greet "World"
+#
+# @option -u | --uppercase  Uppercase the name.
+# @arg $1 string The name to greet.
+# @arg $@ string Additional names.
+# @set LAST_GREETED string The last name greeted.
+# @exitcode 0 Success.
+# @exitcode 1 No name provided.
+# @stdin A fallback name.
+# @stdout The greeting.
+# @stderr A warning.
+# @see farewell()
+# @deprecated Use hello() instead.
+greet() {
+    echo "Hello, $1!"
+}
+
+# @description Say goodbye.
+# @arg $1 string The name.
+# @noargs
+farewell() {
+    echo "Bye"
+}`
+
+	parser := NewParser()
+	lines := strings.Split(input, "\n")
+	for _, line := range lines {
+		parser.ProcessLine(line)
+	}
+
+	jsonOut, err := parser.RenderJSON()
+	if err != nil {
+		t.Fatalf("RenderJSON failed: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal([]byte(jsonOut), &doc); err != nil {
+		t.Fatalf("Invalid JSON: %v\nOutput:\n%s", err, jsonOut)
+	}
+
+	// Check document-level fields
+	if doc.Name != "mylib" {
+		t.Errorf("Expected name 'mylib', got %q", doc.Name)
+	}
+	if doc.Brief != "A brief description" {
+		t.Errorf("Expected brief 'A brief description', got %q", doc.Brief)
+	}
+	if doc.Description != "The full description." {
+		t.Errorf("Expected description 'The full description.', got %q", doc.Description)
+	}
+
+	if len(doc.Functions) != 2 {
+		t.Fatalf("Expected 2 functions, got %d", len(doc.Functions))
+	}
+
+	// Check first function
+	f := doc.Functions[0]
+	if f.Name != "greet" {
+		t.Errorf("Expected function name 'greet', got %q", f.Name)
+	}
+	if f.Section != "Utils" {
+		t.Errorf("Expected section 'Utils', got %q", f.Section)
+	}
+	if f.SectionDescription != "Helper functions." {
+		t.Errorf("Expected section_description 'Helper functions.', got %q", f.SectionDescription)
+	}
+	if f.Deprecated != "Use hello() instead." {
+		t.Errorf("Expected deprecated 'Use hello() instead.', got %q", f.Deprecated)
+	}
+	if len(f.Options) != 1 {
+		t.Errorf("Expected 1 option, got %d", len(f.Options))
+	}
+	if len(f.Args) != 2 {
+		t.Errorf("Expected 2 args, got %d", len(f.Args))
+	} else {
+		if f.Args[0].Name != "$1" || f.Args[0].Type != "string" {
+			t.Errorf("Unexpected arg[0]: %+v", f.Args[0])
+		}
+		if f.Args[1].Name != "$@" || f.Args[1].Type != "string" {
+			t.Errorf("Unexpected arg[1]: %+v", f.Args[1])
+		}
+	}
+	if len(f.Set) != 1 {
+		t.Errorf("Expected 1 set var, got %d", len(f.Set))
+	} else if f.Set[0].Name != "LAST_GREETED" {
+		t.Errorf("Expected set var 'LAST_GREETED', got %q", f.Set[0].Name)
+	}
+	if len(f.ExitCodes) != 2 {
+		t.Errorf("Expected 2 exit codes, got %d", len(f.ExitCodes))
+	}
+	if len(f.Stdin) != 1 {
+		t.Errorf("Expected 1 stdin, got %d", len(f.Stdin))
+	}
+	if len(f.Stdout) != 1 {
+		t.Errorf("Expected 1 stdout, got %d", len(f.Stdout))
+	}
+	if len(f.Stderr) != 1 {
+		t.Errorf("Expected 1 stderr, got %d", len(f.Stderr))
+	}
+	if len(f.See) != 1 {
+		t.Errorf("Expected 1 see, got %d", len(f.See))
+	}
+
+	// Check second function
+	f2 := doc.Functions[1]
+	if f2.Name != "farewell" {
+		t.Errorf("Expected function name 'farewell', got %q", f2.Name)
+	}
+	if !f2.NoArgs {
+		t.Errorf("Expected noargs to be true")
+	}
+}
+
+func TestSortOutput(t *testing.T) {
+	input := `#!/bin/bash
+
+# @description Zulu function.
+# @noargs
+zulu() {
+    :
+}
+
+# @description Alpha function.
+# @noargs
+alpha() {
+    :
+}
+
+# @description Mike function.
+# @noargs
+mike() {
+    :
+}`
+
+	parser := NewParser()
+	lines := strings.Split(input, "\n")
+	for _, line := range lines {
+		parser.ProcessLine(line)
+	}
+
+	// Sort functions
+	sort.Slice(parser.doc.Functions, func(i, j int) bool {
+		return parser.doc.Functions[i].Name < parser.doc.Functions[j].Name
+	})
+
+	output := parser.Render()
+
+	// Functions should appear in alphabetical order
+	alphaIdx := strings.Index(output, "### alpha")
+	mikeIdx := strings.Index(output, "### mike")
+	zuluIdx := strings.Index(output, "### zulu")
+
+	if alphaIdx == -1 || mikeIdx == -1 || zuluIdx == -1 {
+		t.Fatalf("Missing function headers in output:\n%s", output)
+	}
+
+	if !(alphaIdx < mikeIdx && mikeIdx < zuluIdx) {
+		t.Errorf("Functions not in alphabetical order: alpha@%d, mike@%d, zulu@%d", alphaIdx, mikeIdx, zuluIdx)
+	}
+
+	// TOC should also be sorted
+	tocAlpha := strings.Index(output, "* [alpha](#alpha)")
+	tocMike := strings.Index(output, "* [mike](#mike)")
+	tocZulu := strings.Index(output, "* [zulu](#zulu)")
+
+	if tocAlpha == -1 || tocMike == -1 || tocZulu == -1 {
+		t.Fatalf("Missing TOC entries in output:\n%s", output)
+	}
+
+	if !(tocAlpha < tocMike && tocMike < tocZulu) {
+		t.Errorf("TOC not in alphabetical order: alpha@%d, mike@%d, zulu@%d", tocAlpha, tocMike, tocZulu)
 	}
 }
 
