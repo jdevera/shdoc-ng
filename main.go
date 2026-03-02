@@ -2,11 +2,12 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"io"
 	"os"
 	"sort"
+
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
@@ -18,9 +19,22 @@ func main() {
 	flag.StringVar(&format, "format", "markdown", "Output format: markdown, json")
 	flag.BoolVar(&sortFuncs, "sort", false, "Sort functions alphabetically")
 	flag.BoolVar(&showSchema, "schema", false, "Print JSON Schema for --format json output and exit")
-	flag.StringVar(&inputFile, "i", "-", "Input file (- for stdin)")
-	flag.StringVar(&outputFile, "o", "-", "Output file (- for stdout)")
+	flag.StringVarP(&inputFile, "input", "i", "-", "Input file (- for stdin)")
+	flag.StringVarP(&outputFile, "output", "o", "-", "Output file (- for stdout)")
 	flag.Parse()
+
+	var output io.Writer
+	if outputFile == "-" {
+		output = os.Stdout
+	} else {
+		f, err := os.Create(outputFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error opening output file: %v\n", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+		output = f
+	}
 
 	if showSchema {
 		out, err := renderSchema()
@@ -28,7 +42,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Error generating schema: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Print(out)
+		fmt.Fprint(output, out)
 		return
 	}
 
@@ -43,19 +57,6 @@ func main() {
 		}
 		defer f.Close()
 		input = f
-	}
-
-	var output io.Writer
-	if outputFile == "-" {
-		output = os.Stdout
-	} else {
-		f, err := os.Create(outputFile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening output file: %v\n", err)
-			os.Exit(1)
-		}
-		defer f.Close()
-		output = f
 	}
 
 	scanner := bufio.NewScanner(input)

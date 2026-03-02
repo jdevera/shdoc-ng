@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts from stdin and produces Markdown on stdout. Zero external dependencies.
+shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts from stdin and produces Markdown on stdout. Minimal external dependencies (only `pflag` for CLI flag parsing).
 
 ## Build & Test Commands
 
@@ -14,9 +14,9 @@ go test ./...               # run all tests (includes conformance)
 go test -run TestConformance/option  # run a single conformance case
 ```
 
-Usage: `./shdoc-ng -i script.sh -o output.md`
+Usage: `./shdoc-ng -i script.sh -o output.md` (or `--input`/`--output`)
 
-Also supported: `./shdoc-ng < script.sh > output.md` (stdin/stdout are the defaults for `-i` and `-o`)
+Also supported: `./shdoc-ng < script.sh > output.md` (stdin/stdout are the defaults for `-i`/`--input` and `-o`/`--output`)
 
 ## Architecture
 
