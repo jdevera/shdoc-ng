@@ -34,43 +34,71 @@ var urlDetectPattern = regexp.MustCompile(`[^\]]([^a-z(]|\()[a-z]+://[-a-zA-Z0-9
 // urlReplacePattern is used to wrap bare URLs in markdown link syntax.
 var urlReplacePattern = regexp.MustCompile(`([^\]]([^a-z(]|\())([a-z]+://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])`)
 
-// markdownLinkPattern detects if text already contains a markdown link.
+// markdownLinkPattern detects if text contains a markdown link anywhere.
 var markdownLinkPattern = regexp.MustCompile(`\[[^\]]*\]\([^)]*\)`)
 
-// renderTocLink converts text to a markdown link for TOC and @see entries.
-// Detection order matches the awk implementation.
-func renderTocLink(text string) string {
-	// 1. Relative path (starts with ./ or ../)
+// markdownLinkParseRegex matches text that is entirely a single markdown link.
+var markdownLinkParseRegex = regexp.MustCompile(`^\[([^\]]*)\]\(([^)]*)\)$`)
+
+// bareURLRegex matches text that is entirely a URL.
+var bareURLRegex = regexp.MustCompile(`^[a-z]+://\S`)
+
+// parseSeeRef classifies a raw @see value into a structured SeeRef.
+// Classification order matches the awk implementation.
+func parseSeeRef(text string) SeeRef {
+	// 1. Relative path
 	if strings.HasPrefix(text, "./") || strings.HasPrefix(text, "../") {
-		return "[" + text + "](" + text + ")"
+		return SeeRef{Kind: "path", Href: text}
 	}
 
-	// 2. Absolute path (starts with /)
+	// 2. Absolute path
 	if strings.HasPrefix(text, "/") {
-		return "[" + text + "](" + text + ")"
+		return SeeRef{Kind: "path", Href: text}
 	}
 
-	// 3. Contains URLs not in markdown links - pad with spaces like awk does
+	// 3. Pure markdown link [text](url) — entire text is the link
+	if m := markdownLinkParseRegex.FindStringSubmatch(text); m != nil {
+		return SeeRef{Kind: "link", Text: m[1], Href: m[2]}
+	}
+
+	// 4. Bare URL — entire text is a URL
+	if bareURLRegex.MatchString(text) {
+		return SeeRef{Kind: "url", Href: text}
+	}
+
+	// 5. Mixed content — text containing embedded URLs or markdown links
 	padded := "  " + text + " "
-	if urlDetectPattern.MatchString(padded) {
-		// Wrap bare URLs in markdown links
+	if urlDetectPattern.MatchString(padded) || markdownLinkPattern.MatchString(text) {
+		return SeeRef{Kind: "text", Text: text}
+	}
+
+	// 6. Plain anchor reference
+	return SeeRef{Kind: "ref", Text: text}
+}
+
+// renderSeeRef renders a SeeRef to markdown.
+func renderSeeRef(ref SeeRef) string {
+	switch ref.Kind {
+	case "path":
+		return "[" + ref.Href + "](" + ref.Href + ")"
+	case "url":
+		return "[" + ref.Href + "](" + ref.Href + ")"
+	case "link":
+		return "[" + ref.Text + "](" + ref.Href + ")"
+	case "ref":
+		return "[" + ref.Text + "](#" + slug(ref.Text) + ")"
+	case "text":
+		// Mixed content: wrap bare URLs but leave existing markdown links alone
+		padded := "  " + ref.Text + " "
 		padded = urlReplacePattern.ReplaceAllString(padded, "${1}[${3}](${3})")
-		// Trim the padding spaces
 		padded = strings.TrimLeft(padded, " ")
 		padded = strings.TrimRight(padded, " ")
 		return padded
 	}
-
-	// 4. Already a markdown link - pass through
-	if markdownLinkPattern.MatchString(text) {
-		return text
-	}
-
-	// 5. Plain text → anchor link
-	return "[" + text + "](#" + slug(text) + ")"
+	return ref.Text
 }
 
 // renderTocItem renders a TOC entry for a function name.
 func renderTocItem(title string) string {
-	return "* " + renderTocLink(title)
+	return "* " + renderSeeRef(SeeRef{Kind: "ref", Text: title})
 }

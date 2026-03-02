@@ -24,13 +24,53 @@ var optionRegex = regexp.MustCompile(
 	`^(((-[a-zA-Z0-9]([ \t]*<[^>]+>)?|--[a-zA-Z0-9][a-zA-Z0-9-]*((=|[ \t]+)<[^>]+>)?)([ \t]*\|?[ \t]+))+)([^ \t|<-].*)?$`,
 )
 
+// shortFormRegex parses a single short option token: -x or -x<val> or -x <val>
+var shortFormRegex = regexp.MustCompile(`^(-[a-zA-Z0-9])([ \t]*)(?:<([^>]+)>)?$`)
+
+// longFormRegex parses a single long option token: --xxx or --xxx=<val> or --xxx <val>
+var longFormRegex = regexp.MustCompile(`^(--[a-zA-Z0-9][a-zA-Z0-9-]*)(=|[ \t]+)?(?:<([^>]+)>)?$`)
+
+// parseOptionForms splits a normalized term string into individual OptionForms.
+func parseOptionForms(term string) []OptionForm {
+	var forms []OptionForm
+	for _, tok := range strings.Split(term, " | ") {
+		tok = strings.TrimSpace(tok)
+		if tok == "" {
+			continue
+		}
+		var form OptionForm
+		if m := longFormRegex.FindStringSubmatch(tok); m != nil {
+			form.Name = m[1]
+			if m[3] != "" {
+				sep := m[2]
+				if sep != "=" {
+					sep = " "
+				}
+				form.Value = m[3]
+				form.ValueSep = sep
+			}
+		} else if m := shortFormRegex.FindStringSubmatch(tok); m != nil {
+			form.Name = m[1]
+			if m[3] != "" {
+				form.Value = m[3]
+				if m[2] != "" {
+					form.ValueSep = " "
+				}
+				// empty m[2] means adjacent (value_sep omitted)
+			}
+		}
+		forms = append(forms, form)
+	}
+	return forms
+}
+
 // processAtOption validates and parses an @option entry.
-// Returns (term, definition, valid).
-func processAtOption(text string) (string, string, bool) {
+// Returns (forms, definition, valid).
+func processAtOption(text string) ([]OptionForm, string, bool) {
 	text = normalizeOptionSeparators(text)
 	m := optionRegex.FindStringSubmatch(text)
 	if m == nil {
-		return "", "", false
+		return nil, "", false
 	}
 
 	term := strings.TrimSpace(m[1])
@@ -40,21 +80,21 @@ func processAtOption(text string) (string, string, bool) {
 	pipeRe := regexp.MustCompile(`[ \t]+\|[ \t]+`)
 	term = pipeRe.ReplaceAllString(term, " | ")
 
-	return term, definition, true
+	return parseOptionForms(term), definition, true
 }
 
-// renderOptionTerm renders the term portion of an option for markdown output.
-// Wraps in bold, splits around pipes, escapes < and >.
-func renderOptionTerm(term string) string {
-	// Wrap in bold
-	result := "**" + term + "**"
-
-	// Split bold around pipes: " | " within bold becomes "** | **"
-	result = strings.ReplaceAll(result, " | ", "** | **")
-
-	// Escape < and >
-	result = strings.ReplaceAll(result, "<", `\<`)
-	result = strings.ReplaceAll(result, ">", `\>`)
-
-	return result
+// renderOptionTerm renders the option forms for markdown output.
+// Each form is bolded; angle brackets are escaped; forms are joined with " | ".
+func renderOptionTerm(forms []OptionForm) string {
+	parts := make([]string, 0, len(forms))
+	for _, f := range forms {
+		s := f.Name
+		if f.Value != "" {
+			s += f.ValueSep + "<" + f.Value + ">"
+		}
+		s = strings.ReplaceAll(s, "<", `\<`)
+		s = strings.ReplaceAll(s, ">", `\>`)
+		parts = append(parts, "**"+s+"**")
+	}
+	return strings.Join(parts, " | ")
 }

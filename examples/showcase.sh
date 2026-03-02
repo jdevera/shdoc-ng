@@ -46,7 +46,10 @@
 # @stderr A warning when no name is given.
 #
 # @see farewell()
-# @see [Bash scripting guide](https://tldp.org/LDP/abs/html/).
+# @see https://www.gnu.org/software/bash/
+# @see ./lib/helpers.sh
+# @see [Bash manual](https://www.gnu.org/software/bash/manual/)
+# @see See also the [bash guide](https://tldp.org/LDP/abs/html/) and https://mywiki.wooledge.org/BashFAQ.
 greet() {
     if [[ -z "$1" ]]; then
         echo "Warning: no name provided" >&2

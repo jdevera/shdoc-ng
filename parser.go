@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -25,15 +26,15 @@ type Parser struct {
 	functionDeclaration string
 	isInternal          bool
 
+	tempArgs map[string]Arg
+
 	lineNum int
 }
 
 // NewParser creates a new Parser.
 func NewParser() *Parser {
 	return &Parser{
-		docblock: FuncDoc{
-			Args: make(map[string]string),
-		},
+		tempArgs: make(map[string]Arg),
 	}
 }
 
@@ -44,9 +45,8 @@ func (p *Parser) warn(message string) {
 }
 
 func (p *Parser) reset() {
-	p.docblock = FuncDoc{
-		Args: make(map[string]string),
-	}
+	p.docblock = FuncDoc{}
+	p.tempArgs = make(map[string]Arg)
 	p.description = ""
 }
 
@@ -82,6 +82,16 @@ func (p *Parser) processFunction(text string) {
 	if p.isInternal {
 		p.isInternal = false
 	} else {
+		// Convert tempArgs map to sorted slice
+		sortKeys := make([]string, 0, len(p.tempArgs))
+		for k := range p.tempArgs {
+			sortKeys = append(sortKeys, k)
+		}
+		sort.Strings(sortKeys)
+		for _, k := range sortKeys {
+			p.docblock.Args = append(p.docblock.Args, p.tempArgs[k])
+		}
+
 		// Extract function name
 		funcNameRegex := regexp.MustCompile(
 			`^\s*(?:function\s+)?([a-zA-Z0-9_\-:.\-]+)\s*(?:\(\s*\))?\s*\{?`,
@@ -144,6 +154,12 @@ var (
 	exitcodeRegexLine = regexp.MustCompile(`^[\s]*# @exitcode `)
 	seeRegexLine      = regexp.MustCompile(`^[\s]*# @see `)
 	warningRegexLine  = regexp.MustCompile(`^[\s]*# @warning `)
+
+	// Structured-field parsing
+	argNRegex    = regexp.MustCompile(`^\$([0-9]+)\s+(\S+)\s+(.*)$`)
+	argAtRegex   = regexp.MustCompile(`^\$@\s+(\S+)\s+(.*)$`)
+	setVarRegex  = regexp.MustCompile(`^(\S+)\s+(\S+)\s*(.*)$`)
+	exitCodeRegex = regexp.MustCompile(`^([>!]?[0-9]{1,3}) (.*)$`)
 
 	// Multi-line stdin/stdout/stderr
 	stdioRegex = regexp.MustCompile(`^([\t ]*#[\t ]+)@(stdin|stdout|stderr)[\t ]+(.*[^\t ])[\t ]*$`)
@@ -298,9 +314,9 @@ func (p *Parser) ProcessLine(line string) {
 		optionText := regexp.MustCompile(`^[\t ]*#[\t ]+@option[\t ]+`).ReplaceAllString(line, "")
 		optionText = strings.TrimSpace(optionText)
 
-		term, def, valid := processAtOption(optionText)
+		forms, def, valid := processAtOption(optionText)
 		if valid {
-			p.docblock.Options = append(p.docblock.Options, OptionEntry{Term: term, Definition: def})
+			p.docblock.Options = append(p.docblock.Options, OptionEntry{Forms: forms, Definition: def})
 		} else {
 			p.warn("Invalid format: @option " + optionText)
 			p.docblock.BadOptions = append(p.docblock.BadOptions, optionText)
@@ -317,19 +333,26 @@ func (p *Parser) ProcessLine(line string) {
 		argMatch := regexp.MustCompile(`^\$([0-9]+|@)\s`).FindStringSubmatch(argText)
 		if argMatch != nil {
 			argNumber := argMatch[1]
-			// Zero-pad numeric arguments
-			if argNumber != "@" {
-				argNumber = fmt.Sprintf("%03s", argNumber)
+			// Zero-pad numeric arguments for sort order
+			sortKey := argNumber
+			if sortKey != "@" {
+				sortKey = fmt.Sprintf("%03s", sortKey)
 			}
-			p.docblock.Args[argNumber] = argText
+			var arg Arg
+			if m := argNRegex.FindStringSubmatch(argText); m != nil {
+				arg = Arg{Name: "$" + m[1], Type: m[2], Description: m[3]}
+			} else if m := argAtRegex.FindStringSubmatch(argText); m != nil {
+				arg = Arg{Name: "$@", Type: m[1], Description: m[2]}
+			}
+			p.tempArgs[sortKey] = arg
 			return
 		}
 
 		// Invalid @arg format - process as @option with warning
 		p.warn("Invalid format, processed as @option: @arg " + argText)
-		term, def, valid := processAtOption(argText)
+		forms, def, valid := processAtOption(argText)
 		if valid {
-			p.docblock.Options = append(p.docblock.Options, OptionEntry{Term: term, Definition: def})
+			p.docblock.Options = append(p.docblock.Options, OptionEntry{Forms: forms, Definition: def})
 		} else {
 			p.warn("Invalid format: @option " + argText)
 			p.docblock.BadOptions = append(p.docblock.BadOptions, argText)
@@ -346,21 +369,27 @@ func (p *Parser) ProcessLine(line string) {
 	// Rule 12: @set
 	if setRegexLine.MatchString(line) {
 		stripped := setRegexLine.ReplaceAllString(line, "")
-		p.docblock.Sets = append(p.docblock.Sets, stripped)
+		if m := setVarRegex.FindStringSubmatch(stripped); m != nil {
+			p.docblock.Sets = append(p.docblock.Sets, SetVar{Name: m[1], Type: m[2], Description: strings.TrimSpace(m[3])})
+		}
 		return
 	}
 
 	// Rule 12b: @env
 	if envRegexLine.MatchString(line) {
 		stripped := envRegexLine.ReplaceAllString(line, "")
-		p.docblock.Env = append(p.docblock.Env, stripped)
+		if m := setVarRegex.FindStringSubmatch(stripped); m != nil {
+			p.docblock.Env = append(p.docblock.Env, SetVar{Name: m[1], Type: m[2], Description: strings.TrimSpace(m[3])})
+		}
 		return
 	}
 
-	// Rule 12: @exitcode
+	// Rule 12c: @exitcode
 	if exitcodeRegexLine.MatchString(line) {
 		stripped := exitcodeRegexLine.ReplaceAllString(line, "")
-		p.docblock.ExitCodes = append(p.docblock.ExitCodes, stripped)
+		if m := exitCodeRegex.FindStringSubmatch(stripped); m != nil {
+			p.docblock.ExitCodes = append(p.docblock.ExitCodes, ExitCode{Code: m[1], Description: m[2]})
+		}
 		return
 	}
 
@@ -368,7 +397,7 @@ func (p *Parser) ProcessLine(line string) {
 	if seeRegexLine.MatchString(line) {
 		// awk: sub(/[[:space:]]*# @see /, "")
 		stripped := regexp.MustCompile(`[\s]*# @see `).ReplaceAllString(line, "")
-		p.docblock.See = append(p.docblock.See, stripped)
+		p.docblock.See = append(p.docblock.See, parseSeeRef(stripped))
 		return
 	}
 

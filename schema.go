@@ -67,7 +67,7 @@ func schemaForType(t reflect.Type) map[string]any {
 }
 
 func generateSchema() map[string]any {
-	schema := schemaForType(reflect.TypeOf(JSONDocument{}))
+	schema := schemaForType(reflect.TypeOf(Document{}))
 	schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
 	schema["title"] = "shdoc-ng JSON output"
 	schema["description"] = "Schema for the JSON output produced by shdoc-ng --format json"

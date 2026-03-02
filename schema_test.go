@@ -132,7 +132,7 @@ func TestSchemaRequiredFields(t *testing.T) {
 		{
 			name:     "OptionEntry",
 			path:     []string{"functions", "items", "options", "items"},
-			required: []string{"term", "description"},
+			required: []string{"forms", "description"},
 		},
 	}
 

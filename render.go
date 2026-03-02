@@ -2,38 +2,8 @@ package main
 
 import (
 	"fmt"
-	"regexp"
-	"sort"
 	"strings"
 )
-
-// renderArgN converts "$N type desc" to "**$N** (type): desc"
-var argNRegex = regexp.MustCompile(`^\$([0-9]+)\s+(\S+)\s+`)
-
-func renderArgN(text string) string {
-	return argNRegex.ReplaceAllString(text, `**$$${1}** (${2}): `)
-}
-
-// renderArgAt converts "$@ type desc" to "**...** (type): desc"
-var argAtRegex = regexp.MustCompile(`^\$@\s+(\S+)\s+`)
-
-func renderArgAt(text string) string {
-	return argAtRegex.ReplaceAllString(text, `**...** (${1}): `)
-}
-
-// renderSet converts "VAR type rest" to "**VAR** (type): rest"
-var setRegex = regexp.MustCompile(`^(\S+) (\S+)`)
-
-func renderSet(text string) string {
-	return setRegex.ReplaceAllString(text, `**${1}** (${2}):`)
-}
-
-// renderExitCode converts "code desc" to "**code**: desc"
-var exitCodeRegex = regexp.MustCompile(`([>!]?[0-9]{1,3}) (.*)`)
-
-func renderExitCode(text string) string {
-	return exitCodeRegex.ReplaceAllString(text, `**${1}**: ${2}`)
-}
 
 // unindent removes common leading whitespace from text lines.
 // Matches the awk implementation precisely.
@@ -157,7 +127,7 @@ func renderFuncDoc(f *FuncDoc) string {
 		lines = append(lines, "#### Options\n")
 
 		for _, opt := range f.Options {
-			term := renderOptionTerm(opt.Term)
+			term := renderOptionTerm(opt.Forms)
 			lines = append(lines, "* "+term+"\n")
 			lines = append(lines, "  "+opt.Definition+"\n")
 		}
@@ -173,17 +143,13 @@ func renderFuncDoc(f *FuncDoc) string {
 	if len(f.Args) > 0 {
 		lines = append(lines, "#### Arguments\n")
 
-		// Sort args by zero-padded key
-		keys := make([]string, 0, len(f.Args))
-		for k := range f.Args {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, k := range keys {
-			item := f.Args[k]
-			item = renderArgN(item)
-			item = renderArgAt(item)
+		for _, a := range f.Args {
+			var item string
+			if a.Name == "$@" {
+				item = fmt.Sprintf("**...** (%s): %s", a.Type, a.Description)
+			} else {
+				item = fmt.Sprintf("**%s** (%s): %s", a.Name, a.Type, a.Description)
+			}
 			lines = append(lines, "* "+item)
 		}
 		lines = append(lines, "")
@@ -197,8 +163,7 @@ func renderFuncDoc(f *FuncDoc) string {
 	if len(f.Sets) > 0 {
 		lines = append(lines, "#### Variables set\n")
 		for _, s := range f.Sets {
-			item := renderSet(s)
-			lines = append(lines, "* "+item)
+			lines = append(lines, fmt.Sprintf("* **%s** (%s): %s", s.Name, s.Type, s.Description))
 		}
 		lines = append(lines, "")
 	}
@@ -206,8 +171,7 @@ func renderFuncDoc(f *FuncDoc) string {
 	if len(f.Env) > 0 {
 		lines = append(lines, "#### Environment variables\n")
 		for _, e := range f.Env {
-			item := renderSet(e)
-			lines = append(lines, "* "+item)
+			lines = append(lines, fmt.Sprintf("* **%s** (%s): %s", e.Name, e.Type, e.Description))
 		}
 		lines = append(lines, "")
 	}
@@ -215,8 +179,7 @@ func renderFuncDoc(f *FuncDoc) string {
 	if len(f.ExitCodes) > 0 {
 		lines = append(lines, "#### Exit codes\n")
 		for _, e := range f.ExitCodes {
-			item := renderExitCode(e)
-			lines = append(lines, "* "+item)
+			lines = append(lines, fmt.Sprintf("* **%s**: %s", e.Code, e.Description))
 		}
 		lines = append(lines, "")
 	}
@@ -252,7 +215,7 @@ func renderFuncDoc(f *FuncDoc) string {
 	if len(f.See) > 0 {
 		lines = append(lines, "#### See also\n")
 		for _, s := range f.See {
-			lines = append(lines, "* "+renderTocLink(s))
+			lines = append(lines, "* "+renderSeeRef(s))
 		}
 		lines = append(lines, "")
 	}

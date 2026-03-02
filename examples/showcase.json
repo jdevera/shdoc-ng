@@ -11,21 +11,44 @@
   "functions": [
     {
       "name": "greet",
-      "section": "String Utilities",
-      "section_description": "Common string operations.",
       "description": "Greet someone by name.\n\nPrints a friendly greeting to stdout. Returns non-zero\nif no name is provided.",
       "example": "   greet \"World\"\n   greet \"$(whoami)\"",
       "options": [
         {
-          "term": "-u | --uppercase",
+          "forms": [
+            {
+              "name": "-u"
+            },
+            {
+              "name": "--uppercase"
+            }
+          ],
           "description": "Uppercase the name."
         },
         {
-          "term": "-n \u003ccount\u003e | --repeat=\u003ccount\u003e",
+          "forms": [
+            {
+              "name": "-n",
+              "value": "count",
+              "value_sep": " "
+            },
+            {
+              "name": "--repeat",
+              "value": "count",
+              "value_sep": "="
+            }
+          ],
           "description": "Repeat the greeting."
         },
         {
-          "term": "-r | --reverse",
+          "forms": [
+            {
+              "name": "-r"
+            },
+            {
+              "name": "--reverse"
+            }
+          ],
           "description": "Reverse the greeting."
         }
       ],
@@ -48,6 +71,13 @@
           "description": "The last name that was greeted."
         }
       ],
+      "env": [
+        {
+          "name": "HOME",
+          "type": "string",
+          "description": "The user's home directory."
+        }
+      ],
       "exitcodes": [
         {
           "code": "0",
@@ -56,13 +86,6 @@
         {
           "code": "1",
           "description": "If no name was provided."
-        }
-      ],
-      "env": [
-        {
-          "name": "HOME",
-          "type": "string",
-          "description": "The user's home directory."
         }
       ],
       "stdin": [
@@ -75,12 +98,33 @@
         "A warning when no name is given."
       ],
       "see": [
-        "farewell()",
-        "[Bash scripting guide](https://tldp.org/LDP/abs/html/)."
+        {
+          "kind": "ref",
+          "text": "farewell()"
+        },
+        {
+          "kind": "url",
+          "href": "https://www.gnu.org/software/bash/"
+        },
+        {
+          "kind": "path",
+          "href": "./lib/helpers.sh"
+        },
+        {
+          "kind": "link",
+          "text": "Bash manual",
+          "href": "https://www.gnu.org/software/bash/manual/"
+        },
+        {
+          "kind": "text",
+          "text": "See also the [bash guide](https://tldp.org/LDP/abs/html/) and https://mywiki.wooledge.org/BashFAQ."
+        }
       ],
       "warnings": [
         "Do not pass empty strings."
-      ]
+      ],
+      "section": "String Utilities",
+      "section_description": "Common string operations."
     },
     {
       "name": "farewell",
@@ -99,15 +143,18 @@
         }
       ],
       "see": [
-        "greet()"
+        {
+          "kind": "ref",
+          "text": "greet()"
+        }
       ]
     },
     {
       "name": "old_hello",
-      "section": "Deprecated Utilities",
-      "section_description": "Functions kept for backwards compatibility.",
       "description": "This function is obsolete.",
-      "deprecated": "Use greet() instead."
+      "deprecated": "Use greet() instead.",
+      "section": "Deprecated Utilities",
+      "section_description": "Functions kept for backwards compatibility."
     },
     {
       "name": "old_noop",

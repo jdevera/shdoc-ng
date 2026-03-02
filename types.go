@@ -16,17 +16,17 @@ type FuncDoc struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description,omitempty"`
 	Example     string            `json:"example,omitempty"`
-	Options     []OptionEntry     `json:"options,omitempty"`
-	BadOptions  []string          `json:"-"`
-	Args        map[string]string `json:"-"`
-	NoArgs      bool              `json:"noargs,omitempty"`
-	Sets        []string          `json:"-"`
-	Env         []string          `json:"-"`
-	ExitCodes   []string          `json:"-"`
+	Options     []OptionEntry `json:"options,omitempty"`
+	BadOptions  []string      `json:"-"`
+	Args        []Arg         `json:"args,omitempty"`
+	NoArgs      bool          `json:"noargs,omitempty"`
+	Sets        []SetVar      `json:"set,omitempty"`
+	Env         []SetVar      `json:"env,omitempty"`
+	ExitCodes   []ExitCode    `json:"exitcodes,omitempty"`
 	Stdin       []string          `json:"stdin,omitempty"`
 	Stdout      []string          `json:"stdout,omitempty"`
 	Stderr      []string          `json:"stderr,omitempty"`
-	See         []string          `json:"see,omitempty"`
+	See         []SeeRef          `json:"see,omitempty"`
 	Warnings    []string          `json:"warnings,omitempty"`
 	Deprecated  string            `json:"deprecated,omitempty"`
 	Section     string            `json:"section,omitempty"`
@@ -45,8 +45,44 @@ func (f *FuncDoc) hasDocumentation() bool {
 		f.Deprecated != "" || f.Example != ""
 }
 
-// OptionEntry represents a valid @option with its rendered term and description.
+// OptionForm represents one form of a command-line option (e.g., "-n" or "--repeat").
+// If Value is present and ValueSep is absent, the value is directly adjacent (e.g., "-n<count>").
+type OptionForm struct {
+	Name     string `json:"name"`
+	Value    string `json:"value,omitempty"`
+	ValueSep string `json:"value_sep,omitempty"`
+}
+
+// OptionEntry represents a valid @option with its parsed forms and description.
 type OptionEntry struct {
-	Term       string `json:"term"`
-	Definition string `json:"description"`
+	Forms      []OptionForm `json:"forms"`
+	Definition string       `json:"description"`
+}
+
+// SeeRef represents a parsed @see reference.
+// Kind is one of: "ref" (anchor), "url", "path", "link" (markdown link), "text" (mixed content).
+type SeeRef struct {
+	Kind string `json:"kind"`
+	Text string `json:"text,omitempty"`
+	Href string `json:"href,omitempty"`
+}
+
+// Arg represents a parsed @arg entry.
+type Arg struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+// SetVar represents a parsed @set or @env entry.
+type SetVar struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+// ExitCode represents a parsed @exitcode entry.
+type ExitCode struct {
+	Code        string `json:"code"`
+	Description string `json:"description"`
 }

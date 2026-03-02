@@ -196,20 +196,20 @@ farewell() {
 		t.Fatalf("RenderJSON failed: %v", err)
 	}
 
-	var doc JSONDocument
+	var doc Document
 	if err := json.Unmarshal([]byte(jsonOut), &doc); err != nil {
 		t.Fatalf("Invalid JSON: %v\nOutput:\n%s", err, jsonOut)
 	}
 
 	// Check document-level fields
-	if doc.Name != "mylib" {
-		t.Errorf("Expected name 'mylib', got %q", doc.Name)
+	if doc.FileTitle != "mylib" {
+		t.Errorf("Expected name 'mylib', got %q", doc.FileTitle)
 	}
-	if doc.Brief != "A brief description" {
-		t.Errorf("Expected brief 'A brief description', got %q", doc.Brief)
+	if doc.FileBrief != "A brief description" {
+		t.Errorf("Expected brief 'A brief description', got %q", doc.FileBrief)
 	}
-	if doc.Description != "The full description." {
-		t.Errorf("Expected description 'The full description.', got %q", doc.Description)
+	if doc.FileDescription != "The full description." {
+		t.Errorf("Expected description 'The full description.', got %q", doc.FileDescription)
 	}
 
 	if len(doc.Functions) != 2 {
@@ -224,8 +224,8 @@ farewell() {
 	if f.Section != "Utils" {
 		t.Errorf("Expected section 'Utils', got %q", f.Section)
 	}
-	if f.SectionDescription != "Helper functions." {
-		t.Errorf("Expected section_description 'Helper functions.', got %q", f.SectionDescription)
+	if f.SectionDesc != "Helper functions." {
+		t.Errorf("Expected section_description 'Helper functions.', got %q", f.SectionDesc)
 	}
 	if f.Deprecated != "Use hello() instead." {
 		t.Errorf("Expected deprecated 'Use hello() instead.', got %q", f.Deprecated)
@@ -243,10 +243,10 @@ farewell() {
 			t.Errorf("Unexpected arg[1]: %+v", f.Args[1])
 		}
 	}
-	if len(f.Set) != 1 {
-		t.Errorf("Expected 1 set var, got %d", len(f.Set))
-	} else if f.Set[0].Name != "LAST_GREETED" {
-		t.Errorf("Expected set var 'LAST_GREETED', got %q", f.Set[0].Name)
+	if len(f.Sets) != 1 {
+		t.Errorf("Expected 1 set var, got %d", len(f.Sets))
+	} else if f.Sets[0].Name != "LAST_GREETED" {
+		t.Errorf("Expected set var 'LAST_GREETED', got %q", f.Sets[0].Name)
 	}
 	if len(f.ExitCodes) != 2 {
 		t.Errorf("Expected 2 exit codes, got %d", len(f.ExitCodes))

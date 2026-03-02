@@ -102,7 +102,10 @@ greet "$(whoami)"
 #### See also
 
 * [farewell()](#farewell)
-* [Bash scripting guide](https://tldp.org/LDP/abs/html/).
+* [https://www.gnu.org/software/bash/](https://www.gnu.org/software/bash/)
+* [./lib/helpers.sh](./lib/helpers.sh)
+* [Bash manual](https://www.gnu.org/software/bash/manual/)
+* See also the [bash guide](https://tldp.org/LDP/abs/html/) and [https://mywiki.wooledge.org/BashFAQ](https://mywiki.wooledge.org/BashFAQ).
 
 ### farewell
 
