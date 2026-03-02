@@ -2,35 +2,35 @@ package main
 
 // Document holds the top-level file metadata and stored function docs.
 type Document struct {
-	FileTitle       string    `json:"name,omitempty"`
-	FileBrief       string    `json:"brief,omitempty"`
-	FileDescription string    `json:"description,omitempty"`
-	Authors         []string  `json:"authors,omitempty"`
-	License         string    `json:"license,omitempty"`
-	Version         string    `json:"version,omitempty"`
-	Functions       []FuncDoc `json:"functions,omitempty"`
+	FileTitle       string    `json:"name,omitempty"        desc:"Title or name of the shell script (@file)"`
+	FileBrief       string    `json:"brief,omitempty"       desc:"One-line summary of the script (@brief)"`
+	FileDescription string    `json:"description,omitempty" desc:"Extended description of the script (@description)"`
+	Authors         []string  `json:"authors,omitempty"     desc:"List of authors (@author)"`
+	License         string    `json:"license,omitempty"     desc:"License identifier (@license)"`
+	Version         string    `json:"version,omitempty"     desc:"Version string (@version)"`
+	Functions       []FuncDoc `json:"functions,omitempty"   desc:"Documented functions found in the script"`
 }
 
 // FuncDoc holds the parsed documentation for a single function.
 type FuncDoc struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description,omitempty"`
-	Example     string            `json:"example,omitempty"`
-	Options     []OptionEntry `json:"options,omitempty"`
+	Name        string        `json:"name"                        desc:"Function name as it appears in the source"`
+	Description string        `json:"description,omitempty"       desc:"Description of the function (@description)"`
+	Example     string        `json:"example,omitempty"           desc:"Example usage (@example)"`
+	Options     []OptionEntry `json:"options,omitempty"           desc:"Command-line options the function accepts (@option)"`
 	BadOptions  []string      `json:"-"`
-	Args        []Arg         `json:"args,omitempty"`
-	NoArgs      bool          `json:"noargs,omitempty"`
-	Sets        []SetVar      `json:"set,omitempty"`
-	Env         []SetVar      `json:"env,omitempty"`
-	ExitCodes   []ExitCode    `json:"exitcodes,omitempty"`
-	Stdin       []string          `json:"stdin,omitempty"`
-	Stdout      []string          `json:"stdout,omitempty"`
-	Stderr      []string          `json:"stderr,omitempty"`
-	See         []SeeRef          `json:"see,omitempty"`
-	Warnings    []string          `json:"warnings,omitempty"`
-	Deprecated  string            `json:"deprecated,omitempty"`
-	Section     string            `json:"section,omitempty"`
-	SectionDesc string            `json:"section_description,omitempty"`
+	Args        []Arg         `json:"args,omitempty"              desc:"Positional arguments the function accepts (@arg)"`
+	NoArgs      bool          `json:"noargs,omitempty"            desc:"True if the function explicitly takes no arguments (@noargs)"`
+	Sets        []SetVar      `json:"set,omitempty"               desc:"Variables set by the function (@set)"`
+	Env         []SetVar      `json:"env,omitempty"               desc:"Environment variables used or modified (@env)"`
+	ExitCodes   []ExitCode    `json:"exitcodes,omitempty"         desc:"Exit codes and their meanings (@exitcode)"`
+	Stdin       []string      `json:"stdin,omitempty"             desc:"Description of stdin usage (@stdin)"`
+	Stdout      []string      `json:"stdout,omitempty"            desc:"Description of stdout output (@stdout)"`
+	Stderr      []string      `json:"stderr,omitempty"            desc:"Description of stderr output (@stderr)"`
+	See         []SeeRef      `json:"see,omitempty"               desc:"See also references (@see)"`
+	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
+	Deprecated  string        `json:"deprecated,omitempty"        desc:"Deprecation notice (@deprecated)"`
+	Section     string        `json:"section,omitempty"           desc:"Section the function belongs to (@section)"`
+	SectionDesc string        `json:"section_description,omitempty" desc:"Description of the section"`
 }
 
 // hasDocumentation returns true if the FuncDoc has any documentation content.
@@ -48,41 +48,41 @@ func (f *FuncDoc) hasDocumentation() bool {
 // OptionForm represents one form of a command-line option (e.g., "-n" or "--repeat").
 // If Value is present and ValueSep is absent, the value is directly adjacent (e.g., "-n<count>").
 type OptionForm struct {
-	Name     string `json:"name"`
-	Value    string `json:"value,omitempty"`
-	ValueSep string `json:"value_sep,omitempty"`
+	Name     string `json:"name"               desc:"The flag name (e.g., \"-n\" or \"--repeat\")"`
+	Value    string `json:"value,omitempty"    desc:"Placeholder for the option's value (e.g., \"count\")"`
+	ValueSep string `json:"value_sep,omitempty" desc:"Separator between flag and value (\"=\" or \" \"; absent means value is adjacent)"`
 }
 
 // OptionEntry represents a valid @option with its parsed forms and description.
 type OptionEntry struct {
-	Forms      []OptionForm `json:"forms"`
-	Definition string       `json:"description"`
+	Forms      []OptionForm `json:"forms"       desc:"All forms of the option (e.g., short and long flags)"`
+	Definition string       `json:"description" desc:"Description of what the option does"`
 }
 
 // SeeRef represents a parsed @see reference.
 // Kind is one of: "ref" (anchor), "url", "path", "link" (markdown link), "text" (mixed content).
 type SeeRef struct {
-	Kind string `json:"kind"`
-	Text string `json:"text,omitempty"`
-	Href string `json:"href,omitempty"`
+	Kind string `json:"kind"           desc:"Reference type: ref (anchor), url, path, link (markdown link), or text"`
+	Text string `json:"text,omitempty" desc:"Display text for the reference"`
+	Href string `json:"href,omitempty" desc:"URL or path target for the reference"`
 }
 
 // Arg represents a parsed @arg entry.
 type Arg struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string `json:"name"        desc:"Argument name"`
+	Type        string `json:"type"        desc:"Argument type (e.g., String, Number)"`
+	Description string `json:"description" desc:"Description of the argument"`
 }
 
 // SetVar represents a parsed @set or @env entry.
 type SetVar struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string `json:"name"        desc:"Variable name"`
+	Type        string `json:"type"        desc:"Variable type"`
+	Description string `json:"description" desc:"Description of the variable"`
 }
 
 // ExitCode represents a parsed @exitcode entry.
 type ExitCode struct {
-	Code        string `json:"code"`
-	Description string `json:"description"`
+	Code        string `json:"code"        desc:"Exit code value (e.g., 0, 1, or a signal name)"`
+	Description string `json:"description" desc:"Meaning of this exit code"`
 }

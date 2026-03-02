@@ -47,7 +47,11 @@ func schemaForType(t reflect.Type) map[string]any {
 			if skip {
 				continue
 			}
-			props[name] = schemaForType(field.Type)
+			prop := schemaForType(field.Type)
+			if d := field.Tag.Get("desc"); d != "" {
+				prop["description"] = d
+			}
+			props[name] = prop
 			if !omitempty {
 				required = append(required, name)
 			}
