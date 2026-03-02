@@ -98,7 +98,3 @@ func renderSeeRef(ref SeeRef) string {
 	return ref.Text
 }
 
-// renderTocItem renders a TOC entry for a function name.
-func renderTocItem(title string) string {
-	return "* " + renderSeeRef(SeeRef{Kind: "ref", Text: title})
-}

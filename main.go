@@ -16,11 +16,15 @@ func main() {
 	var showSchema bool
 	var inputFile string
 	var outputFile string
+	var printTemplate string
+	var templateFile string
 	flag.StringVar(&format, "format", "markdown", "Output format: markdown, json")
 	flag.BoolVar(&sortFuncs, "sort", false, "Sort functions alphabetically")
 	flag.BoolVar(&showSchema, "schema", false, "Print JSON Schema for --format json output and exit")
 	flag.StringVarP(&inputFile, "input", "i", "-", "Input file (- for stdin)")
 	flag.StringVarP(&outputFile, "output", "o", "-", "Output file (- for stdout)")
+	flag.StringVar(&printTemplate, "print-template", "", "Print default template for format (md) and exit")
+	flag.StringVar(&templateFile, "template", "", "Use custom template file for markdown output")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `shdoc-ng - Generate Markdown documentation from annotated shell scripts.
 
@@ -61,6 +65,17 @@ Flags:
 		return
 	}
 
+	if printTemplate != "" {
+		switch printTemplate {
+		case "md", "markdown":
+			fmt.Fprint(output, defaultMarkdownTemplate)
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown template format: %s (supported: md)\n", printTemplate)
+			os.Exit(1)
+		}
+		return
+	}
+
 	var input io.Reader
 	if inputFile == "-" {
 		input = os.Stdin
@@ -88,7 +103,26 @@ Flags:
 
 	switch format {
 	case "markdown", "md":
-		fmt.Fprint(output, parser.Render())
+		var (
+			out  string
+			data []byte
+			err  error
+		)
+		if templateFile != "" {
+			data, err = os.ReadFile(templateFile)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error reading template file: %v\n", err)
+				os.Exit(1)
+			}
+			out, err = parser.RenderWithTemplate(string(data))
+		} else {
+			out, err = parser.Render()
+		}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error rendering markdown: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprint(output, out)
 	case "json":
 		out, err := parser.RenderJSON()
 		if err != nil {

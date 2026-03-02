@@ -1,0 +1,218 @@
+{{- /*
+================================================================================
+SHDOC-NG DEFAULT MARKDOWN TEMPLATE
+================================================================================
+
+DATA MODEL
+----------
+This template receives a Document at the top level. When rendering each
+function, funcBlock receives a FuncDoc value.
+
+Document fields (top-level):
+  .FileTitle       string    — @name value
+  .FileBrief       string    — brief description on @name line
+  .FileDescription string    — @description block at file level
+  .Authors         []string  — @author values
+  .License         string    — @license value
+  .Version         string    — @version value
+  .Functions       []FuncDoc
+
+FuncDoc fields (passed to funcBlock and all sec* templates):
+  .Name        string        — function name
+  .Section     string        — @section heading (## level), may be empty
+  .SectionDesc string        — text block after @section, may be empty
+  .Deprecated  string        — @deprecated value, may be empty
+  .Description string        — @description block
+  .Warnings    []string      — @warning values
+  .Example     string        — @example block (raw, use unindent to strip indent)
+  .Options     []OptionEntry — @option entries that passed validation
+  .BadOptions  []string      — @option entries that failed validation (raw text)
+  .Args        []ArgEntry    — @arg entries
+  .NoArgs      bool          — true when @noargs is present
+  .Sets        []VarEntry    — @set entries
+  .Env         []VarEntry    — @env entries
+  .ExitCodes   []ExitEntry   — @exitcode entries
+  .Stdin       []string      — @stdin values
+  .Stdout      []string      — @stdout values
+  .Stderr      []string      — @stderr values
+  .See         []SeeRef      — @see values
+
+OptionEntry:  .Forms []OptionForm, .Definition string
+OptionForm:   .Name string (e.g. "-v"), .Value string, .ValueSep string ("" | " " | "=")
+ArgEntry:     .Name string, .Type string, .Description string
+VarEntry:     .Name string, .Type string, .Description string
+ExitEntry:    .Code string, .Description string
+SeeRef:       opaque — pass to renderSeeRef to produce a markdown link
+
+TEMPLATE FUNCTIONS
+------------------
+  slug text            — GitHub-compatible anchor (lowercase, spaces→dashes)
+  unindent text        — strip common leading whitespace from a block
+  trimSpace text       — trim leading/trailing whitespace
+  replaceAll s old new — replace all occurrences of old with new in s
+  mdEscape text        — escape < and > for markdown (\< \>)
+  mdBold text          — wrap in **...**
+  mdLink text href     — produce [text](href)
+  mdAnchor text        — produce [text](#slug)
+  mdLinkify text       — wrap bare URLs in markdown links, leave existing links
+  optionFormStr form   — reconstruct display string for an OptionForm
+  renderSeeRef ref     — render a SeeRef to a markdown link or text
+
+SECTION TEMPLATE CONTRACT
+-------------------------
+Every sec* template produces either:
+  - empty string   — when the corresponding field is absent/empty
+  - "\n\ncontent"  — when the field has content (blank-line separator included)
+Content never ends with a trailing newline; funcBlock appends a final "\n".
+================================================================================
+*/ -}}
+
+{{- /* secDeprecated — @deprecated notice */ -}}
+{{- define "secDeprecated" -}}
+{{- if .Deprecated -}}
+{{- $r := trimSpace .Deprecated -}}
+{{if eq $r ""}}{{"\n\n**DEPRECATED.**"}}{{else}}{{"\n\n**DEPRECATED:** "}}{{$r}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secDescription — @description block */ -}}
+{{- define "secDescription" -}}
+{{- if .Description}}{{"\n\n"}}{{.Description}}{{- end -}}
+{{- end -}}
+
+{{- /* secWarnings — @warning list */ -}}
+{{- define "secWarnings" -}}
+{{- if .Warnings}}{{"\n\n#### Warnings\n\n"}}{{range $i, $w := .Warnings}}{{if $i}}{{"\n"}}{{end}}* {{$w}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secExample — @example fenced code block */ -}}
+{{- define "secExample" -}}
+{{- if .Example}}{{"\n\n#### Example\n\n```bash\n"}}{{unindent .Example}}{{"\n```"}}{{- end -}}
+{{- end -}}
+
+{{- /*
+secOptions — @option list (valid entries) and bad-option fallback lines.
+
+Each valid option entry renders as:
+  * **-f** | **--flag**
+                          ← blank line between term and definition
+    Definition text.
+                          ← blank line between consecutive options
+Bad options (entries that failed format validation) follow with no blank lines.
+*/ -}}
+{{- define "secOptions" -}}
+{{- if or .Options .BadOptions}}{{"\n\n#### Options\n\n"}}{{range $i, $o := .Options}}{{if $i}}{{"\n\n"}}{{end}}* {{range $j, $f := $o.Forms}}{{if $j}} | {{end}}{{mdBold (mdEscape (optionFormStr $f))}}{{end}}{{"\n\n  "}}{{$o.Definition}}{{end}}{{if and .Options .BadOptions}}{{"\n\n"}}{{end}}{{range $i, $b := .BadOptions}}{{if $i}}{{"\n"}}{{end}}* {{$b}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secArgs — @arg list; $@ renders as **...** */ -}}
+{{- define "secArgs" -}}
+{{- if .Args}}{{"\n\n#### Arguments\n\n"}}{{range $i, $a := .Args}}{{if $i}}{{"\n"}}{{end}}{{if eq $a.Name "$@"}}* **...** ({{$a.Type}}): {{$a.Description}}{{else}}* **{{$a.Name}}** ({{$a.Type}}): {{$a.Description}}{{end}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secNoArgs — @noargs marker */ -}}
+{{- define "secNoArgs" -}}
+{{- if .NoArgs}}{{"\n\n_Function has no arguments._"}}{{- end -}}
+{{- end -}}
+
+{{- /* secSets — @set list */ -}}
+{{- define "secSets" -}}
+{{- if .Sets}}{{"\n\n#### Variables set\n\n"}}{{range $i, $s := .Sets}}{{if $i}}{{"\n"}}{{end}}* **{{$s.Name}}** ({{$s.Type}}): {{$s.Description}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secEnv — @env list */ -}}
+{{- define "secEnv" -}}
+{{- if .Env}}{{"\n\n#### Environment variables\n\n"}}{{range $i, $e := .Env}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Name}}** ({{$e.Type}}): {{$e.Description}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secExitCodes — @exitcode list */ -}}
+{{- define "secExitCodes" -}}
+{{- if .ExitCodes}}{{"\n\n#### Exit codes\n\n"}}{{range $i, $e := .ExitCodes}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Code}}**: {{$e.Description}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secStdin — @stdin list; multi-line items get continuation lines indented */ -}}
+{{- define "secStdin" -}}
+{{- if .Stdin}}{{"\n\n#### Input on stdin\n\n"}}{{range $i, $s := .Stdin}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $s "\n" "\n  "}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secStdout — @stdout list */ -}}
+{{- define "secStdout" -}}
+{{- if .Stdout}}{{"\n\n#### Output on stdout\n\n"}}{{range $i, $s := .Stdout}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $s "\n" "\n  "}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secStderr — @stderr list */ -}}
+{{- define "secStderr" -}}
+{{- if .Stderr}}{{"\n\n#### Output on stderr\n\n"}}{{range $i, $s := .Stderr}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $s "\n" "\n  "}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /* secSee — @see list; each entry rendered via renderSeeRef */ -}}
+{{- define "secSee" -}}
+{{- if .See}}{{"\n\n#### See also\n\n"}}{{range $i, $s := .See}}{{if $i}}{{"\n"}}{{end}}* {{renderSeeRef $s}}{{end}}{{- end -}}
+{{- end -}}
+
+{{- /*
+funcBlock renders a complete function documentation block.
+If .Section is set, a "## Section" heading (with optional description) is
+emitted first. Then the "### FuncName" heading, followed by all sections.
+Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the block.
+*/ -}}
+{{- define "funcBlock" -}}
+{{- if .Section -}}
+## {{.Section}}{{if .SectionDesc}}{{"\n\n"}}{{.SectionDesc}}{{end}}{{"\n\n"}}
+{{- end -}}
+### {{.Name}}
+{{- template "secDeprecated"  .}}
+{{- template "secDescription" .}}
+{{- template "secWarnings"    .}}
+{{- template "secExample"     .}}
+{{- template "secOptions"     .}}
+{{- template "secArgs"        .}}
+{{- template "secNoArgs"      .}}
+{{- template "secSets"        .}}
+{{- template "secEnv"         .}}
+{{- template "secExitCodes"   .}}
+{{- template "secStdin"       .}}
+{{- template "secStdout"      .}}
+{{- template "secStderr"      .}}
+{{- template "secSee"         .}}
+{{- "\n"}}
+{{- end -}}
+
+{{- /* ── Document body ──────────────────────────────────────────────────── */}}
+
+{{- /* File-level header: title, brief, description, authors, license, version */}}
+{{- if .FileTitle}}# {{.FileTitle}}
+
+{{if .FileBrief}}{{.FileBrief}}
+
+{{end -}}
+{{- if .FileDescription}}## Overview
+
+{{.FileDescription}}
+
+{{end -}}
+{{- if .Authors}}#### Authors
+
+{{range .Authors}}* {{.}}
+{{end}}
+{{end -}}
+{{- if .License}}#### License
+
+{{.License}}
+
+{{end -}}
+{{- if .Version}}#### Version
+
+{{.Version}}
+
+{{end -}}
+{{- end -}}
+
+{{- /* Table of contents */}}
+{{- if .Functions}}## Index
+
+{{range .Functions}}* {{mdAnchor .Name}}
+{{end}}
+{{end -}}
+
+{{- /* Function blocks — blank line between consecutive blocks */}}
+{{- range $i, $f := .Functions}}{{if $i}}
+{{end}}{{template "funcBlock" $f}}{{end}}

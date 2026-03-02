@@ -137,7 +137,10 @@ func TestConformance(t *testing.T) {
 						parser.ProcessLine(line)
 					}
 
-					actual := parser.Render()
+					actual, err := parser.Render()
+					if err != nil {
+						t.Fatalf("Render() error: %v", err)
+					}
 					expected := string(tc.expected)
 
 					if actual != expected {
@@ -306,7 +309,10 @@ mike() {
 		return parser.doc.Functions[i].Name < parser.doc.Functions[j].Name
 	})
 
-	output := parser.Render()
+	output, err := parser.Render()
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
 
 	// Functions should appear in alphabetical order
 	alphaIdx := strings.Index(output, "### alpha")

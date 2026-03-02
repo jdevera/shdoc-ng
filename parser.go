@@ -184,6 +184,14 @@ var (
 	nonCommentLine = regexp.MustCompile(`^[^#]*$`)
 )
 
+// concat joins two strings with a newline, or returns the non-empty one.
+func concat(x, text string) string {
+	if x == "" {
+		return text
+	}
+	return x + "\n" + text
+}
+
 // ProcessLine processes a single line of input.
 func (p *Parser) ProcessLine(line string) {
 	p.lineNum++
@@ -486,7 +494,12 @@ func (p *Parser) ProcessLine(line string) {
 	}
 }
 
-// Render produces the final document output.
-func (p *Parser) Render() string {
-	return renderDocument(&p.doc)
+// Render produces the final document output using the default template.
+func (p *Parser) Render() (string, error) {
+	return renderWithTemplate(&p.doc, defaultMarkdownTemplate)
+}
+
+// RenderWithTemplate produces the final document output using the given template text.
+func (p *Parser) RenderWithTemplate(tmplText string) (string, error) {
+	return renderWithTemplate(&p.doc, tmplText)
 }

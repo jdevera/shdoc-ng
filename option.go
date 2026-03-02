@@ -83,18 +83,3 @@ func processAtOption(text string) ([]OptionForm, string, bool) {
 	return parseOptionForms(term), definition, true
 }
 
-// renderOptionTerm renders the option forms for markdown output.
-// Each form is bolded; angle brackets are escaped; forms are joined with " | ".
-func renderOptionTerm(forms []OptionForm) string {
-	parts := make([]string, 0, len(forms))
-	for _, f := range forms {
-		s := f.Name
-		if f.Value != "" {
-			s += f.ValueSep + "<" + f.Value + ">"
-		}
-		s = strings.ReplaceAll(s, "<", `\<`)
-		s = strings.ReplaceAll(s, ">", `\>`)
-		parts = append(parts, "**"+s+"**")
-	}
-	return strings.Join(parts, " | ")
-}
