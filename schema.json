@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Schema for the JSON output produced by shdoc-ng --format json",
+  "properties": {
+    "authors": {
+      "description": "List of authors (@author)",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "brief": {
+      "description": "One-line summary of the script (@brief)",
+      "type": "string"
+    },
+    "description": {
+      "description": "Extended description of the script (@description)",
+      "type": "string"
+    },
+    "functions": {
+      "description": "Documented functions found in the script",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "args": {
+            "description": "Positional arguments the function accepts (@arg)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Description of the argument",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Argument name",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Argument type (e.g., String, Number)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "description"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "deprecated": {
+            "description": "Deprecation notice (@deprecated)",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the function (@description)",
+            "type": "string"
+          },
+          "env": {
+            "description": "Environment variables used or modified (@env)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Description of the variable",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Variable name",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Variable type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "description"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "example": {
+            "description": "Example usage (@example)",
+            "type": "string"
+          },
+          "exitcodes": {
+            "description": "Exit codes and their meanings (@exitcode)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "description": "Exit code value (e.g., 0, 1, or a signal name)",
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Meaning of this exit code",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "description"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "Function name as it appears in the source",
+            "type": "string"
+          },
+          "noargs": {
+            "description": "True if the function explicitly takes no arguments (@noargs)",
+            "type": "boolean"
+          },
+          "options": {
+            "description": "Command-line options the function accepts (@option)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Description of what the option does",
+                  "type": "string"
+                },
+                "forms": {
+                  "description": "All forms of the option (e.g., short and long flags)",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "description": "The flag name (e.g., \"-n\" or \"--repeat\")",
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "Placeholder for the option's value (e.g., \"count\")",
+                        "type": "string"
+                      },
+                      "value_sep": {
+                        "description": "Separator between flag and value (\"=\" or \" \"; absent means value is adjacent)",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "forms",
+                "description"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "section": {
+            "description": "Section the function belongs to (@section)",
+            "type": "string"
+          },
+          "section_description": {
+            "description": "Description of the section",
+            "type": "string"
+          },
+          "see": {
+            "description": "See also references (@see)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "href": {
+                  "description": "URL or path target for the reference",
+                  "type": "string"
+                },
+                "kind": {
+                  "description": "Reference type: ref (anchor), url, path, link (markdown link), or text",
+                  "type": "string"
+                },
+                "text": {
+                  "description": "Display text for the reference",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "set": {
+            "description": "Variables set by the function (@set)",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Description of the variable",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Variable name",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Variable type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "description"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "stderr": {
+            "description": "Description of stderr output (@stderr)",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "stdin": {
+            "description": "Description of stdin usage (@stdin)",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "stdout": {
+            "description": "Description of stdout output (@stdout)",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "warnings": {
+            "description": "Warnings about usage or behavior (@warning)",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "license": {
+      "description": "License identifier (@license)",
+      "type": "string"
+    },
+    "name": {
+      "description": "Title or name of the shell script (@file)",
+      "type": "string"
+    },
+    "version": {
+      "description": "Version string (@version)",
+      "type": "string"
+    }
+  },
+  "title": "shdoc-ng JSON output",
+  "type": "object"
+}

@@ -182,6 +182,20 @@ func checkOutputMatchesSchema(t *testing.T, jsonObj map[string]any, schemaNode m
 	}
 }
 
+func TestSchemaFileUpToDate(t *testing.T) {
+	committed, err := os.ReadFile("schema.json")
+	if err != nil {
+		t.Fatalf("read schema.json: %v", err)
+	}
+	generated, err := renderSchema()
+	if err != nil {
+		t.Fatalf("renderSchema: %v", err)
+	}
+	if string(committed) != generated {
+		t.Error("schema.json is out of date; regenerate with: go run . --schema > schema.json")
+	}
+}
+
 func TestSchemaMatchesJSONOutput(t *testing.T) {
 	f, err := os.Open("examples/showcase.sh")
 	if err != nil {
