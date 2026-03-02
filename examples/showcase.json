@@ -1,0 +1,133 @@
+{
+  "name": "mylib",
+  "brief": "A showcase of every shdoc-ng annotation.",
+  "description": "This library demonstrates all supported tags.\n\nFeatures include:\n* Function documentation\n* Deprecation notices\n* Grouped sections",
+  "authors": [
+    "Alice",
+    "Bob"
+  ],
+  "license": "MIT",
+  "version": "2.0.0",
+  "functions": [
+    {
+      "name": "greet",
+      "section": "String Utilities",
+      "section_description": "Common string operations.",
+      "description": "Greet someone by name.\n\nPrints a friendly greeting to stdout. Returns non-zero\nif no name is provided.",
+      "example": "   greet \"World\"\n   greet \"$(whoami)\"",
+      "options": [
+        {
+          "term": "-u | --uppercase",
+          "description": "Uppercase the name."
+        },
+        {
+          "term": "-n \u003ccount\u003e | --repeat=\u003ccount\u003e",
+          "description": "Repeat the greeting."
+        },
+        {
+          "term": "-r | --reverse",
+          "description": "Reverse the greeting."
+        }
+      ],
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "The name to greet."
+        },
+        {
+          "name": "$@",
+          "type": "string",
+          "description": "Additional names."
+        }
+      ],
+      "set": [
+        {
+          "name": "LAST_GREETED",
+          "type": "string",
+          "description": "The last name that was greeted."
+        }
+      ],
+      "exitcodes": [
+        {
+          "code": "0",
+          "description": "If successful."
+        },
+        {
+          "code": "1",
+          "description": "If no name was provided."
+        }
+      ],
+      "env": [
+        {
+          "name": "HOME",
+          "type": "string",
+          "description": "The user's home directory."
+        }
+      ],
+      "stdin": [
+        "A fallback name, read if $1 is empty."
+      ],
+      "stdout": [
+        "The greeting string."
+      ],
+      "stderr": [
+        "A warning when no name is given."
+      ],
+      "see": [
+        "farewell()",
+        "[Bash scripting guide](https://tldp.org/LDP/abs/html/)."
+      ],
+      "warnings": [
+        "Do not pass empty strings."
+      ]
+    },
+    {
+      "name": "farewell",
+      "description": "Say goodbye.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "The name to bid farewell."
+        }
+      ],
+      "exitcodes": [
+        {
+          "code": "0",
+          "description": "Always."
+        }
+      ],
+      "see": [
+        "greet()"
+      ]
+    },
+    {
+      "name": "old_hello",
+      "section": "Deprecated Utilities",
+      "section_description": "Functions kept for backwards compatibility.",
+      "description": "This function is obsolete.",
+      "deprecated": "Use greet() instead."
+    },
+    {
+      "name": "old_noop",
+      "deprecated": " "
+    },
+    {
+      "name": "braceless_func",
+      "description": "A function whose opening brace\nis on the next line.",
+      "noargs": true
+    },
+    {
+      "name": "subshell_func",
+      "description": "A subshell function using parens\ninstead of braces.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "A command to run in a subshell."
+        }
+      ]
+    }
+  ]
+}
