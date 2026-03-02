@@ -21,6 +21,21 @@ func main() {
 	flag.BoolVar(&showSchema, "schema", false, "Print JSON Schema for --format json output and exit")
 	flag.StringVarP(&inputFile, "input", "i", "-", "Input file (- for stdin)")
 	flag.StringVarP(&outputFile, "output", "o", "-", "Output file (- for stdout)")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `shdoc-ng - Generate Markdown documentation from annotated shell scripts.
+
+Reads a shell script and produces documentation by extracting structured
+comment blocks written above shell functions. Supports tags like @description,
+@arg, @option, @exitcode, @example, and more.
+
+Usage:
+  shdoc-ng [flags]
+  shdoc-ng < script.sh > docs.md
+
+Flags:
+`)
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	var output io.Writer
