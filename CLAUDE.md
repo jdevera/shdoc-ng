@@ -14,7 +14,9 @@ go test ./...               # run all tests (includes conformance)
 go test -run TestConformance/option  # run a single conformance case
 ```
 
-Usage: `./shdoc-ng < script.sh > output.md`
+Usage: `./shdoc-ng -i script.sh -o output.md`
+
+Also supported: `./shdoc-ng < script.sh > output.md` (stdin/stdout are the defaults for `-i` and `-o`)
 
 ## Architecture
 
