@@ -7,6 +7,7 @@ A showcase of every shdoc-ng annotation.
 This library demonstrates all supported tags.
 
 Features include:
+
 * Function documentation
 * Deprecation notices
 * Grouped sections
