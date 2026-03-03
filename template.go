@@ -2,12 +2,18 @@ package main
 
 import (
 	_ "embed"
+	"bytes"
 	"strings"
 	"text/template"
+
+	"github.com/yuin/goldmark"
 )
 
 //go:embed templates/markdown.tmpl
 var defaultMarkdownTemplate string
+
+//go:embed templates/html.tmpl
+var defaultHTMLTemplate string
 
 // optionFormStr reconstructs the raw display string for one OptionForm.
 // e.g. OptionForm{Name: "--file", Value: "path", ValueSep: " "} → "--file <path>"
@@ -49,9 +55,27 @@ func mdLinkify(s string) string {
 	return padded
 }
 
+// md2html converts a Markdown string to an HTML string.
+func md2html(s string) string {
+	var buf bytes.Buffer
+	if err := goldmark.Convert([]byte(s), &buf); err != nil {
+		return s
+	}
+	return buf.String()
+}
+
+// md2inline converts a Markdown string to HTML and strips the wrapping <p>
+// tags, suitable for use inside table cells or other inline contexts.
+func md2inline(s string) string {
+	result := strings.TrimSpace(md2html(s))
+	result = strings.TrimPrefix(result, "<p>")
+	result = strings.TrimSuffix(result, "</p>")
+	return strings.TrimSpace(result)
+}
+
 // funcMap is the template function map used for rendering.
 var funcMap = template.FuncMap{
-	"slug":         slug,
+	"slug":          slug,
 	"unindent":     unindent,
 	"optionFormStr": optionFormStr,
 	"mdEscape":     mdEscape,
@@ -62,6 +86,8 @@ var funcMap = template.FuncMap{
 	"renderSeeRef": renderSeeRef,
 	"trimSpace":    strings.TrimSpace,
 	"replaceAll":   strings.ReplaceAll,
+	"md2html":      md2html,
+	"md2inline":    md2inline,
 }
 
 // renderWithTemplate renders a Document using the given template text.

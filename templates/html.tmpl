@@ -1,0 +1,987 @@
+{{- define "seeRef" -}}
+{{- if eq .Kind "ref" -}}<a href="#{{slug .Text}}" class="link-ref">{{.Text | html}}</a>
+{{- else if eq .Kind "url" -}}<a href="{{.Href | html}}" class="link-ext" target="_blank" rel="noopener">{{.Href | html}}</a>
+{{- else if eq .Kind "link" -}}<a href="{{.Href | html}}" class="link-ext" target="_blank" rel="noopener">{{if .Text}}{{.Text | html}}{{else}}{{.Href | html}}{{end}}</a>
+{{- else if eq .Kind "path" -}}<a href="{{.Href | html}}" class="link-path">{{.Href | html}}</a>
+{{- else -}}{{.Text | md2inline}}
+{{- end -}}
+{{- end -}}
+
+{{- define "funcBlock" -}}
+<section class="func{{if .Section}} has-section{{end}}" id="{{slug .Name}}">
+
+{{- if .Section}}
+  <div class="section-heading">
+    <h2 class="section-title">{{.Section | html}}</h2>
+    {{- if .SectionDesc}}<div class="section-desc">{{.SectionDesc | md2html}}</div>{{end}}
+  </div>
+{{- end}}
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}</h3>
+    <a href="#{{slug .Name}}" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+
+{{- if .Deprecated}}
+  <div class="badge-deprecated">
+    <span class="badge-label">deprecated</span>
+    {{- $r := trimSpace .Deprecated}}{{if $r}} <span class="badge-reason">{{$r | md2inline}}</span>{{end}}
+  </div>
+{{- end}}
+
+{{- if .Description}}
+  <div class="func-desc">{{.Description | md2html}}</div>
+{{- end}}
+
+{{- if .Warnings}}
+  <div class="sec warnings">
+    <h4 class="sec-label">Warnings</h4>
+    <ul class="warning-list">
+      {{- range .Warnings}}
+      <li>{{. | md2inline}}</li>
+      {{- end}}
+    </ul>
+  </div>
+{{- end}}
+
+{{- if .Example}}
+  <div class="sec example">
+    <h4 class="sec-label">Example</h4>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <pre><code>{{unindent .Example | html}}</code></pre>
+    </div>
+  </div>
+{{- end}}
+
+{{- if or .Options .BadOptions}}
+  <div class="sec options">
+    <h4 class="sec-label">Options</h4>
+    <dl class="option-list">
+      {{- range .Options}}
+      <dt class="opt-term">{{range $j, $f := .Forms}}{{if $j}}<span class="opt-pipe">|</span> {{end}}<code>{{optionFormStr $f | html}}</code> {{end}}</dt>
+      <dd class="opt-def">{{.Definition | md2inline}}</dd>
+      {{- end}}
+      {{- range .BadOptions}}
+      <dt class="opt-term opt-bad"><code>{{. | html}}</code></dt>
+      <dd class="opt-def opt-bad-note">invalid option format</dd>
+      {{- end}}
+    </dl>
+  </div>
+{{- end}}
+
+{{- if .Args}}
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        {{- range .Args}}
+        <tr>
+          <td><code>{{if eq .Name "$@"}}...{{else}}{{.Name | html}}{{end}}</code></td>
+          <td><span class="type-badge">{{.Type | html}}</span></td>
+          <td>{{.Description | md2inline}}</td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </div>
+{{- end}}
+
+{{- if .NoArgs}}
+  <p class="no-args">This function takes no arguments.</p>
+{{- end}}
+
+{{- if .Sets}}
+  <div class="sec sets">
+    <h4 class="sec-label">Variables set</h4>
+    <table class="data-table">
+      <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        {{- range .Sets}}
+        <tr>
+          <td><code>{{.Name | html}}</code></td>
+          <td><span class="type-badge">{{.Type | html}}</span></td>
+          <td>{{.Description | md2inline}}</td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </div>
+{{- end}}
+
+{{- if .Env}}
+  <div class="sec env">
+    <h4 class="sec-label">Environment variables</h4>
+    <table class="data-table">
+      <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        {{- range .Env}}
+        <tr>
+          <td><code>{{.Name | html}}</code></td>
+          <td><span class="type-badge">{{.Type | html}}</span></td>
+          <td>{{.Description | md2inline}}</td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </div>
+{{- end}}
+
+{{- if .ExitCodes}}
+  <div class="sec exitcodes">
+    <h4 class="sec-label">Exit codes</h4>
+    <table class="data-table">
+      <thead><tr><th>Code</th><th>Description</th></tr></thead>
+      <tbody>
+        {{- range .ExitCodes}}
+        <tr>
+          <td><code>{{.Code | html}}</code></td>
+          <td>{{.Description | md2inline}}</td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </div>
+{{- end}}
+
+{{- if .Stdin}}
+  <div class="sec stdin">
+    <h4 class="sec-label">Input on stdin</h4>
+    <ul class="io-list">
+      {{- range .Stdin}}<li>{{. | md2inline}}</li>{{end}}
+    </ul>
+  </div>
+{{- end}}
+
+{{- if .Stdout}}
+  <div class="sec stdout">
+    <h4 class="sec-label">Output on stdout</h4>
+    <ul class="io-list">
+      {{- range .Stdout}}<li>{{. | md2inline}}</li>{{end}}
+    </ul>
+  </div>
+{{- end}}
+
+{{- if .Stderr}}
+  <div class="sec stderr">
+    <h4 class="sec-label">Output on stderr</h4>
+    <ul class="io-list">
+      {{- range .Stderr}}<li>{{. | md2inline}}</li>{{end}}
+    </ul>
+  </div>
+{{- end}}
+
+{{- if .See}}
+  <div class="sec see">
+    <h4 class="sec-label">See also</h4>
+    <ul class="see-list">
+      {{- range .See}}<li>{{template "seeRef" .}}</li>{{end}}
+    </ul>
+  </div>
+{{- end}}
+
+</section>
+{{- end -}}
+
+<!DOCTYPE html>
+<html lang="en" data-theme="mocha">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{if .FileTitle}}{{.FileTitle | html}}{{else}}Shell Docs{{end}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /*
+    ════════════════════════════════════════════════════════════════════
+    LAYER 1 — PALETTE
+    Raw colour tokens for each Catppuccin flavour, prefixed --ctp-*.
+    These are the only place hex values appear.
+    ════════════════════════════════════════════════════════════════════
+    */
+
+    /* ── Catppuccin Mocha ───────────────────────────────────────────── */
+    [data-theme="mocha"] {
+      --ctp-base:      #1e1e2e; --ctp-mantle:   #181825; --ctp-crust:    #11111b;
+      --ctp-surface0:  #313244; --ctp-surface1: #45475a; --ctp-surface2: #585b70;
+      --ctp-overlay0:  #6c7086; --ctp-overlay1: #7f849c; --ctp-overlay2: #9399b2;
+      --ctp-subtext0:  #a6adc8; --ctp-subtext1: #bac2de; --ctp-text:     #cdd6f4;
+      --ctp-rosewater: #f5e0dc; --ctp-flamingo: #f2cdcd; --ctp-pink:     #f5c2e7;
+      --ctp-mauve:     #cba6f7; --ctp-red:      #f38ba8; --ctp-maroon:   #eba0ac;
+      --ctp-peach:     #fab387; --ctp-yellow:   #f9e2af; --ctp-green:    #a6e3a1;
+      --ctp-teal:      #94e2d5; --ctp-sky:      #89dceb; --ctp-sapphire: #74c7ec;
+      --ctp-blue:      #89b4fa; --ctp-lavender: #b4befe;
+    }
+
+    /* ── Catppuccin Macchiato ───────────────────────────────────────── */
+    [data-theme="macchiato"] {
+      --ctp-base:      #24273a; --ctp-mantle:   #1e2030; --ctp-crust:    #181926;
+      --ctp-surface0:  #363a4f; --ctp-surface1: #494d64; --ctp-surface2: #5b6078;
+      --ctp-overlay0:  #6e738d; --ctp-overlay1: #8087a2; --ctp-overlay2: #939ab7;
+      --ctp-subtext0:  #a5adcb; --ctp-subtext1: #b8c0e0; --ctp-text:     #cad3f5;
+      --ctp-rosewater: #f4dbd6; --ctp-flamingo: #f0c6c6; --ctp-pink:     #f5bde6;
+      --ctp-mauve:     #c6a0f6; --ctp-red:      #ed8796; --ctp-maroon:   #ee99a0;
+      --ctp-peach:     #f5a97f; --ctp-yellow:   #eed49f; --ctp-green:    #a6da95;
+      --ctp-teal:      #8bd5ca; --ctp-sky:      #91d7e3; --ctp-sapphire: #7dc4e4;
+      --ctp-blue:      #8aadf4; --ctp-lavender: #b7bdf8;
+    }
+
+    /* ── Catppuccin Frappé ──────────────────────────────────────────── */
+    [data-theme="frappe"] {
+      --ctp-base:      #303446; --ctp-mantle:   #292c3c; --ctp-crust:    #232634;
+      --ctp-surface0:  #414559; --ctp-surface1: #51576d; --ctp-surface2: #626880;
+      --ctp-overlay0:  #737994; --ctp-overlay1: #838ba7; --ctp-overlay2: #949cbb;
+      --ctp-subtext0:  #a5adce; --ctp-subtext1: #b5bfe2; --ctp-text:     #c6d0f5;
+      --ctp-rosewater: #f2d5cf; --ctp-flamingo: #eebebe; --ctp-pink:     #f4b8e4;
+      --ctp-mauve:     #ca9ee6; --ctp-red:      #e78284; --ctp-maroon:   #ea999c;
+      --ctp-peach:     #ef9f76; --ctp-yellow:   #e5c890; --ctp-green:    #a6d189;
+      --ctp-teal:      #81c8be; --ctp-sky:      #99d1db; --ctp-sapphire: #85c1dc;
+      --ctp-blue:      #8caaee; --ctp-lavender: #babbf1;
+    }
+
+    /* ── Catppuccin Latte ───────────────────────────────────────────── */
+    [data-theme="latte"] {
+      --ctp-base:      #eff1f5; --ctp-mantle:   #e6e9ef; --ctp-crust:    #dce0e8;
+      --ctp-surface0:  #ccd0da; --ctp-surface1: #bcc0cc; --ctp-surface2: #acb0be;
+      --ctp-overlay0:  #9ca0b0; --ctp-overlay1: #8c8fa1; --ctp-overlay2: #7c7f93;
+      --ctp-subtext0:  #6c6f85; --ctp-subtext1: #5c5f77; --ctp-text:     #4c4f69;
+      --ctp-rosewater: #dc8a78; --ctp-flamingo: #dd7878; --ctp-pink:     #ea76cb;
+      --ctp-mauve:     #8839ef; --ctp-red:      #d20f39; --ctp-maroon:   #e64553;
+      --ctp-peach:     #fe640b; --ctp-yellow:   #df8e1d; --ctp-green:    #40a02b;
+      --ctp-teal:      #179299; --ctp-sky:      #04a5e5; --ctp-sapphire: #209fb5;
+      --ctp-blue:      #1e66f5; --ctp-lavender: #7287fd;
+    }
+
+    /*
+    ════════════════════════════════════════════════════════════════════
+    LAYER 2 — SEMANTIC THEME
+    Role-based variables that map a purpose to a palette token.
+    Defined once for all [data-theme] values so every flavour inherits
+    the same mapping automatically.
+
+    To create a custom theme:
+      1. Define [data-theme="mytheme"] with --ctp-* values from any
+         palette, OR
+      2. Just override the --theme-* vars directly — no palette needed.
+    ════════════════════════════════════════════════════════════════════
+    */
+    [data-theme] {
+      /* Backgrounds */
+      --theme-bg:          var(--ctp-base);      /* page background */
+      --theme-bg-sidebar:  var(--ctp-mantle);    /* sidebar / panels */
+      --theme-bg-code:     var(--ctp-crust);     /* fenced code blocks */
+      --theme-surface:     var(--ctp-surface0);  /* inputs, inline code bg, button bg */
+
+      /* Borders */
+      --theme-border:      var(--ctp-surface0);  /* default dividers */
+      --theme-border-faint:var(--ctp-surface1);  /* subtle separators, scrollbars */
+
+      /* Text */
+      --theme-text:        var(--ctp-text);      /* body copy */
+      --theme-text-secondary: var(--ctp-subtext1); /* descriptions, table cells */
+      --theme-text-muted:  var(--ctp-overlay1);  /* labels, metadata */
+      --theme-text-faint:  var(--ctp-overlay0);  /* placeholders, sec-labels, anchors */
+
+      /* Accent & headings */
+      --theme-accent:      var(--ctp-lavender);  /* titles, active TOC, focus rings */
+      --theme-fn-name:     var(--ctp-sky);       /* function name headings */
+      --theme-section:     var(--ctp-mauve);     /* @section headings */
+
+      /* Interactive */
+      --theme-link:        var(--ctp-blue);      /* hyperlinks */
+
+      /* Code */
+      --theme-code-text:   var(--ctp-sky);       /* inline code foreground */
+
+      /* Semantic badges */
+      --theme-type:        var(--ctp-peach);     /* type badges (string, int, …) */
+      --theme-option:      var(--ctp-green);     /* option flag tokens */
+      --theme-deprecated:  var(--ctp-red);       /* deprecated badge */
+      --theme-deprecated-subtle: var(--ctp-maroon); /* deprecated reason text */
+      --theme-warning:     var(--ctp-yellow);    /* @warning items */
+      --theme-success:     var(--ctp-green);     /* copy-button success flash */
+    }
+
+    /*
+    ════════════════════════════════════════════════════════════════════
+    LAYER 3 — COMPONENTS
+    All rules reference --theme-* only. No palette tokens here.
+    ════════════════════════════════════════════════════════════════════
+    */
+
+    /* ── Reset & base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--theme-bg);
+      color: var(--theme-text);
+      line-height: 1.6;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ────────────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--theme-bg-sidebar);
+      border-right: 1px solid var(--theme-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+
+    .sidebar-brand {
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid var(--theme-border);
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--theme-accent);
+      letter-spacing: 0.02em;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .brand-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .brand-version {
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--theme-text-secondary);
+      background: var(--theme-surface);
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+    }
+
+    .brand-license {
+      font-size: 0.7rem;
+      color: var(--theme-text-muted);
+    }
+
+    .sidebar-search {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--theme-border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      background: var(--theme-surface);
+      border: 1px solid var(--theme-border-faint);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--theme-text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .sidebar-search input::placeholder { color: var(--theme-text-faint); }
+    .sidebar-search input:focus { border-color: var(--theme-accent); }
+
+    .toc {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--theme-border-faint) transparent;
+    }
+
+    .toc::-webkit-scrollbar { width: 4px; }
+    .toc::-webkit-scrollbar-track { background: transparent; }
+    .toc::-webkit-scrollbar-thumb { background: var(--theme-border-faint); border-radius: 2px; }
+
+    .toc-item {
+      display: block;
+      padding: 0.3rem 1.25rem 0.3rem 1rem;
+      font-size: 0.8rem;
+      color: var(--theme-text-secondary);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-item:hover { color: var(--theme-text); background: var(--theme-surface); }
+
+    .toc-item.active {
+      color: var(--theme-accent);
+      border-left-color: var(--theme-accent);
+      background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+    }
+
+    /* ── Theme picker ───────────────────────────────────────────────── */
+    .theme-picker {
+      position: fixed;
+      top: 1rem;
+      right: 1.5rem;
+      z-index: 100;
+    }
+
+    .theme-picker select {
+      appearance: none;
+      background: var(--theme-bg-sidebar);
+      border: 1px solid var(--theme-border-faint);
+      border-radius: 7px;
+      padding: 0.35rem 2rem 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-family: 'Inter', inherit;
+      color: var(--theme-text-secondary);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s, color 0.15s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+    }
+
+    .theme-picker select:hover { border-color: var(--theme-text-faint); color: var(--theme-text); }
+    .theme-picker select:focus { border-color: var(--theme-accent); }
+
+    /* ── Page footer ────────────────────────────────────────────────── */
+    .page-footer {
+      margin-top: 4rem;
+      padding: 1.5rem 0 0;
+      border-top: 1px solid var(--theme-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--theme-text-faint);
+    }
+
+    .page-footer a { color: var(--theme-text-muted); text-decoration: none; }
+    .page-footer a:hover { color: var(--theme-text-secondary); text-decoration: underline; }
+
+    /* ── Main content ───────────────────────────────────────────────── */
+    .content {
+      overflow-y: auto;
+      height: 100vh;
+      scrollbar-width: thin;
+      scrollbar-color: var(--theme-border-faint) transparent;
+    }
+
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--theme-border-faint); border-radius: 3px; }
+
+    .content-inner {
+      max-width: 860px;
+      padding: 3rem 3rem 6rem;
+    }
+
+    /* ── File header ────────────────────────────────────────────────── */
+    .file-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--theme-border);
+    }
+
+    .file-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--theme-accent);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .file-brief {
+      font-size: 1rem;
+      color: var(--theme-text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .file-overview { margin-top: 1.5rem; }
+
+    .file-overview h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--theme-text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .file-overview div {
+      color: var(--theme-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .file-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .meta-group { display: flex; flex-direction: column; gap: 0.15rem; }
+
+    .meta-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--theme-text-faint);
+    }
+
+    .meta-value { font-size: 0.82rem; color: var(--theme-text-secondary); }
+
+    /* ── Function block ─────────────────────────────────────────────── */
+    .func {
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--theme-border);
+    }
+
+    .func:last-child { border-bottom: none; }
+
+    .section-heading {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--theme-border);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--theme-section);
+      letter-spacing: -0.01em;
+    }
+
+    .section-desc {
+      font-size: 0.85rem;
+      color: var(--theme-text-secondary);
+      margin-top: 0.35rem;
+    }
+
+    .func-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .func-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--theme-fn-name);
+      letter-spacing: -0.02em;
+    }
+
+    .func-sigil {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--theme-text-muted);
+      background: var(--theme-surface);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      margin-right: 0.25rem;
+      vertical-align: middle;
+    }
+
+    .func-anchor {
+      font-size: 0.9rem;
+      color: var(--theme-text-faint);
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .func-header:hover .func-anchor { opacity: 1; }
+
+    .func-desc {
+      font-size: 0.9rem;
+      color: var(--theme-text-secondary);
+      margin-bottom: 1.25rem;
+      line-height: 1.7;
+    }
+
+    /* ── Deprecated badge ───────────────────────────────────────────── */
+    .badge-deprecated {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: color-mix(in srgb, var(--theme-deprecated) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--theme-deprecated) 30%, transparent);
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--theme-deprecated);
+    }
+
+    .badge-reason { font-size: 0.82rem; color: var(--theme-deprecated-subtle); }
+
+    /* ── Section labels ─────────────────────────────────────────────── */
+    .sec { margin-top: 1.25rem; }
+
+    .sec-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--theme-text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    /* ── Code ───────────────────────────────────────────────────────── */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82em;
+      background: var(--theme-surface);
+      color: var(--theme-code-text);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+
+    .code-block {
+      position: relative;
+      background: var(--theme-bg-code);
+      border: 1px solid var(--theme-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-block pre {
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--theme-border-faint) transparent;
+    }
+
+    .code-block pre::-webkit-scrollbar { height: 4px; }
+    .code-block pre::-webkit-scrollbar-thumb { background: var(--theme-border-faint); }
+
+    .code-block code {
+      background: none;
+      color: var(--theme-text);
+      padding: 0;
+      font-size: 0.82rem;
+      line-height: 1.65;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: var(--theme-surface);
+      border: 1px solid var(--theme-border-faint);
+      border-radius: 5px;
+      padding: 0.3rem 0.4rem;
+      color: var(--theme-text-muted);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .code-block:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: var(--theme-text); }
+    .copy-btn.copied { color: var(--theme-success); }
+
+    /* ── Tables ─────────────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+    .data-table th {
+      text-align: left;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--theme-text-muted);
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid var(--theme-border);
+    }
+
+    .data-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 50%, transparent);
+      vertical-align: top;
+      color: var(--theme-text-secondary);
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: color-mix(in srgb, var(--theme-surface) 40%, transparent); }
+
+    .type-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75em;
+      color: var(--theme-type);
+      background: color-mix(in srgb, var(--theme-type) 10%, transparent);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+    }
+
+    /* ── Options ────────────────────────────────────────────────────── */
+    .option-list { display: grid; gap: 0.75rem; }
+
+    .opt-term { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+    .opt-term code {
+      color: var(--theme-option);
+      background: color-mix(in srgb, var(--theme-option) 10%, transparent);
+    }
+
+    .opt-bad .opt-term code { color: var(--theme-text-muted); }
+
+    .opt-pipe { color: var(--theme-text-faint); font-size: 0.8em; }
+
+    .opt-def {
+      margin: 0.2rem 0 0 0;
+      font-size: 0.85rem;
+      color: var(--theme-text-secondary);
+      padding-left: 0.5rem;
+      border-left: 2px solid var(--theme-border-faint);
+    }
+
+    .opt-bad-note { font-size: 0.75rem; color: var(--theme-text-faint); font-style: italic; }
+
+    /* ── Lists ──────────────────────────────────────────────────────── */
+    .warning-list, .io-list, .see-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .warning-list li {
+      font-size: 0.85rem;
+      color: var(--theme-warning);
+      background: color-mix(in srgb, var(--theme-warning) 8%, transparent);
+      border-left: 3px solid var(--theme-warning);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .io-list li, .see-list li {
+      font-size: 0.85rem;
+      color: var(--theme-text-secondary);
+      padding-left: 0.75rem;
+      position: relative;
+    }
+
+    .io-list li::before, .see-list li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--theme-text-faint);
+    }
+
+    .no-args {
+      font-size: 0.85rem;
+      color: var(--theme-text-muted);
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Links ──────────────────────────────────────────────────────── */
+    a.link-ref, a.link-ext, a.link-path {
+      color: var(--theme-link);
+      text-decoration: none;
+    }
+
+    a.link-ext::after {
+      content: '↗';
+      font-size: 0.7em;
+      margin-left: 0.2em;
+      color: var(--theme-text-faint);
+    }
+
+    a:hover { text-decoration: underline; }
+
+    /* ── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow: auto; }
+      .sidebar { height: auto; max-height: 40vh; position: relative; }
+      .content { height: auto; overflow: visible; }
+      .content-inner { padding: 1.5rem 1rem 4rem; }
+    }
+
+    /* ── Print ──────────────────────────────────────────────────────── */
+    @media print {
+      body { grid-template-columns: 1fr; background: white; color: black; }
+      .sidebar { display: none; }
+      .content { overflow: visible; height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-name">{{if .FileTitle}}{{.FileTitle | html}}{{else}}Shell Docs{{end}}</span>
+    {{if or .Version .License}}
+    <div class="brand-meta">
+      {{- if .Version}}<span class="brand-version">{{.Version | html}}</span>{{end}}
+      {{- if .License}}<span class="brand-license">{{.License | html}}</span>{{end}}
+    </div>
+    {{end}}
+  </div>
+
+  <div class="sidebar-search">
+    <input type="search" id="toc-search" placeholder="Filter functions…" oninput="filterToc(this.value)" autocomplete="off">
+  </div>
+
+  <nav class="toc" id="toc">
+    {{- range .Functions}}
+    <a href="#{{slug .Name}}" class="toc-item" data-name="{{.Name | html}}">{{.Name | html}}</a>
+    {{- end}}
+  </nav>
+
+</aside>
+
+<div class="theme-picker">
+  <select id="theme-select" onchange="setTheme(this.value)" title="Colour flavour">
+    <option value="mocha">Mocha</option>
+    <option value="macchiato">Macchiato</option>
+    <option value="frappe">Frappé</option>
+    <option value="latte">Latte</option>
+  </select>
+</div>
+
+<div class="content" id="content">
+  <div class="content-inner">
+
+    {{- if .FileTitle}}
+    <header class="file-header">
+      <h1 class="file-title">{{.FileTitle | html}}</h1>
+      {{- if .FileBrief}}<p class="file-brief">{{.FileBrief | md2inline}}</p>{{end}}
+
+      {{- if .FileDescription}}
+      <div class="file-overview">
+        <h2>Overview</h2>
+        <div>{{.FileDescription | md2html}}</div>
+      </div>
+      {{- end}}
+
+      {{- if or .Authors .Version .License}}
+      <div class="file-meta">
+        {{- if .Authors}}
+        <div class="meta-group">
+          <span class="meta-label">{{if eq (len .Authors) 1}}Author{{else}}Authors{{end}}</span>
+          {{- range .Authors}}<span class="meta-value">{{. | html}}</span>{{end}}
+        </div>
+        {{- end}}
+        {{- if .Version}}
+        <div class="meta-group">
+          <span class="meta-label">Version</span>
+          <span class="meta-value">{{.Version | html}}</span>
+        </div>
+        {{- end}}
+        {{- if .License}}
+        <div class="meta-group">
+          <span class="meta-label">License</span>
+          <span class="meta-value">{{.License | html}}</span>
+        </div>
+        {{- end}}
+      </div>
+      {{- end}}
+    </header>
+    {{- end}}
+
+    {{- range .Functions}}
+    {{template "funcBlock" .}}
+    {{- end}}
+
+    <footer class="page-footer">
+      <span>Generated by <a href="https://github.com/reconquest/shdoc" target="_blank" rel="noopener">shdoc-ng</a></span>
+      <span>Theme by <a href="https://catppuccin.com" target="_blank" rel="noopener">Catppuccin</a></span>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  // ── Theme selector ───────────────────────────────────────────────────
+  const html = document.documentElement;
+  const sel = document.getElementById('theme-select');
+  const flavours = ['mocha', 'macchiato', 'frappe', 'latte'];
+
+  function setTheme(name) {
+    if (!flavours.includes(name)) return;
+    html.dataset.theme = name;
+    sel.value = name;
+    localStorage.setItem('theme', name);
+  }
+
+  const stored = localStorage.getItem('theme');
+  if (stored && flavours.includes(stored)) setTheme(stored);
+  else if (window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('latte');
+  else sel.value = html.dataset.theme;
+
+  // ── Active TOC item via IntersectionObserver ─────────────────────────
+  const tocItems = document.querySelectorAll('.toc-item');
+  const sections = document.querySelectorAll('.func');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocItems.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-item[href="#${entry.target.id}"]`);
+        if (active) {
+          active.classList.add('active');
+          active.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ── TOC filter ───────────────────────────────────────────────────────
+  function filterToc(query) {
+    const q = query.toLowerCase();
+    tocItems.forEach(item => {
+      const match = item.dataset.name.toLowerCase().includes(q);
+      item.style.display = match ? '' : 'none';
+    });
+  }
+
+  // ── Copy button ──────────────────────────────────────────────────────
+  function copyCode(btn) {
+    const code = btn.closest('.code-block').querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.classList.add('copied');
+      btn.title = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.title = 'Copy'; }, 1500);
+    });
+  }
+</script>
+
+</body>
+</html>

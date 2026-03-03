@@ -18,15 +18,15 @@ func main() {
 	var outputFile string
 	var printTemplate string
 	var templateFile string
-	flag.StringVar(&format, "format", "markdown", "Output format: markdown, json")
+	flag.StringVar(&format, "format", "markdown", "Output format: markdown, html, json")
 	flag.BoolVar(&sortFuncs, "sort", false, "Sort functions alphabetically")
 	flag.BoolVar(&showSchema, "schema", false, "Print JSON Schema for --format json output and exit")
 	flag.StringVarP(&inputFile, "input", "i", "-", "Input file (- for stdin)")
 	flag.StringVarP(&outputFile, "output", "o", "-", "Output file (- for stdout)")
-	flag.StringVar(&printTemplate, "print-template", "", "Print default template for format (md) and exit")
-	flag.StringVar(&templateFile, "template", "", "Use custom template file for markdown output")
+	flag.StringVar(&printTemplate, "print-template", "", "Print built-in template for format (markdown, html) and exit")
+	flag.StringVar(&templateFile, "template", "", "Use a custom template file instead of the built-in one for the selected --format")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `shdoc-ng - Generate Markdown documentation from annotated shell scripts.
+		fmt.Fprintf(os.Stderr, `shdoc-ng - Generate documentation from annotated shell scripts.
 
 Reads a shell script and produces documentation by extracting structured
 comment blocks written above shell functions. Supports tags like @description,
@@ -35,6 +35,7 @@ comment blocks written above shell functions. Supports tags like @description,
 Usage:
   shdoc-ng [flags]
   shdoc-ng < script.sh > docs.md
+  shdoc-ng --format html -i script.sh -o docs.html
 
 Flags:
 `)
@@ -69,8 +70,10 @@ Flags:
 		switch printTemplate {
 		case "md", "markdown":
 			fmt.Fprint(output, defaultMarkdownTemplate)
+		case "html":
+			fmt.Fprint(output, defaultHTMLTemplate)
 		default:
-			fmt.Fprintf(os.Stderr, "Unknown template format: %s (supported: md)\n", printTemplate)
+			fmt.Fprintf(os.Stderr, "Unknown template format: %q (supported: markdown, html)\n", printTemplate)
 			os.Exit(1)
 		}
 		return
@@ -103,23 +106,34 @@ Flags:
 
 	switch format {
 	case "markdown", "md":
-		var (
-			out  string
-			data []byte
-			err  error
-		)
+		tmplText := defaultMarkdownTemplate
 		if templateFile != "" {
-			data, err = os.ReadFile(templateFile)
+			data, err := os.ReadFile(templateFile)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error reading template file: %v\n", err)
 				os.Exit(1)
 			}
-			out, err = parser.RenderWithTemplate(string(data))
-		} else {
-			out, err = parser.Render()
+			tmplText = string(data)
 		}
+		out, err := parser.RenderWithTemplate(tmplText)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering markdown: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprint(output, out)
+	case "html":
+		tmplText := defaultHTMLTemplate
+		if templateFile != "" {
+			data, err := os.ReadFile(templateFile)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error reading template file: %v\n", err)
+				os.Exit(1)
+			}
+			tmplText = string(data)
+		}
+		out, err := parser.RenderWithTemplate(tmplText)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error rendering HTML: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprint(output, out)
@@ -131,7 +145,7 @@ Flags:
 		}
 		fmt.Fprint(output, out)
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown format: %s (supported: markdown, json)\n", format)
+		fmt.Fprintf(os.Stderr, "Unknown format: %q (supported: markdown, html, json)\n", format)
 		os.Exit(1)
 	}
 }
