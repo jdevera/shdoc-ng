@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -92,15 +91,23 @@ Flags:
 		input = f
 	}
 
-	scanner := bufio.NewScanner(input)
-	parser := NewParser()
-	for scanner.Scan() {
-		parser.ProcessLine(scanner.Text())
+	src, err := io.ReadAll(input)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
+		os.Exit(1)
+	}
+
+	doc, warns := ParseDocument(string(src))
+
+	warnColor := "\033[1;34m"
+	colorClear := "\033[1;0m"
+	for _, w := range warns {
+		fmt.Fprintf(os.Stderr, "%sline %4d, warning : %s%s\n", warnColor, w.Line, w.Message, colorClear)
 	}
 
 	if sortFuncs {
-		sort.Slice(parser.doc.Functions, func(i, j int) bool {
-			return parser.doc.Functions[i].Name < parser.doc.Functions[j].Name
+		sort.Slice(doc.Functions, func(i, j int) bool {
+			return doc.Functions[i].Name < doc.Functions[j].Name
 		})
 	}
 
@@ -115,7 +122,7 @@ Flags:
 			}
 			tmplText = string(data)
 		}
-		out, err := parser.RenderWithTemplate(tmplText)
+		out, err := renderWithTemplate(&doc, tmplText)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering markdown: %v\n", err)
 			os.Exit(1)
@@ -131,14 +138,14 @@ Flags:
 			}
 			tmplText = string(data)
 		}
-		out, err := parser.RenderWithTemplate(tmplText)
+		out, err := renderWithTemplate(&doc, tmplText)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering HTML: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprint(output, out)
 	case "json":
-		out, err := parser.RenderJSON()
+		out, err := renderDocumentJSON(&doc)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering JSON: %v\n", err)
 			os.Exit(1)

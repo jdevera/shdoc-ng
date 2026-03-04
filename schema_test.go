@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
+	"io"
 	"os"
 	"testing"
 )
@@ -203,15 +203,15 @@ func TestSchemaMatchesJSONOutput(t *testing.T) {
 	}
 	defer f.Close()
 
-	parser := NewParser()
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		parser.ProcessLine(scanner.Text())
-	}
-
-	jsonOut, err := parser.RenderJSON()
+	src, err := io.ReadAll(f)
 	if err != nil {
-		t.Fatalf("RenderJSON: %v", err)
+		t.Fatalf("read showcase.sh: %v", err)
+	}
+	doc, _ := ParseDocument(string(src))
+
+	jsonOut, err := renderDocumentJSON(&doc)
+	if err != nil {
+		t.Fatalf("renderDocumentJSON: %v", err)
 	}
 
 	var jsonDoc map[string]any

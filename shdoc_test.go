@@ -127,22 +127,12 @@ func TestConformance(t *testing.T) {
 		t.Run(tag, func(t *testing.T) {
 			for _, tc := range cases {
 				t.Run(tc.name, func(t *testing.T) {
-					parser := NewParser()
-					lines := strings.Split(string(tc.input), "\n")
-					// Remove last element if it's empty (trailing newline in file)
-					if len(lines) > 0 && lines[len(lines)-1] == "" {
-						lines = lines[:len(lines)-1]
-					}
-					for _, line := range lines {
-						parser.ProcessLine(line)
-					}
-
-					actual, err := parser.Render()
+					doc, _ := ParseDocument(string(tc.input))
+					actual, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
 					if err != nil {
-						t.Fatalf("Render() error: %v", err)
+						t.Fatalf("renderWithTemplate() error: %v", err)
 					}
 					expected := string(tc.expected)
-
 					if actual != expected {
 						diffOutput(t, tc.name, actual, expected)
 					}
@@ -188,39 +178,35 @@ farewell() {
     echo "Bye"
 }`
 
-	parser := NewParser()
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		parser.ProcessLine(line)
-	}
+	doc, _ := ParseDocument(input)
 
-	jsonOut, err := parser.RenderJSON()
+	jsonOut, err := renderDocumentJSON(&doc)
 	if err != nil {
-		t.Fatalf("RenderJSON failed: %v", err)
+		t.Fatalf("renderDocumentJSON failed: %v", err)
 	}
 
-	var doc Document
-	if err := json.Unmarshal([]byte(jsonOut), &doc); err != nil {
+	var parsedDoc Document
+	if err := json.Unmarshal([]byte(jsonOut), &parsedDoc); err != nil {
 		t.Fatalf("Invalid JSON: %v\nOutput:\n%s", err, jsonOut)
 	}
 
 	// Check document-level fields
-	if doc.FileTitle != "mylib" {
-		t.Errorf("Expected name 'mylib', got %q", doc.FileTitle)
+	if parsedDoc.FileTitle != "mylib" {
+		t.Errorf("Expected name 'mylib', got %q", parsedDoc.FileTitle)
 	}
-	if doc.FileBrief != "A brief description" {
-		t.Errorf("Expected brief 'A brief description', got %q", doc.FileBrief)
+	if parsedDoc.FileBrief != "A brief description" {
+		t.Errorf("Expected brief 'A brief description', got %q", parsedDoc.FileBrief)
 	}
-	if doc.FileDescription != "The full description." {
-		t.Errorf("Expected description 'The full description.', got %q", doc.FileDescription)
+	if parsedDoc.FileDescription != "The full description." {
+		t.Errorf("Expected description 'The full description.', got %q", parsedDoc.FileDescription)
 	}
 
-	if len(doc.Functions) != 2 {
-		t.Fatalf("Expected 2 functions, got %d", len(doc.Functions))
+	if len(parsedDoc.Functions) != 2 {
+		t.Fatalf("Expected 2 functions, got %d", len(parsedDoc.Functions))
 	}
 
 	// Check first function
-	f := doc.Functions[0]
+	f := parsedDoc.Functions[0]
 	if f.Name != "greet" {
 		t.Errorf("Expected function name 'greet', got %q", f.Name)
 	}
@@ -230,8 +216,11 @@ farewell() {
 	if f.SectionDesc != "Helper functions." {
 		t.Errorf("Expected section_description 'Helper functions.', got %q", f.SectionDesc)
 	}
-	if f.Deprecated != "Use hello() instead." {
-		t.Errorf("Expected deprecated 'Use hello() instead.', got %q", f.Deprecated)
+	if !f.IsDeprecated {
+		t.Errorf("Expected IsDeprecated to be true")
+	}
+	if f.DeprecatedMessage != "Use hello() instead." {
+		t.Errorf("Expected DeprecatedMessage 'Use hello() instead.', got %q", f.DeprecatedMessage)
 	}
 	if len(f.Options) != 1 {
 		t.Errorf("Expected 1 option, got %d", len(f.Options))
@@ -268,12 +257,12 @@ farewell() {
 	}
 
 	// Check second function
-	f2 := doc.Functions[1]
+	f2 := parsedDoc.Functions[1]
 	if f2.Name != "farewell" {
 		t.Errorf("Expected function name 'farewell', got %q", f2.Name)
 	}
-	if !f2.NoArgs {
-		t.Errorf("Expected noargs to be true")
+	if !f2.IsNoArgs {
+		t.Errorf("Expected IsNoArgs to be true")
 	}
 }
 
@@ -298,20 +287,16 @@ mike() {
     :
 }`
 
-	parser := NewParser()
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		parser.ProcessLine(line)
-	}
+	doc, _ := ParseDocument(input)
 
 	// Sort functions
-	sort.Slice(parser.doc.Functions, func(i, j int) bool {
-		return parser.doc.Functions[i].Name < parser.doc.Functions[j].Name
+	sort.Slice(doc.Functions, func(i, j int) bool {
+		return doc.Functions[i].Name < doc.Functions[j].Name
 	})
 
-	output, err := parser.Render()
+	output, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
 	if err != nil {
-		t.Fatalf("Render() error: %v", err)
+		t.Fatalf("renderWithTemplate() error: %v", err)
 	}
 
 	// Functions should appear in alphabetical order

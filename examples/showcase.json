@@ -1,7 +1,7 @@
 {
   "name": "mylib",
   "brief": "A showcase of every shdoc-ng annotation.",
-  "description": "This library demonstrates all supported tags.\n\nFeatures include:\n* Function documentation\n* Deprecation notices\n* Grouped sections",
+  "description": "This library demonstrates all supported tags.\n\nFeatures include:\n\n* Function documentation\n* Deprecation notices\n* Grouped sections",
   "authors": [
     "Alice",
     "Bob"
@@ -152,18 +152,19 @@
     {
       "name": "old_hello",
       "description": "This function is obsolete.",
-      "deprecated": "Use greet() instead.",
+      "is_deprecated": true,
+      "deprecated_message": "Use greet() instead.",
       "section": "Deprecated Utilities",
       "section_description": "Functions kept for backwards compatibility."
     },
     {
       "name": "old_noop",
-      "deprecated": " "
+      "is_deprecated": true
     },
     {
       "name": "braceless_func",
       "description": "A function whose opening brace\nis on the next line.",
-      "noargs": true
+      "is_noargs": true
     },
     {
       "name": "subshell_func",

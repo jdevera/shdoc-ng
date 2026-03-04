@@ -50,8 +50,8 @@
             },
             "type": "array"
           },
-          "deprecated": {
-            "description": "Deprecation notice (@deprecated)",
+          "deprecated_message": {
+            "description": "Deprecation notice, if provided (@deprecated message)",
             "type": "string"
           },
           "description": {
@@ -111,13 +111,17 @@
             },
             "type": "array"
           },
+          "is_deprecated": {
+            "description": "True if the function is deprecated (@deprecated)",
+            "type": "boolean"
+          },
+          "is_noargs": {
+            "description": "True if the function explicitly takes no arguments (@noargs)",
+            "type": "boolean"
+          },
           "name": {
             "description": "Function name as it appears in the source",
             "type": "string"
-          },
-          "noargs": {
-            "description": "True if the function explicitly takes no arguments (@noargs)",
-            "type": "boolean"
           },
           "options": {
             "description": "Command-line options the function accepts (@option)",

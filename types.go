@@ -19,7 +19,7 @@ type FuncDoc struct {
 	Options     []OptionEntry `json:"options,omitempty"           desc:"Command-line options the function accepts (@option)"`
 	BadOptions  []string      `json:"-"`
 	Args        []Arg         `json:"args,omitempty"              desc:"Positional arguments the function accepts (@arg)"`
-	NoArgs      bool          `json:"noargs,omitempty"            desc:"True if the function explicitly takes no arguments (@noargs)"`
+	IsNoArgs    bool          `json:"is_noargs,omitempty"         desc:"True if the function explicitly takes no arguments (@noargs)"`
 	Sets        []SetVar      `json:"set,omitempty"               desc:"Variables set by the function (@set)"`
 	Env         []SetVar      `json:"env,omitempty"               desc:"Environment variables used or modified (@env)"`
 	ExitCodes   []ExitCode    `json:"exitcodes,omitempty"         desc:"Exit codes and their meanings (@exitcode)"`
@@ -28,7 +28,8 @@ type FuncDoc struct {
 	Stderr      []string      `json:"stderr,omitempty"            desc:"Description of stderr output (@stderr)"`
 	See         []SeeRef      `json:"see,omitempty"               desc:"See also references (@see)"`
 	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
-	Deprecated  string        `json:"deprecated,omitempty"        desc:"Deprecation notice (@deprecated)"`
+	IsDeprecated    bool          `json:"is_deprecated,omitempty"      desc:"True if the function is deprecated (@deprecated)"`
+	DeprecatedMessage string      `json:"deprecated_message,omitempty" desc:"Deprecation notice, if provided (@deprecated message)"`
 	Section     string        `json:"section,omitempty"           desc:"Section the function belongs to (@section)"`
 	SectionDesc string        `json:"section_description,omitempty" desc:"Description of the section"`
 }
@@ -36,13 +37,13 @@ type FuncDoc struct {
 // hasDocumentation returns true if the FuncDoc has any documentation content.
 func (f *FuncDoc) hasDocumentation() bool {
 	return len(f.Options) > 0 || len(f.BadOptions) > 0 ||
-		len(f.Args) > 0 || f.NoArgs ||
+		len(f.Args) > 0 || f.IsNoArgs ||
 		len(f.Sets) > 0 || len(f.Env) > 0 ||
 		len(f.ExitCodes) > 0 ||
 		len(f.Stdin) > 0 || len(f.Stdout) > 0 ||
 		len(f.Stderr) > 0 || len(f.See) > 0 ||
 		len(f.Warnings) > 0 ||
-		f.Deprecated != "" || f.Example != ""
+		f.IsDeprecated || f.Example != ""
 }
 
 // OptionForm represents one form of a command-line option (e.g., "-n" or "--repeat").

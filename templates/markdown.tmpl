@@ -21,14 +21,15 @@ FuncDoc fields (passed to funcBlock and all sec* templates):
   .Name        string        — function name
   .Section     string        — @section heading (## level), may be empty
   .SectionDesc string        — text block after @section, may be empty
-  .Deprecated  string        — @deprecated value, may be empty
+  .IsDeprecated     bool          — true when @deprecated is present
+  .DeprecatedMessage string       — @deprecated message, may be empty
   .Description string        — @description block
   .Warnings    []string      — @warning values
   .Example     string        — @example block (raw, use unindent to strip indent)
   .Options     []OptionEntry — @option entries that passed validation
   .BadOptions  []string      — @option entries that failed validation (raw text)
   .Args        []ArgEntry    — @arg entries
-  .NoArgs      bool          — true when @noargs is present
+  .IsNoArgs    bool          — true when @noargs is present
   .Sets        []VarEntry    — @set entries
   .Env         []VarEntry    — @env entries
   .ExitCodes   []ExitEntry   — @exitcode entries
@@ -69,9 +70,8 @@ Content never ends with a trailing newline; funcBlock appends a final "\n".
 
 {{- /* secDeprecated — @deprecated notice */ -}}
 {{- define "secDeprecated" -}}
-{{- if .Deprecated -}}
-{{- $r := trimSpace .Deprecated -}}
-{{if eq $r ""}}{{"\n\n**DEPRECATED.**"}}{{else}}{{"\n\n**DEPRECATED:** "}}{{$r}}{{end}}{{- end -}}
+{{- if .IsDeprecated -}}
+{{if eq .DeprecatedMessage ""}}{{"\n\n**DEPRECATED.**"}}{{else}}{{"\n\n**DEPRECATED:** "}}{{.DeprecatedMessage}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secDescription — @description block */ -}}
@@ -110,7 +110,7 @@ Bad options (entries that failed format validation) follow with no blank lines.
 
 {{- /* secNoArgs — @noargs marker */ -}}
 {{- define "secNoArgs" -}}
-{{- if .NoArgs}}{{"\n\n_Function has no arguments._"}}{{- end -}}
+{{- if .IsNoArgs}}{{"\n\n_Function has no arguments._"}}{{- end -}}
 {{- end -}}
 
 {{- /* secSets — @set list */ -}}

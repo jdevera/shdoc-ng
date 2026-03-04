@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 )
 
-// RenderJSON produces JSON output for the parsed document.
-func (p *Parser) RenderJSON() (string, error) {
+// renderDocumentJSON produces JSON output for a Document.
+func renderDocumentJSON(doc *Document) (string, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(&p.doc); err != nil {
+	if err := enc.Encode(doc); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

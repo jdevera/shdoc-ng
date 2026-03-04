@@ -22,10 +22,10 @@
     <a href="#{{slug .Name}}" class="func-anchor" aria-label="permalink">¶</a>
   </div>
 
-{{- if .Deprecated}}
+{{- if .IsDeprecated}}
   <div class="badge-deprecated">
     <span class="badge-label">deprecated</span>
-    {{- $r := trimSpace .Deprecated}}{{if $r}} <span class="badge-reason">{{$r | md2inline}}</span>{{end}}
+    {{- if .DeprecatedMessage}} <span class="badge-reason">{{.DeprecatedMessage | md2inline}}</span>{{end}}
   </div>
 {{- end}}
 
@@ -90,7 +90,7 @@
   </div>
 {{- end}}
 
-{{- if .NoArgs}}
+{{- if .IsNoArgs}}
   <p class="no-args">This function takes no arguments.</p>
 {{- end}}
 
