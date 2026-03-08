@@ -674,6 +674,21 @@
     <a href="#old_noop" class="toc-item" data-name="old_noop">old_noop</a>
     <a href="#braceless_func" class="toc-item" data-name="braceless_func">braceless_func</a>
     <a href="#subshell_func" class="toc-item" data-name="subshell_func">subshell_func</a>
+    <a href="#multi_arg_func" class="toc-item" data-name="multi_arg_func">multi_arg_func</a>
+    <a href="#option_variety" class="toc-item" data-name="option_variety">option_variety</a>
+    <a href="#env_and_set_func" class="toc-item" data-name="env_and_set_func">env_and_set_func</a>
+    <a href="#multi_exitcode" class="toc-item" data-name="multi_exitcode">multi_exitcode</a>
+    <a href="#noargs_but_uses_params" class="toc-item" data-name="noargs_but_uses_params">noargs_but_uses_params</a>
+    <a href="#noargs_with_awk" class="toc-item" data-name="noargs_with_awk">noargs_with_awk</a>
+    <a href="#old_parse" class="toc-item" data-name="old_parse">old_parse</a>
+    <a href="#new_parse" class="toc-item" data-name="new_parse">new_parse</a>
+    <a href="#empty_tags_func" class="toc-item" data-name="empty_tags_func">empty_tags_func</a>
+    <a href="#see_references" class="toc-item" data-name="see_references">see_references</a>
+    <a href="#single_line_doc" class="toc-item" data-name="single_line_doc">single_line_doc</a>
+    <a href="#multi_line_doc" class="toc-item" data-name="multi_line_doc">multi_line_doc</a>
+    <a href="#keyword_no_parens" class="toc-item" data-name="keyword_no_parens">keyword_no_parens</a>
+    <a href="#keyword_with_parens" class="toc-item" data-name="keyword_with_parens">keyword_with_parens</a>
+    <a href="#multiline_io" class="toc-item" data-name="multiline_io">multiline_io</a>
   </nav>
 
 </aside>
@@ -693,7 +708,7 @@
       <h1 class="file-title">mylib</h1><p class="file-brief">A showcase of every shdoc-ng annotation.</p>
       <div class="file-overview">
         <h2>Overview</h2>
-        <div><p>This library demonstrates all supported tags.</p>
+        <div><p>This library <strong>demonstrates</strong> all supported tags.</p>
 <p>Features include:</p>
 <ul>
 <li>Function documentation</li>
@@ -839,7 +854,7 @@ greet &#34;$(whoami)&#34;</code></pre>
   </div>
 
 </section>
-    <section class="func" id="farewell">
+    <section class="func has-section" id="farewell">
 
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> farewell</h3>
@@ -896,7 +911,7 @@ greet &#34;$(whoami)&#34;</code></pre>
 </div>
 
 </section>
-    <section class="func" id="old_noop">
+    <section class="func has-section" id="old_noop">
 
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> old_noop</h3>
@@ -907,7 +922,7 @@ greet &#34;$(whoami)&#34;</code></pre>
   </div>
 
 </section>
-    <section class="func" id="braceless_func">
+    <section class="func has-section" id="braceless_func">
 
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> braceless_func</h3>
@@ -919,7 +934,7 @@ is on the next line.</p>
   <p class="no-args">This function takes no arguments.</p>
 
 </section>
-    <section class="func" id="subshell_func">
+    <section class="func has-section" id="subshell_func">
 
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> subshell_func</h3>
@@ -940,6 +955,401 @@ instead of braces.</p>
         </tr>
       </tbody>
     </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="multi_arg_func">
+  <div class="section-heading">
+    <h2 class="section-title">LSP &amp; Highlight Testing</h2><div class="section-desc"><p>Cases to exercise syntax highlighting, diagnostics, and LSP features.</p>
+</div>
+  </div>
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> multi_arg_func</h3>
+    <a href="#multi_arg_func" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Multiple arguments with different types.</p>
+</div>
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>$1</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>The input file path.</td>
+        </tr>
+        <tr>
+          <td><code>$2</code></td>
+          <td><span class="type-badge">int</span></td>
+          <td>Number of lines to read.</td>
+        </tr>
+        <tr>
+          <td><code>$3</code></td>
+          <td><span class="type-badge">bool</span></td>
+          <td>Whether to trim whitespace.</td>
+        </tr>
+        <tr>
+          <td><code>...</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>Remaining arguments forwarded to helper.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="option_variety">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> option_variety</h3>
+    <a href="#option_variety" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Various option forms.</p>
+</div>
+  <div class="sec options">
+    <h4 class="sec-label">Options</h4>
+    <dl class="option-list">
+      <dt class="opt-term"><code>-v</code> </dt>
+      <dd class="opt-def">Enable verbose mode.</dd>
+      <dt class="opt-term"><code>--dry-run</code> </dt>
+      <dd class="opt-def">Do not actually execute.</dd>
+      <dt class="opt-term"><code>-o &lt;path&gt;</code> <span class="opt-pipe">|</span> <code>--output &lt;path&gt;</code> </dt>
+      <dd class="opt-def">Write output to file.</dd>
+      <dt class="opt-term"><code>-f</code> <span class="opt-pipe">|</span> <code>--force</code> </dt>
+      <dd class="opt-def">Force overwrite.</dd>
+      <dt class="opt-term"><code>--timeout=&lt;seconds&gt;</code> </dt>
+      <dd class="opt-def">Timeout in seconds.</dd>
+    </dl>
+  </div>
+
+</section>
+    <section class="func has-section" id="env_and_set_func">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> env_and_set_func</h3>
+    <a href="#env_and_set_func" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Exercises @set and @env highlighting.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+  <div class="sec sets">
+    <h4 class="sec-label">Variables set</h4>
+    <table class="data-table">
+      <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>RESULT_CODE</code></td>
+          <td><span class="type-badge">int</span></td>
+          <td>The result code.</td>
+        </tr>
+        <tr>
+          <td><code>OUTPUT_PATH</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>The generated output path.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec env">
+    <h4 class="sec-label">Environment variables</h4>
+    <table class="data-table">
+      <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>LANG</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>The current locale.</td>
+        </tr>
+        <tr>
+          <td><code>TERM</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>The terminal type.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="multi_exitcode">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> multi_exitcode</h3>
+    <a href="#multi_exitcode" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Multiple exit codes.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+  <div class="sec exitcodes">
+    <h4 class="sec-label">Exit codes</h4>
+    <table class="data-table">
+      <thead><tr><th>Code</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>0</code></td>
+          <td>Success.</td>
+        </tr>
+        <tr>
+          <td><code>1</code></td>
+          <td>General error.</td>
+        </tr>
+        <tr>
+          <td><code>2</code></td>
+          <td>Misuse of shell builtins.</td>
+        </tr>
+        <tr>
+          <td><code>127</code></td>
+          <td>Command not found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="noargs_but_uses_params">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> noargs_but_uses_params</h3>
+    <a href="#noargs_but_uses_params" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Should warn: uses $1 despite @noargs.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+
+</section>
+    <section class="func has-section" id="noargs_with_awk">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> noargs_with_awk</h3>
+    <a href="#noargs_with_awk" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Should NOT warn: $1 is inside single quotes (awk).</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+
+</section>
+    <section class="func has-section" id="old_parse">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> old_parse</h3>
+    <a href="#old_parse" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="badge-deprecated">
+    <span class="badge-label">deprecated</span> <span class="badge-reason">Replaced by new_parse().</span>
+  </div>
+  <div class="func-desc"><p>Old parser, use new_parse() instead.</p>
+</div>
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>$1</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>Input text.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="new_parse">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> new_parse</h3>
+    <a href="#new_parse" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>New parser.</p>
+</div>
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>$1</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>Input text.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="empty_tags_func">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> empty_tags_func</h3>
+    <a href="#empty_tags_func" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="sec warnings">
+    <h4 class="sec-label">Warnings</h4>
+    <ul class="warning-list">
+      <li></li>
+    </ul>
+  </div>
+  <div class="sec env">
+    <h4 class="sec-label">Environment variables</h4>
+    <table class="data-table">
+      <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>FOO</code></td>
+          <td><span class="type-badge"></span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec stdin">
+    <h4 class="sec-label">Input on stdin</h4>
+    <ul class="io-list"><li></li>
+    </ul>
+  </div>
+  <div class="sec stdout">
+    <h4 class="sec-label">Output on stdout</h4>
+    <ul class="io-list"><li></li>
+    </ul>
+  </div>
+  <div class="sec stderr">
+    <h4 class="sec-label">Output on stderr</h4>
+    <ul class="io-list"><li></li>
+    </ul>
+  </div>
+  <div class="sec see">
+    <h4 class="sec-label">See also</h4>
+    <ul class="see-list"><li><a href="#" class="link-ref"></a></li>
+    </ul>
+  </div>
+
+</section>
+    <section class="func has-section" id="see_references">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> see_references</h3>
+    <a href="#see_references" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>A function that references others via @see.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+  <div class="sec see">
+    <h4 class="sec-label">See also</h4>
+    <ul class="see-list"><li><a href="#greet" class="link-ref">greet()</a></li><li><a href="#farewell" class="link-ref">farewell()</a></li><li><a href="#old_parse" class="link-ref">old_parse()</a></li>
+    </ul>
+  </div>
+
+</section>
+    <section class="func has-section" id="single_line_doc">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> single_line_doc</h3>
+    <a href="#single_line_doc" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>This is a single-line doc block (no fold arrow expected).</p>
+</div>
+
+</section>
+    <section class="func has-section" id="multi_line_doc">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> multi_line_doc</h3>
+    <a href="#multi_line_doc" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>This is a multi-line doc block.</p>
+<p>It spans several comment lines, so it should
+be foldable in the editor.</p>
+</div>
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>$1</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>Something.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec exitcodes">
+    <h4 class="sec-label">Exit codes</h4>
+    <table class="data-table">
+      <thead><tr><th>Code</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>0</code></td>
+          <td>Always.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="keyword_no_parens">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> keyword_no_parens</h3>
+    <a href="#keyword_no_parens" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Uses the 'function' keyword without parens.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+
+</section>
+    <section class="func has-section" id="keyword_with_parens">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> keyword_with_parens</h3>
+    <a href="#keyword_with_parens" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Uses the 'function' keyword with parens.</p>
+</div>
+  <div class="sec args">
+    <h4 class="sec-label">Arguments</h4>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>$1</code></td>
+          <td><span class="type-badge">string</span></td>
+          <td>A value.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+    <section class="func has-section" id="multiline_io">
+
+  <div class="func-header">
+    <h3 class="func-name"><span class="func-sigil">fn</span> multiline_io</h3>
+    <a href="#multiline_io" class="func-anchor" aria-label="permalink">¶</a>
+  </div>
+  <div class="func-desc"><p>Demonstrates multi-line IO docs.</p>
+</div>
+  <p class="no-args">This function takes no arguments.</p>
+  <div class="sec stdin">
+    <h4 class="sec-label">Input on stdin</h4>
+    <ul class="io-list"><li>Lines of text, one per line.
+Each line should be tab-separated.
+Empty lines are skipped.</li>
+    </ul>
+  </div>
+  <div class="sec stdout">
+    <h4 class="sec-label">Output on stdout</h4>
+    <ul class="io-list"><li>Processed output.
+First line is a header.
+Subsequent lines are data rows.</li>
+    </ul>
+  </div>
+  <div class="sec stderr">
+    <h4 class="sec-label">Output on stderr</h4>
+    <ul class="io-list"><li>Progress messages.
+Prefixed with the current timestamp.</li>
+    </ul>
   </div>
 
 </section>

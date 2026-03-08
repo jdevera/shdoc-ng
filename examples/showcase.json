@@ -1,7 +1,7 @@
 {
   "name": "mylib",
   "brief": "A showcase of every shdoc-ng annotation.",
-  "description": "This library demonstrates all supported tags.\n\nFeatures include:\n\n* Function documentation\n* Deprecation notices\n* Grouped sections",
+  "description": "This library **demonstrates** all supported tags.\n\nFeatures include:\n\n* Function documentation\n* Deprecation notices\n* Grouped sections",
   "authors": [
     "Alice",
     "Bob"
@@ -124,7 +124,8 @@
         "Do not pass empty strings."
       ],
       "section": "String Utilities",
-      "section_description": "Common string operations."
+      "section_description": "Common string operations.",
+      "is_first_in_section": true
     },
     {
       "name": "farewell",
@@ -147,7 +148,9 @@
           "kind": "ref",
           "text": "greet()"
         }
-      ]
+      ],
+      "section": "String Utilities",
+      "section_description": "Common string operations."
     },
     {
       "name": "old_hello",
@@ -155,16 +158,21 @@
       "is_deprecated": true,
       "deprecated_message": "Use greet() instead.",
       "section": "Deprecated Utilities",
-      "section_description": "Functions kept for backwards compatibility."
+      "section_description": "Functions kept for backwards compatibility.",
+      "is_first_in_section": true
     },
     {
       "name": "old_noop",
-      "is_deprecated": true
+      "is_deprecated": true,
+      "section": "Deprecated Utilities",
+      "section_description": "Functions kept for backwards compatibility."
     },
     {
       "name": "braceless_func",
       "description": "A function whose opening brace\nis on the next line.",
-      "is_noargs": true
+      "is_noargs": true,
+      "section": "Deprecated Utilities",
+      "section_description": "Functions kept for backwards compatibility."
     },
     {
       "name": "subshell_func",
@@ -175,7 +183,307 @@
           "type": "string",
           "description": "A command to run in a subshell."
         }
-      ]
+      ],
+      "section": "Deprecated Utilities",
+      "section_description": "Functions kept for backwards compatibility."
+    },
+    {
+      "name": "multi_arg_func",
+      "description": "Multiple arguments with different types.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "The input file path."
+        },
+        {
+          "name": "$2",
+          "type": "int",
+          "description": "Number of lines to read."
+        },
+        {
+          "name": "$3",
+          "type": "bool",
+          "description": "Whether to trim whitespace."
+        },
+        {
+          "name": "$@",
+          "type": "string",
+          "description": "Remaining arguments forwarded to helper."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features.",
+      "is_first_in_section": true
+    },
+    {
+      "name": "option_variety",
+      "description": "Various option forms.",
+      "options": [
+        {
+          "forms": [
+            {
+              "name": "-v"
+            }
+          ],
+          "description": "Enable verbose mode."
+        },
+        {
+          "forms": [
+            {
+              "name": "--dry-run"
+            }
+          ],
+          "description": "Do not actually execute."
+        },
+        {
+          "forms": [
+            {
+              "name": "-o",
+              "value": "path",
+              "value_sep": " "
+            },
+            {
+              "name": "--output",
+              "value": "path",
+              "value_sep": " "
+            }
+          ],
+          "description": "Write output to file."
+        },
+        {
+          "forms": [
+            {
+              "name": "-f"
+            },
+            {
+              "name": "--force"
+            }
+          ],
+          "description": "Force overwrite."
+        },
+        {
+          "forms": [
+            {
+              "name": "--timeout",
+              "value": "seconds",
+              "value_sep": "="
+            }
+          ],
+          "description": "Timeout in seconds."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "env_and_set_func",
+      "description": "Exercises @set and @env highlighting.",
+      "is_noargs": true,
+      "set": [
+        {
+          "name": "RESULT_CODE",
+          "type": "int",
+          "description": "The result code."
+        },
+        {
+          "name": "OUTPUT_PATH",
+          "type": "string",
+          "description": "The generated output path."
+        }
+      ],
+      "env": [
+        {
+          "name": "LANG",
+          "type": "string",
+          "description": "The current locale."
+        },
+        {
+          "name": "TERM",
+          "type": "string",
+          "description": "The terminal type."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "multi_exitcode",
+      "description": "Multiple exit codes.",
+      "is_noargs": true,
+      "exitcodes": [
+        {
+          "code": "0",
+          "description": "Success."
+        },
+        {
+          "code": "1",
+          "description": "General error."
+        },
+        {
+          "code": "2",
+          "description": "Misuse of shell builtins."
+        },
+        {
+          "code": "127",
+          "description": "Command not found."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "noargs_but_uses_params",
+      "description": "Should warn: uses $1 despite @noargs.",
+      "is_noargs": true,
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "noargs_with_awk",
+      "description": "Should NOT warn: $1 is inside single quotes (awk).",
+      "is_noargs": true,
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "old_parse",
+      "description": "Old parser, use new_parse() instead.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "Input text."
+        }
+      ],
+      "is_deprecated": true,
+      "deprecated_message": "Replaced by new_parse().",
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "new_parse",
+      "description": "New parser.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "Input text."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "empty_tags_func",
+      "env": [
+        {
+          "name": "FOO",
+          "type": "",
+          "description": ""
+        }
+      ],
+      "stdin": [
+        ""
+      ],
+      "stdout": [
+        ""
+      ],
+      "stderr": [
+        ""
+      ],
+      "see": [
+        {
+          "kind": "ref"
+        }
+      ],
+      "warnings": [
+        ""
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "see_references",
+      "description": "A function that references others via @see.",
+      "is_noargs": true,
+      "see": [
+        {
+          "kind": "ref",
+          "text": "greet()"
+        },
+        {
+          "kind": "ref",
+          "text": "farewell()"
+        },
+        {
+          "kind": "ref",
+          "text": "old_parse()"
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "single_line_doc",
+      "description": "This is a single-line doc block (no fold arrow expected).",
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "multi_line_doc",
+      "description": "This is a multi-line doc block.\n\nIt spans several comment lines, so it should\nbe foldable in the editor.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "Something."
+        }
+      ],
+      "exitcodes": [
+        {
+          "code": "0",
+          "description": "Always."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "keyword_no_parens",
+      "description": "Uses the 'function' keyword without parens.",
+      "is_noargs": true,
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "keyword_with_parens",
+      "description": "Uses the 'function' keyword with parens.",
+      "args": [
+        {
+          "name": "$1",
+          "type": "string",
+          "description": "A value."
+        }
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
+    },
+    {
+      "name": "multiline_io",
+      "description": "Demonstrates multi-line IO docs.",
+      "is_noargs": true,
+      "stdin": [
+        "Lines of text, one per line.\nEach line should be tab-separated.\nEmpty lines are skipped."
+      ],
+      "stdout": [
+        "Processed output.\nFirst line is a header.\nSubsequent lines are data rows."
+      ],
+      "stderr": [
+        "Progress messages.\nPrefixed with the current timestamp."
+      ],
+      "section": "LSP & Highlight Testing",
+      "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
     }
   ]
 }

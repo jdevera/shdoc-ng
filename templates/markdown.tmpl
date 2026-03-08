@@ -155,7 +155,7 @@ emitted first. Then the "### FuncName" heading, followed by all sections.
 Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the block.
 */ -}}
 {{- define "funcBlock" -}}
-{{- if .Section -}}
+{{- if .IsFirstInSection -}}
 ## {{.Section}}{{if .SectionDesc}}{{"\n\n"}}{{.SectionDesc}}{{end}}{{"\n\n"}}
 {{- end -}}
 ### {{.Name}}

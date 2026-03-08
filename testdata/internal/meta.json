@@ -1,1 +1,6 @@
-{"tags": ["compat"]}
+{
+  "tags": ["compat"],
+  "knownDeviations": [
+    "Function @description no longer routes to file-level Overview"
+  ]
+}

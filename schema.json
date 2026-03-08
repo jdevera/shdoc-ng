@@ -115,6 +115,10 @@
             "description": "True if the function is deprecated (@deprecated)",
             "type": "boolean"
           },
+          "is_first_in_section": {
+            "description": "True if this is the first function in its section",
+            "type": "boolean"
+          },
           "is_noargs": {
             "description": "True if the function explicitly takes no arguments (@noargs)",
             "type": "boolean"

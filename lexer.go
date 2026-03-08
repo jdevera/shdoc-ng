@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"regexp"
@@ -27,7 +27,7 @@ var (
 )
 
 // lexLines classifies every line in src.
-func lexLines(src string) []LexedLine {
+func LexLines(src string) []LexedLine {
 	rawLines := strings.Split(src, "\n")
 	result := make([]LexedLine, 0, len(rawLines))
 	for i, raw := range rawLines {

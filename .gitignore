@@ -1,3 +1,6 @@
-shdoc-ng
+/shdoc-ng
+/shdoc-lsp
 shdoc-awk/
 github/
+editors/vscode/node_modules/
+editors/vscode/out/

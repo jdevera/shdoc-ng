@@ -1,1 +1,8 @@
-{"tags": ["compat"]}
+{
+  "tags": ["compat"],
+  "knownDeviations": [
+    "Section description no longer leaks to file-level Overview",
+    "Section description no longer leaks from a previous section when the current section has no explicit @description",
+    "Function @description no longer routes to section description"
+  ]
+}

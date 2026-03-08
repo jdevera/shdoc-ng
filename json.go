@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 )
 
 // renderDocumentJSON produces JSON output for a Document.
-func renderDocumentJSON(doc *Document) (string, error) {
+func RenderDocumentJSON(doc *Document) (string, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)

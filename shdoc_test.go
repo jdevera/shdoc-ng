@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"encoding/json"
@@ -12,21 +12,25 @@ import (
 
 // testCaseMeta holds the metadata read from meta.json.
 type testCaseMeta struct {
-	Tags []string `json:"tags"`
+	Tags             []string `json:"tags"`
+	KnownDeviations  []string `json:"knownDeviations,omitempty"`
 }
 
 // testCase holds all data for a single conformance test case.
 type testCase struct {
-	name     string
-	dir      string
-	input    []byte
-	expected []byte
-	tags     []string
+	name             string
+	dir              string
+	input            []byte
+	expected         []byte
+	tags             []string
+	knownDeviations  []string
 }
 
 // loadTestCases reads all test cases from testdata/ and returns them grouped by tag.
 // Cases without a meta.json or without tags default to "compat".
-func loadTestCases(t *testing.T) map[string][]testCase {
+// When legacy is false, expected-ng.md is preferred over expected.md.
+// When legacy is true, only expected.md is used.
+func loadTestCases(t *testing.T, legacy bool) map[string][]testCase {
 	t.Helper()
 
 	casesDir := "testdata"
@@ -50,22 +54,33 @@ func loadTestCases(t *testing.T) map[string][]testCase {
 			t.Fatalf("Failed to read input for %s: %v", name, err)
 		}
 
-		expectedData, err := os.ReadFile(filepath.Join(dir, "expected.md"))
-		if err != nil {
-			t.Fatalf("Failed to read expected for %s: %v", name, err)
+		var expectedData []byte
+		if !legacy {
+			// Prefer expected-ng.md (our corrected output) over expected.md.
+			expectedData, err = os.ReadFile(filepath.Join(dir, "expected-ng.md"))
+			if err != nil {
+				expectedData = nil
+			}
+		}
+		if expectedData == nil {
+			expectedData, err = os.ReadFile(filepath.Join(dir, "expected.md"))
+			if err != nil {
+				t.Fatalf("Failed to read expected for %s: %v", name, err)
+			}
 		}
 
-		tags := readTags(t, dir)
+		meta := readMeta(t, dir)
 
 		tc := testCase{
-			name:     name,
-			dir:      dir,
-			input:    inputData,
-			expected: expectedData,
-			tags:     tags,
+			name:            name,
+			dir:             dir,
+			input:           inputData,
+			expected:        expectedData,
+			tags:            meta.Tags,
+			knownDeviations: meta.KnownDeviations,
 		}
 
-		for _, tag := range tags {
+		for _, tag := range meta.Tags {
 			grouped[tag] = append(grouped[tag], tc)
 		}
 	}
@@ -73,15 +88,15 @@ func loadTestCases(t *testing.T) map[string][]testCase {
 	return grouped
 }
 
-// readTags reads meta.json from dir and returns the tags list.
-// Returns ["compat"] if meta.json doesn't exist or has no tags.
-func readTags(t *testing.T, dir string) []string {
+// readMeta reads meta.json from dir and returns the parsed metadata.
+// Returns default metadata with tags=["compat"] if meta.json doesn't exist.
+func readMeta(t *testing.T, dir string) testCaseMeta {
 	t.Helper()
 
 	metaPath := filepath.Join(dir, "meta.json")
 	data, err := os.ReadFile(metaPath)
 	if err != nil {
-		return []string{"compat"}
+		return testCaseMeta{Tags: []string{"compat"}}
 	}
 
 	var meta testCaseMeta
@@ -90,10 +105,10 @@ func readTags(t *testing.T, dir string) []string {
 	}
 
 	if len(meta.Tags) == 0 {
-		return []string{"compat"}
+		meta.Tags = []string{"compat"}
 	}
 
-	return meta.Tags
+	return meta
 }
 
 // diffOutput produces a line-by-line diff-style error report.
@@ -121,16 +136,50 @@ func diffOutput(t *testing.T, testName, actual, expected string) {
 }
 
 func TestConformance(t *testing.T) {
-	grouped := loadTestCases(t)
+	grouped := loadTestCases(t, false)
 
 	for tag, cases := range grouped {
 		t.Run(tag, func(t *testing.T) {
 			for _, tc := range cases {
 				t.Run(tc.name, func(t *testing.T) {
+					if len(tc.knownDeviations) > 0 {
+						t.Logf("Known deviations from original shdoc:")
+						for _, d := range tc.knownDeviations {
+							t.Logf("  - %s", d)
+						}
+					}
 					doc, _ := ParseDocument(string(tc.input))
-					actual, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
+					actual, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
 					if err != nil {
-						t.Fatalf("renderWithTemplate() error: %v", err)
+						t.Fatalf("RenderWithTemplate() error: %v", err)
+					}
+					expected := string(tc.expected)
+					if actual != expected {
+						diffOutput(t, tc.name, actual, expected)
+					}
+				})
+			}
+		})
+	}
+}
+
+// TestLegacyConformance runs the conformance suite using only expected.md
+// (the original awk output). Cases with knownDeviations are skipped because
+// shdoc-ng intentionally deviates from the original awk behavior.
+func TestLegacyConformance(t *testing.T) {
+	grouped := loadTestCases(t, true)
+
+	for tag, cases := range grouped {
+		t.Run(tag, func(t *testing.T) {
+			for _, tc := range cases {
+				t.Run(tc.name, func(t *testing.T) {
+					if len(tc.knownDeviations) > 0 {
+						t.Skipf("Skipped: known deviations from original shdoc: %v", tc.knownDeviations)
+					}
+					doc, _ := ParseDocument(string(tc.input))
+					actual, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
+					if err != nil {
+						t.Fatalf("RenderWithTemplate() error: %v", err)
 					}
 					expected := string(tc.expected)
 					if actual != expected {
@@ -180,7 +229,7 @@ farewell() {
 
 	doc, _ := ParseDocument(input)
 
-	jsonOut, err := renderDocumentJSON(&doc)
+	jsonOut, err := RenderDocumentJSON(&doc)
 	if err != nil {
 		t.Fatalf("renderDocumentJSON failed: %v", err)
 	}
@@ -294,9 +343,9 @@ mike() {
 		return doc.Functions[i].Name < doc.Functions[j].Name
 	})
 
-	output, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
+	output, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
 	if err != nil {
-		t.Fatalf("renderWithTemplate() error: %v", err)
+		t.Fatalf("RenderWithTemplate() error: %v", err)
 	}
 
 	// Functions should appear in alphabetical order
@@ -336,7 +385,7 @@ func TestExternal(t *testing.T) {
 	cmdName := parts[0]
 	cmdArgs := parts[1:]
 
-	grouped := loadTestCases(t)
+	grouped := loadTestCases(t, true)
 
 	for tag, cases := range grouped {
 		t.Run(tag, func(t *testing.T) {

@@ -4,44 +4,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts from stdin and produces Markdown on stdout. Minimal external dependencies (only `pflag` for CLI flag parsing).
+shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts and produces Markdown, HTML, or JSON documentation. The root package is a library (`package shdoc`); CLIs live under `cmd/`.
 
 ## Build & Test Commands
 
 ```bash
-go build -o shdoc-ng .     # build binary
-go test ./...               # run all tests (includes conformance)
-go test -run TestConformance/option  # run a single conformance case
+go build ./cmd/shdoc-ng       # CLI binary
+go build ./cmd/shdoc-lsp      # LSP server
+go test ./...                  # all tests (conformance + unit)
+go test -run TestConformance/option  # single conformance case
 ```
 
-Usage: `./shdoc-ng -i script.sh -o output.md` (or `--input`/`--output`)
-
-Also supported: `./shdoc-ng < script.sh > output.md` (stdin/stdout are the defaults for `-i`/`--input` and `-o`/`--output`)
+Usage: `shdoc-ng -i script.sh -o output.md` or `shdoc-ng < script.sh > output.md`
 
 ## Architecture
 
-The pipeline is: **stdin → Parser (line-by-line state machine) → Renderer → stdout**
+**Pipeline:** input → `LexLines()` → `SegmentBlocks()` → `ParseDocument()` → `RenderWithTemplate()` → output
 
-- **`parser.go`** (~400 lines) — The core. A line-by-line state machine in `ProcessLine()` that matches awk rule order exactly. Rules are checked sequentially (not with early returns everywhere — some rules intentionally fall through to later ones). State variables track whether we're inside a `@description`, `@example`, or multi-line `@stdin/@stdout/@stderr` block.
-- **`render.go`** — Assembles Markdown output. `renderFuncDoc()` produces one function's documentation; `renderDocument()` joins the file header, TOC, and all function docs. Also contains `unindent()` for `@example` blocks.
-- **`slug.go`** — GitHub-compatible anchor generation (`slug()`) and `@see`/TOC link rendering (`renderTocLink()`). Handles bare URLs, markdown links, relative/absolute paths.
-- **`option.go`** — Validates `@option` format (short/long flags with optional values, pipe-separated) and renders terms with bold/escaped angle brackets.
-- **`types.go`** — Data structs: `Document` (file-level), `FuncDoc` (per-function docblock), `OptionEntry`.
-- **`main.go`** — Thin CLI wrapper.
+- **`lexer.go`** — Line classification (comment, code, blank).
+- **`segmenter.go`** — Groups comment lines into blocks, identifies function declarations.
+- **`blockparser.go`** — Core parser. Processes blocks into `Document`/`FuncDoc`. All `@tag` parsing, validation, warnings. Tag shorthands (`@desc`→`@description`, etc.) normalized in `ParseTag()`.
+- **`template.go`** — Template rendering with `text/template`. Function map for slugs, markdown helpers.
+- **`templates/`** — Embedded Markdown and HTML (Catppuccin) templates.
+- **`types.go`** — Data structs: `Document`, `FuncDoc`, `OptionEntry`, `Arg`, `SetVar`, etc.
+- **`option.go`** — `@option` format validation and rendering.
+- **`slug.go`** — GitHub-compatible anchors, `@see` link rendering.
+- **`cmd/shdoc-ng/`** — CLI wrapper with `--format`, `--sort`, `--lint`, `--template` flags.
+- **`cmd/shdoc-lsp/`** — LSP server (diagnostics, hover, completion, go-to-def, symbols, folding, code actions).
+- **`editors/vscode/`** — VSCode extension (syntax highlighting, snippets, LSP client, doc preview).
+- **`editors/neovim/`** — Neovim integration (LSP, snippets, syntax).
 
 ## Conformance Tests
 
-Tests live in `testdata/*/input.sh` + `expected.md` (18 cases). `shdoc_test.go` feeds each input through the parser and compares output **byte-for-byte** against expected. These cases were extracted from the original shdoc test suite.
+Tests in `testdata/*/input.sh` + `expected.md`. Two test modes:
 
-To add a test case: create `testdata/<name>/input.sh` and `testdata/<name>/expected.md`. It will be picked up automatically.
+- **`TestConformance`** — validates shdoc-ng behavior. Uses `expected-ng.md` when present (intentional deviations), falls back to `expected.md`.
+- **`TestLegacyConformance`** — validates original awk behavior. Always uses `expected.md`, skips cases with `knownDeviations` in `meta.json`.
+
+See `DEVELOPMENT.md` for full details on the test framework and documenting deviations.
 
 ## Key Implementation Details
 
-- **Rule order in `parser.go` must match the awk original exactly.** The `@description` tag rule intentionally does NOT return — it falls through to the `inDescription` continuation block on the same line. Changing rule order will break conformance.
-- **`handleDescription()` does not clear `description`** — it routes to `fileDescription` or `sectionDesc` but only `reset()` clears the field. This means description stays available for `processFunction()` to consume.
-- **`@arg` with invalid format falls through to `@option` processing** — it's re-processed as an option entry, not just warned about.
-- **`unindent()` uses `-1` as sentinel for `start`** because Go arrays are 0-indexed (the awk original used 0 since `split()` produces 1-indexed arrays).
+- **Sections are sticky** — all functions after `@section Foo` belong to that section until the next `@section`. This deviates from the original awk (which only applied to the next function).
+- **`@arg` with invalid format falls through to `@option` processing** — preserving original awk behaviour.
+- **`IsFirstInSection` flag** on `FuncDoc` — set in the parser after all functions are collected, recomputed after `--sort`. Templates check this flag to emit section headers once.
+- **Function descriptions don't route to section descriptions** — unlike the original awk. See `DEVELOPMENT.md` for known deviations.
 
 ## Reference Implementation
 
-`shdoc-awk/` (if present) contains the original gawk shdoc with its `.git` history. It is gitignored and not required for building or testing.
+`shdoc-awk/` (if present) contains the original gawk shdoc. It is gitignored and not required for building or testing.

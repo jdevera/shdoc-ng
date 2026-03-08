@@ -10,7 +10,7 @@
 {{- define "funcBlock" -}}
 <section class="func{{if .Section}} has-section{{end}}" id="{{slug .Name}}">
 
-{{- if .Section}}
+{{- if .IsFirstInSection}}
   <div class="section-heading">
     <h2 class="section-title">{{.Section | html}}</h2>
     {{- if .SectionDesc}}<div class="section-desc">{{.SectionDesc | md2html}}</div>{{end}}

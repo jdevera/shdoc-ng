@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 // Document holds the top-level file metadata and stored function docs.
 type Document struct {
@@ -30,8 +30,9 @@ type FuncDoc struct {
 	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
 	IsDeprecated    bool          `json:"is_deprecated,omitempty"      desc:"True if the function is deprecated (@deprecated)"`
 	DeprecatedMessage string      `json:"deprecated_message,omitempty" desc:"Deprecation notice, if provided (@deprecated message)"`
-	Section     string        `json:"section,omitempty"           desc:"Section the function belongs to (@section)"`
-	SectionDesc string        `json:"section_description,omitempty" desc:"Description of the section"`
+	Section          string `json:"section,omitempty"              desc:"Section the function belongs to (@section)"`
+	SectionDesc      string `json:"section_description,omitempty"  desc:"Description of the section"`
+	IsFirstInSection bool   `json:"is_first_in_section,omitempty"  desc:"True if this is the first function in its section"`
 }
 
 // hasDocumentation returns true if the FuncDoc has any documentation content.

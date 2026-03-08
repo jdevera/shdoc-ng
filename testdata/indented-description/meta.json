@@ -1,1 +1,6 @@
-{"tags": ["extended"]}
+{
+  "tags": ["extended"],
+  "knownDeviations": [
+    "Function @description no longer routes to file-level Overview"
+  ]
+}

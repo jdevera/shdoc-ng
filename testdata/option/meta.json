@@ -1,1 +1,6 @@
-{"tags": ["compat"]}
+{
+  "tags": ["compat"],
+  "knownDeviations": [
+    "File-level tags (@name, @brief) inside function blocks are ignored by default (use --legacy to allow)"
+  ]
+}

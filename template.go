@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	_ "embed"
@@ -10,10 +10,10 @@ import (
 )
 
 //go:embed templates/markdown.tmpl
-var defaultMarkdownTemplate string
+var DefaultMarkdownTemplate string
 
 //go:embed templates/html.tmpl
-var defaultHTMLTemplate string
+var DefaultHTMLTemplate string
 
 // optionFormStr reconstructs the raw display string for one OptionForm.
 // e.g. OptionForm{Name: "--file", Value: "path", ValueSep: " "} → "--file <path>"
@@ -91,7 +91,7 @@ var funcMap = template.FuncMap{
 }
 
 // renderWithTemplate renders a Document using the given template text.
-func renderWithTemplate(doc *Document, tmplText string) (string, error) {
+func RenderWithTemplate(doc *Document, tmplText string) (string, error) {
 	tmpl, err := template.New("doc").Funcs(funcMap).Parse(tmplText)
 	if err != nil {
 		return "", err

@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"encoding/json"
@@ -8,9 +8,9 @@ import (
 )
 
 func TestSchemaValidJSON(t *testing.T) {
-	out, err := renderSchema()
+	out, err := RenderSchema()
 	if err != nil {
-		t.Fatalf("renderSchema() error: %v", err)
+		t.Fatalf("RenderSchema() error: %v", err)
 	}
 	var schema map[string]any
 	if err := json.Unmarshal([]byte(out), &schema); err != nil {
@@ -187,7 +187,7 @@ func TestSchemaFileUpToDate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read schema.json: %v", err)
 	}
-	generated, err := renderSchema()
+	generated, err := RenderSchema()
 	if err != nil {
 		t.Fatalf("renderSchema: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestSchemaMatchesJSONOutput(t *testing.T) {
 	}
 	doc, _ := ParseDocument(string(src))
 
-	jsonOut, err := renderDocumentJSON(&doc)
+	jsonOut, err := RenderDocumentJSON(&doc)
 	if err != nil {
 		t.Fatalf("renderDocumentJSON: %v", err)
 	}

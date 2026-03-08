@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 
+	shdoc "shdoc-ng"
+
 	flag "github.com/spf13/pflag"
 )
 
@@ -13,6 +15,7 @@ func main() {
 	var format string
 	var sortFuncs bool
 	var showSchema bool
+	var lintOnly bool
 	var inputFile string
 	var outputFile string
 	var printTemplate string
@@ -20,6 +23,7 @@ func main() {
 	flag.StringVar(&format, "format", "markdown", "Output format: markdown, html, json")
 	flag.BoolVar(&sortFuncs, "sort", false, "Sort functions alphabetically")
 	flag.BoolVar(&showSchema, "schema", false, "Print JSON Schema for --format json output and exit")
+	flag.BoolVar(&lintOnly, "lint", false, "Check for warnings without generating output")
 	flag.StringVarP(&inputFile, "input", "i", "-", "Input file (- for stdin)")
 	flag.StringVarP(&outputFile, "output", "o", "-", "Output file (- for stdout)")
 	flag.StringVar(&printTemplate, "print-template", "", "Print built-in template for format (markdown, html) and exit")
@@ -35,6 +39,7 @@ Usage:
   shdoc-ng [flags]
   shdoc-ng < script.sh > docs.md
   shdoc-ng --format html -i script.sh -o docs.html
+  shdoc-ng --lint -i script.sh
 
 Flags:
 `)
@@ -56,7 +61,7 @@ Flags:
 	}
 
 	if showSchema {
-		out, err := renderSchema()
+		out, err := shdoc.RenderSchema()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating schema: %v\n", err)
 			os.Exit(1)
@@ -68,9 +73,9 @@ Flags:
 	if printTemplate != "" {
 		switch printTemplate {
 		case "md", "markdown":
-			fmt.Fprint(output, defaultMarkdownTemplate)
+			fmt.Fprint(output, shdoc.DefaultMarkdownTemplate)
 		case "html":
-			fmt.Fprint(output, defaultHTMLTemplate)
+			fmt.Fprint(output, shdoc.DefaultHTMLTemplate)
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown template format: %q (supported: markdown, html)\n", printTemplate)
 			os.Exit(1)
@@ -97,23 +102,44 @@ Flags:
 		os.Exit(1)
 	}
 
-	doc, warns := ParseDocument(string(src))
+	doc, warns := shdoc.ParseDocument(string(src))
 
-	warnColor := "\033[1;34m"
-	colorClear := "\033[1;0m"
+	warnFile := inputFile
+	if warnFile == "-" {
+		warnFile = "<stdin>"
+	}
 	for _, w := range warns {
-		fmt.Fprintf(os.Stderr, "%sline %4d, warning : %s%s\n", warnColor, w.Line, w.Message, colorClear)
+		fmt.Fprintf(os.Stderr, "%s:%d:%d: warning: %s\n", warnFile, w.Line, w.Col+1, w.Message)
+	}
+
+	if lintOnly {
+		if len(warns) > 0 {
+			os.Exit(1)
+		}
+		return
 	}
 
 	if sortFuncs {
-		sort.Slice(doc.Functions, func(i, j int) bool {
+		sort.SliceStable(doc.Functions, func(i, j int) bool {
+			if doc.Functions[i].Section != doc.Functions[j].Section {
+				return false // preserve section order
+			}
 			return doc.Functions[i].Name < doc.Functions[j].Name
 		})
+		// Recompute IsFirstInSection after reordering.
+		seenSections := map[string]bool{}
+		for i := range doc.Functions {
+			f := &doc.Functions[i]
+			f.IsFirstInSection = f.Section != "" && !seenSections[f.Section]
+			if f.Section != "" {
+				seenSections[f.Section] = true
+			}
+		}
 	}
 
 	switch format {
 	case "markdown", "md":
-		tmplText := defaultMarkdownTemplate
+		tmplText := shdoc.DefaultMarkdownTemplate
 		if templateFile != "" {
 			data, err := os.ReadFile(templateFile)
 			if err != nil {
@@ -122,14 +148,14 @@ Flags:
 			}
 			tmplText = string(data)
 		}
-		out, err := renderWithTemplate(&doc, tmplText)
+		out, err := shdoc.RenderWithTemplate(&doc, tmplText)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering markdown: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprint(output, out)
 	case "html":
-		tmplText := defaultHTMLTemplate
+		tmplText := shdoc.DefaultHTMLTemplate
 		if templateFile != "" {
 			data, err := os.ReadFile(templateFile)
 			if err != nil {
@@ -138,14 +164,14 @@ Flags:
 			}
 			tmplText = string(data)
 		}
-		out, err := renderWithTemplate(&doc, tmplText)
+		out, err := shdoc.RenderWithTemplate(&doc, tmplText)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering HTML: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprint(output, out)
 	case "json":
-		out, err := renderDocumentJSON(&doc)
+		out, err := shdoc.RenderDocumentJSON(&doc)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error rendering JSON: %v\n", err)
 			os.Exit(1)

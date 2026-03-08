@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"encoding/json"
@@ -78,7 +78,7 @@ func generateSchema() map[string]any {
 	return schema
 }
 
-func renderSchema() (string, error) {
+func RenderSchema() (string, error) {
 	schema := generateSchema()
 	data, err := json.MarshalIndent(schema, "", "  ")
 	if err != nil {

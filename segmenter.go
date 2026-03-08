@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import "regexp"
 
@@ -6,6 +6,7 @@ import "regexp"
 type CommentBlock struct {
 	Lines    []LexedLine
 	StartNum int
+	EndNum   int // Num of the last line in Lines
 }
 
 // BlockKind distinguishes function doc blocks from file-level meta blocks.
@@ -39,7 +40,7 @@ var (
 // segmentBlocks walks lexed lines and groups consecutive comment lines into
 // CommentBlocks, pairing each with the function declaration that follows it
 // (if any).
-func segmentBlocks(lines []LexedLine) []ParsedBlock {
+func SegmentBlocks(lines []LexedLine) []ParsedBlock {
 	var blocks []ParsedBlock
 	i, n := 0, len(lines)
 
@@ -57,6 +58,7 @@ func segmentBlocks(lines []LexedLine) []ParsedBlock {
 		block := CommentBlock{
 			Lines:    lines[start:i],
 			StartNum: lines[start].Num,
+			EndNum:   lines[i-1].Num,
 		}
 
 		// Look for an immediately-following function declaration.
@@ -64,7 +66,7 @@ func segmentBlocks(lines []LexedLine) []ParsedBlock {
 		if i < n && lines[i].Kind == LineCode {
 			raw := lines[i].Raw
 			if segFuncDeclWithBrace.MatchString(raw) {
-				funcName = extractFuncName(raw)
+				funcName = ExtractFuncName(raw)
 				i++ // consume the declaration line
 			} else if segFuncDeclWithoutBrace.MatchString(raw) {
 				declLine := raw
@@ -73,7 +75,7 @@ func segmentBlocks(lines []LexedLine) []ParsedBlock {
 				// blank-or-code line between declaration and brace.
 				if i < n && (lines[i].Kind == LineBlank || lines[i].Kind == LineCode) {
 					if segLoneBrace.MatchString(lines[i].Raw) {
-						funcName = extractFuncName(declLine)
+						funcName = ExtractFuncName(declLine)
 						i++ // consume the brace line
 					}
 				}
@@ -97,8 +99,13 @@ func segmentBlocks(lines []LexedLine) []ParsedBlock {
 	return blocks
 }
 
-// extractFuncName pulls the function name from a declaration line.
-func extractFuncName(line string) string {
+// IsFuncDecl reports whether line looks like a shell function declaration.
+func IsFuncDecl(line string) bool {
+	return segFuncDeclWithBrace.MatchString(line)
+}
+
+// ExtractFuncName pulls the function name from a declaration line.
+func ExtractFuncName(line string) string {
 	if m := segFuncNameRe.FindStringSubmatch(line); m != nil {
 		return m[1]
 	}

@@ -1,4 +1,4 @@
-package main
+package shdoc
 
 import (
 	"os"
@@ -8,7 +8,7 @@ import (
 func TestCustomTemplate(t *testing.T) {
 	input := "# @name mylib\n"
 	doc, _ := ParseDocument(input)
-	out, err := renderWithTemplate(&doc, `{{.FileTitle}}`)
+	out, err := RenderWithTemplate(&doc, `{{.FileTitle}}`)
 	if err != nil {
 		t.Fatalf("renderWithTemplate error: %v", err)
 	}
@@ -23,12 +23,12 @@ func TestPrintTemplateRoundtrip(t *testing.T) {
 		t.Fatalf("open showcase.sh: %v", err)
 	}
 	doc, _ := ParseDocument(string(input))
-	out1, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
+	out1, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
 	if err != nil {
 		t.Fatalf("renderWithTemplate error: %v", err)
 	}
 	// Render again with the same template to verify determinism.
-	out2, err := renderWithTemplate(&doc, defaultMarkdownTemplate)
+	out2, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
 	if err != nil {
 		t.Fatalf("renderWithTemplate (second call) error: %v", err)
 	}
