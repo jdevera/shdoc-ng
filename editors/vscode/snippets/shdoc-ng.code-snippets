@@ -1,0 +1,75 @@
+{
+  "shdoc description": {
+    "prefix": "@desc",
+    "body": [
+      "@description",
+      "#\t$0"
+    ],
+    "description": "Insert a @description block"
+  },
+  "shdoc arg": {
+    "prefix": "@arg",
+    "body": [
+      "@arg \\$${1:1} ${2:string} ${3:Description.}"
+    ],
+    "description": "Insert an @arg annotation"
+  },
+  "shdoc option": {
+    "prefix": "@opt",
+    "body": [
+      "@option ${1:--flag} ${2:Description.}"
+    ],
+    "description": "Insert an @option annotation"
+  },
+  "shdoc exitcode": {
+    "prefix": "@exit",
+    "body": [
+      "@exitcode ${1:0} ${2:Description.}"
+    ],
+    "description": "Insert an @exitcode annotation"
+  },
+  "shdoc example": {
+    "prefix": "@ex",
+    "body": [
+      "@example",
+      "#   $0"
+    ],
+    "description": "Insert an @example block"
+  },
+  "shdoc see": {
+    "prefix": "@see",
+    "body": [
+      "@see $0"
+    ],
+    "description": "Insert a @see reference"
+  },
+  "shdoc warning": {
+    "prefix": "@warn",
+    "body": [
+      "@warning $0"
+    ],
+    "description": "Insert a @warning annotation"
+  },
+  "shdoc deprecated": {
+    "prefix": "@dep",
+    "body": [
+      "@deprecated $0"
+    ],
+    "description": "Insert a @deprecated annotation"
+  },
+  "shdoc docblock": {
+    "prefix": "docblock",
+    "body": [
+      "# @description ${1:Brief description.}",
+      "#",
+      "# @arg \\$1 ${2:string} ${3:Description.}",
+      "#",
+      "# @exitcode 0 ${4:Success.}",
+      "#",
+      "# @example",
+      "#   ${5:function_name \"arg1\"}",
+      "$0"
+    ],
+    "description": "Insert a full function documentation block"
+  }
+}

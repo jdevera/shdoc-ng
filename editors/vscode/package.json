@@ -1,0 +1,64 @@
+{
+  "name": "shdoc-ng",
+  "displayName": "shdoc-ng",
+  "description": "Syntax highlighting, snippets, and LSP support for shdoc-ng shell documentation annotations",
+  "version": "0.1.0",
+  "publisher": "shdoc-ng",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:shellscript"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "annotation.shdoc-ng",
+        "path": "./syntaxes/shdoc-ng.tmLanguage.json",
+        "injectTo": [
+          "source.shell"
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "shellscript",
+        "path": "./snippets/shdoc-ng.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "shdoc-ng.previewDocumentation",
+        "title": "shdoc-ng: Preview Documentation",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "shdoc-ng.previewDocumentation",
+          "when": "resourceLangId == shellscript",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0"
+  }
+}
