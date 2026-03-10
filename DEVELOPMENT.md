@@ -6,8 +6,9 @@
 shdoc-ng/
 ├── *.go                    # Core library (package shdoc)
 ├── cmd/
-│   ├── shdoc-ng/           # CLI tool
-│   └── shdoc-lsp/          # LSP server for editor integration
+│   └── shdoc-ng/           # Cobra CLI (generate, check, template, schema, lsp)
+├── internal/
+│   └── lsp/                # LSP server logic
 ├── templates/
 │   ├── markdown.tmpl       # Default Markdown output template
 │   └── html.tmpl           # HTML output template (Catppuccin theme)
@@ -23,8 +24,7 @@ shdoc-ng/
 ## Build & Test
 
 ```bash
-go build -o shdoc-ng ./cmd/shdoc-ng       # CLI binary
-go build -o shdoc-lsp ./cmd/shdoc-lsp     # LSP binary
+go build -o shdoc-ng ./cmd/shdoc-ng        # single binary (CLI + LSP)
 go test ./...                               # all tests
 go test -run TestConformance/option        # single conformance case
 go test -v -run TestLegacyConformance      # legacy awk conformance
@@ -114,17 +114,17 @@ In the original awk, the section heading was emitted for every function in the s
 
 ## Linting
 
-The CLI supports a `--lint` flag for validation-only mode:
+The `check` subcommand runs validation-only mode:
 
 ```bash
-shdoc-ng --lint -i script.sh    # prints warnings to stderr, exits 1 if any
+shdoc-ng check -i script.sh    # prints warnings to stderr, exits 1 if any
 ```
 
 Output uses the standard `file:line:col: warning: message` format for tool integration.
 
 ## LSP Server
 
-`cmd/shdoc-lsp/` provides:
+The `lsp` subcommand (`shdoc-ng lsp`) provides:
 
 - **Diagnostics** — empty tag warnings, invalid formats, `@noargs` + positional param conflicts
 - **Hover** — rendered doc preview on function declaration lines, `@see` reference preview
@@ -141,7 +141,7 @@ Output uses the standard `file:line:col: warning: message` format for tool integ
 
 - TextMate grammar injection for `@tag` syntax highlighting
 - Snippets for common annotations
-- LSP client connecting to `shdoc-lsp` via stdio
+- LSP client connecting to `shdoc-ng lsp` via stdio
 - Documentation preview command (renders to Markdown, opens in built-in preview)
 
 ### Testing the extension
@@ -150,16 +150,14 @@ See `docs/vscode-testing-checklist.md` for the full manual testing checklist.
 
 ```bash
 # Build
-go build -o ~/.local/share/go/bin/shdoc-lsp ./cmd/shdoc-lsp
 go build -o ~/.local/share/go/bin/shdoc-ng ./cmd/shdoc-ng
 cd editors/vscode && npm run compile
 
-# Symlink binaries (once)
-ln -s ~/.local/share/go/bin/shdoc-lsp ~/.local/bin/shdoc-lsp
+# Symlink binary (once)
 ln -s ~/.local/share/go/bin/shdoc-ng ~/.local/bin/shdoc-ng
 
 # Launch dev host
 code --extensionDevelopmentPath=editors/vscode
 
-# After rebuilding shdoc-lsp, reload the dev host window
+# After rebuilding shdoc-ng, reload the dev host window
 ```

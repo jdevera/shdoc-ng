@@ -6,8 +6,8 @@ local function apply(buf, cmd)
 
     -- Start the LSP server.
     vim.lsp.start({
-        name = 'shdoc-lsp',
-        cmd = { cmd },
+        name = 'shdoc-ng',
+        cmd = { cmd, 'lsp' },
         root_dir = vim.fs.dirname(
             vim.fs.find({ '.git' }, { path = file, upward = true })[1]
         ) or vim.fn.getcwd(),
@@ -19,7 +19,7 @@ end
 
 function M.setup(opts)
     opts = opts or {}
-    local cmd = opts.cmd or 'shdoc-lsp'
+    local cmd = opts.cmd or 'shdoc-ng'
     local shell_fts = { sh = true, bash = true, zsh = true }
 
     hl.define_groups()

@@ -3,8 +3,8 @@
 ## Setup
 
 ```bash
-# Rebuild LSP binary
-go build -o ~/.local/share/go/bin/shdoc-lsp ./cmd/shdoc-lsp
+# Rebuild binary
+go build -o ~/.local/share/go/bin/shdoc-ng ./cmd/shdoc-ng
 
 # Compile extension
 cd editors/vscode && npm run compile
@@ -13,7 +13,7 @@ cd editors/vscode && npm run compile
 code --extensionDevelopmentPath=/Users/jdevera/devel/contributions/shdoc-ng/editors/vscode
 ```
 
-**After rebuilding `shdoc-lsp`, restart the dev host** (Cmd+Shift+P -> "Reload Window" or close/reopen).
+**After rebuilding `shdoc-ng`, restart the dev host** (Cmd+Shift+P -> "Reload Window" or close/reopen).
 
 Open a `.sh` file (e.g. `examples/showcase.sh`) to test.
 

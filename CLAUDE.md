@@ -9,13 +9,12 @@ shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc
 ## Build & Test Commands
 
 ```bash
-go build ./cmd/shdoc-ng       # CLI binary
-go build ./cmd/shdoc-lsp      # LSP server
-go test ./...                  # all tests (conformance + unit)
-go test -run TestConformance/option  # single conformance case
+go build ./cmd/shdoc-ng                # CLI binary (includes LSP server)
+go test ./...                           # all tests (conformance + unit)
+go test -run TestConformance/option    # single conformance case
 ```
 
-Usage: `shdoc-ng -i script.sh -o output.md` or `shdoc-ng < script.sh > output.md`
+Usage: `shdoc-ng generate -i script.sh -o output.md` or `shdoc-ng generate < script.sh > output.md`
 
 ## Architecture
 
@@ -29,8 +28,8 @@ Usage: `shdoc-ng -i script.sh -o output.md` or `shdoc-ng < script.sh > output.md
 - **`types.go`** — Data structs: `Document`, `FuncDoc`, `OptionEntry`, `Arg`, `SetVar`, etc.
 - **`option.go`** — `@option` format validation and rendering.
 - **`slug.go`** — GitHub-compatible anchors, `@see` link rendering.
-- **`cmd/shdoc-ng/`** — CLI wrapper with `--format`, `--sort`, `--lint`, `--template` flags.
-- **`cmd/shdoc-lsp/`** — LSP server (diagnostics, hover, completion, go-to-def, symbols, folding, code actions).
+- **`cmd/shdoc-ng/`** — Cobra CLI with subcommands: `generate`, `check`, `template`, `schema`, `lsp`.
+- **`internal/lsp/`** — LSP server (diagnostics, hover, completion, go-to-def, symbols, folding, code actions).
 - **`editors/vscode/`** — VSCode extension (syntax highlighting, snippets, LSP client, doc preview).
 - **`editors/neovim/`** — Neovim integration (LSP, snippets, syntax).
 

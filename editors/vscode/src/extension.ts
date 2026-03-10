@@ -4,7 +4,6 @@ import {
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
-    TransportKind,
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
@@ -22,7 +21,7 @@ class ShdocPreviewProvider implements vscode.TextDocumentContentProvider {
     provideTextDocumentContent(uri: vscode.Uri): Thenable<string> {
         const sourcePath = uri.query;
         return new Promise((resolve) => {
-            execFile('shdoc-ng', ['--format', 'markdown', '-i', sourcePath], (err, stdout, _stderr) => {
+            execFile('shdoc-ng', ['generate', '--format', 'markdown', '-i', sourcePath], (err, stdout, _stderr) => {
                 if (err) {
                     resolve(`# Error\n\n\`\`\`\n${err.message}\n\`\`\``);
                 } else {
@@ -35,8 +34,8 @@ class ShdocPreviewProvider implements vscode.TextDocumentContentProvider {
 
 export function activate(context: vscode.ExtensionContext) {
     const serverOptions: ServerOptions = {
-        command: 'shdoc-lsp',
-        transport: TransportKind.stdio,
+        command: 'shdoc-ng',
+        args: ['lsp'],
     };
 
     const clientOptions: LanguageClientOptions = {
