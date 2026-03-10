@@ -201,7 +201,7 @@ func TestSchemaMatchesJSONOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open showcase.sh: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	src, err := io.ReadAll(f)
 	if err != nil {

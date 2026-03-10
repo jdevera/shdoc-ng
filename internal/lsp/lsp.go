@@ -190,7 +190,7 @@ func Run() {
 		TextDocumentFoldingRange:   foldingRange,
 		TextDocumentCodeAction:     codeAction,
 	}
-	server.NewServer(&handler, serverName, false).RunStdio()
+	_ = server.NewServer(&handler, serverName, false).RunStdio()
 }
 
 func initialize(_ *glsp.Context, _ *protocol.InitializeParams) (any, error) {
@@ -286,9 +286,10 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 				for li := funcStart; li < len(state.lines); li++ {
 					raw := state.lines[li].Raw
 					for _, ch := range raw {
-						if ch == '{' {
+						switch ch {
+						case '{':
 							depth++
-						} else if ch == '}' {
+						case '}':
 							depth--
 						}
 					}

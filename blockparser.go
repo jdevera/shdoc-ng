@@ -359,9 +359,7 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 
 		case "description":
 			// Only the last @description becomes the function description;
-			// earlier ones are discarded.
-			pendingDesc = ""
-			// Collect the new description.
+			// earlier ones are discarded. Collect the new one.
 			var parts []string
 			if value != "" {
 				parts = append(parts, value)

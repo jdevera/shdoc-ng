@@ -357,7 +357,7 @@ mike() {
 		t.Fatalf("Missing function headers in output:\n%s", output)
 	}
 
-	if !(alphaIdx < mikeIdx && mikeIdx < zuluIdx) {
+	if alphaIdx >= mikeIdx || mikeIdx >= zuluIdx {
 		t.Errorf("Functions not in alphabetical order: alpha@%d, mike@%d, zulu@%d", alphaIdx, mikeIdx, zuluIdx)
 	}
 
@@ -370,7 +370,7 @@ mike() {
 		t.Fatalf("Missing TOC entries in output:\n%s", output)
 	}
 
-	if !(tocAlpha < tocMike && tocMike < tocZulu) {
+	if tocAlpha >= tocMike || tocMike >= tocZulu {
 		t.Errorf("TOC not in alphabetical order: alpha@%d, mike@%d, zulu@%d", tocAlpha, tocMike, tocZulu)
 	}
 }
