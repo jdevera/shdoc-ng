@@ -24,6 +24,9 @@ var optionRegex = regexp.MustCompile(
 	`^(((-[a-zA-Z0-9]([ \t]*<[^>]+>)?|--[a-zA-Z0-9][a-zA-Z0-9-]*((=|[ \t]+)<[^>]+>)?)([ \t]*\|?[ \t]+))+)([^ \t|<-].*)?$`,
 )
 
+// pipeNormalizer normalizes whitespace around pipe separators between option forms.
+var pipeNormalizer = regexp.MustCompile(`[ \t]+\|[ \t]+`)
+
 // shortFormRegex parses a single short option token: -x or -x<val> or -x <val>
 var shortFormRegex = regexp.MustCompile(`^(-[a-zA-Z0-9])([ \t]*)(?:<([^>]+)>)?$`)
 
@@ -76,9 +79,7 @@ func processAtOption(text string) ([]OptionForm, string, bool) {
 	term := strings.TrimSpace(m[1])
 	definition := strings.TrimSpace(m[8])
 
-	// Normalize spaces around pipes
-	pipeRe := regexp.MustCompile(`[ \t]+\|[ \t]+`)
-	term = pipeRe.ReplaceAllString(term, " | ")
+	term = pipeNormalizer.ReplaceAllString(term, " | ")
 
 	return parseOptionForms(term), definition, true
 }
