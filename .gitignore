@@ -1,5 +1,9 @@
 /shdoc-ng
+/shdoc-lsp
+/shdoc-ng-test
 shdoc-awk/
 github/
+memory/
+skills/
 editors/vscode/node_modules/
 editors/vscode/out/
