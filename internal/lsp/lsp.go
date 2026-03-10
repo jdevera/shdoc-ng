@@ -521,7 +521,7 @@ func cursorOnTag(raw string, cursorCol int) string {
 	if atIdx < 0 || cursorCol < atIdx {
 		return ""
 	}
-	stripped := shdoc.BpStripRe.ReplaceAllString(raw, "")
+	stripped := shdoc.StripCommentPrefix(raw)
 	tag, _ := shdoc.ParseTag(stripped)
 	if tag == "" {
 		return ""
@@ -567,7 +567,7 @@ func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
 
 	// If cursor is on @see, show the referenced function's docs.
 	if hoveredTag == "see" {
-		stripped := shdoc.BpStripRe.ReplaceAllString(lineRaw, "")
+		stripped := shdoc.StripCommentPrefix(lineRaw)
 		_, value := shdoc.ParseTag(stripped)
 		target := strings.TrimRight(strings.TrimSuffix(value, "()"), " ")
 		for i := range state.doc.Functions {
@@ -666,7 +666,7 @@ func completion(_ *glsp.Context, p *protocol.CompletionParams) (any, error) {
 	}
 
 	lineText := state.lines[lineIdx].Raw
-	stripped := shdoc.BpStripRe.ReplaceAllString(lineText, "")
+	stripped := shdoc.StripCommentPrefix(lineText)
 
 	// Only offer completions on comment lines.
 	if lineIdx < len(state.lines) && state.lines[lineIdx].Kind != shdoc.LineComment {
@@ -735,7 +735,7 @@ func definition(_ *glsp.Context, p *protocol.DefinitionParams) (any, error) {
 	}
 
 	lineText := state.lines[lineIdx].Raw
-	stripped := shdoc.BpStripRe.ReplaceAllString(lineText, "")
+	stripped := shdoc.StripCommentPrefix(lineText)
 	tag, value := shdoc.ParseTag(stripped)
 	if tag != "see" {
 		return nil, nil

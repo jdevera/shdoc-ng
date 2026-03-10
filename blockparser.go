@@ -18,7 +18,7 @@ type Warning struct {
 var (
 	// Strips leading whitespace + # + all following whitespace.
 	// Used for tag detection and description-line stripping.
-	BpStripRe = regexp.MustCompile(`^\s*#\s*`)
+	bpStripRe = regexp.MustCompile(`^\s*#\s*`)
 
 	// Strips leading whitespace + # only (no following whitespace).
 	// Used for example-line stripping to preserve indentation.
@@ -123,7 +123,7 @@ func tagCol(raw string) int {
 
 // isTagLine returns true if a raw comment line contains a @tag.
 func isTagLine(raw string) bool {
-	return strings.HasPrefix(BpStripRe.ReplaceAllString(raw, ""), "@")
+	return strings.HasPrefix(bpStripRe.ReplaceAllString(raw, ""), "@")
 }
 
 // collectUntilNextTag collects non-tag lines from lines[start:], stopping
@@ -144,7 +144,7 @@ func collectExampleLines(lines []LexedLine, start int) ([]LexedLine, int) {
 	i := start
 	for i < len(lines) && bpExampleContRe.MatchString(lines[i].Raw) {
 		// Stop if the continuation line contains a @tag.
-		stripped := BpStripRe.ReplaceAllString(lines[i].Raw, "")
+		stripped := bpStripRe.ReplaceAllString(lines[i].Raw, "")
 		if tag, _ := ParseTag(stripped); tag != "" {
 			break
 		}
@@ -153,10 +153,15 @@ func collectExampleLines(lines []LexedLine, start int) ([]LexedLine, int) {
 	return lines[start:i], i
 }
 
-// stripDesc strips the leading `# ` prefix from a description line,
-// removing all whitespace after the `#` (aggressive strip).
+// StripCommentPrefix strips the leading `# ` prefix from a comment line,
+// removing all whitespace after the `#`.
+func StripCommentPrefix(raw string) string {
+	return bpStripRe.ReplaceAllString(raw, "")
+}
+
+// stripDesc is an internal alias for StripCommentPrefix.
 func stripDesc(raw string) string {
-	return BpStripRe.ReplaceAllString(raw, "")
+	return StripCommentPrefix(raw)
 }
 
 // stripExample strips just the leading `#` from an example line,
