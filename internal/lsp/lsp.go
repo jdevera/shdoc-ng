@@ -250,7 +250,9 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		}
 		for _, f := range state.doc.Functions {
 			if f.Name == b.FuncName && f.IsDeprecated {
-				funcLine := uint32(b.Comments.EndNum) // EndNum is 1-based, func decl is next line, so 0-based = EndNum
+				// EndNum is 1-based; func decl is the line after the comment block.
+				// 0-based decl index = (EndNum - 1) + 1 = EndNum.
+				funcDeclLine := uint32(b.Comments.EndNum)
 				sev := protocol.DiagnosticSeverityHint
 				tag := protocol.DiagnosticTagDeprecated
 				msg := "deprecated"
@@ -259,8 +261,8 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 				}
 				diags = append(diags, protocol.Diagnostic{
 					Range: protocol.Range{
-						Start: protocol.Position{Line: funcLine, Character: 0},
-						End:   protocol.Position{Line: funcLine, Character: 1000},
+						Start: protocol.Position{Line: funcDeclLine, Character: 0},
+						End:   protocol.Position{Line: funcDeclLine, Character: 1000},
 					},
 					Severity: &sev,
 					Message:  msg,
@@ -279,11 +281,11 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		}
 		for _, f := range state.doc.Functions {
 			if f.Name == b.FuncName && f.IsNoArgs {
-				// Find function body: starts at decl line (EndNum is 1-based, so 0-based index = EndNum)
-				funcStart := b.Comments.EndNum // 0-based index of func decl line
+				// EndNum is 1-based; func decl line has 0-based index = EndNum.
+				funcDeclIdx := b.Comments.EndNum
 				// Scan forward tracking brace depth to find function end.
 				depth := 0
-				for li := funcStart; li < len(state.lines); li++ {
+				for li := funcDeclIdx; li < len(state.lines); li++ {
 					raw := state.lines[li].Raw
 					for _, ch := range raw {
 						switch ch {
@@ -294,7 +296,7 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 						}
 					}
 					// Skip the declaration line itself for param scanning.
-					if li > funcStart {
+					if li > funcDeclIdx {
 						locs := positionalParamRe.FindAllStringIndex(raw, -1)
 						for _, loc := range locs {
 							if inSingleQuotes(raw, loc[0]) {
@@ -315,7 +317,7 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 							})
 						}
 					}
-					if depth == 0 && li > funcStart {
+					if depth == 0 && li > funcDeclIdx {
 						break
 					}
 				}
