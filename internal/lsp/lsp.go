@@ -190,7 +190,10 @@ func Run() {
 		TextDocumentFoldingRange:   foldingRange,
 		TextDocumentCodeAction:     codeAction,
 	}
-	_ = server.NewServer(&handler, serverName, false).RunStdio()
+	s := server.NewServer(&handler, serverName, false)
+	if err := s.RunStdio(); err != nil {
+		commonlog.GetLogger("shdoc-lsp").Errorf("LSP server error: %s", err.Error())
+	}
 }
 
 func initialize(_ *glsp.Context, _ *protocol.InitializeParams) (any, error) {
