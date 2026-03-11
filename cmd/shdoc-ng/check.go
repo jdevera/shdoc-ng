@@ -58,7 +58,8 @@ func runCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(warns) > 0 {
-		os.Exit(1)
+		cmd.SilenceUsage = true
+		return fmt.Errorf("found %d warning(s)", len(warns))
 	}
 
 	return nil
