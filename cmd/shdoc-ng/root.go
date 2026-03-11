@@ -23,7 +23,10 @@ When invoked without a subcommand and stdin is a pipe, it behaves as
   shdoc-ng < script.sh > docs.md`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// If stdin is a pipe, behave as "generate".
-		fi, _ := os.Stdin.Stat()
+		fi, err := os.Stdin.Stat()
+		if err != nil {
+			return cmd.Help()
+		}
 		if fi.Mode()&os.ModeCharDevice == 0 {
 			return generateCmd.RunE(generateCmd, args)
 		}
