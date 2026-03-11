@@ -308,6 +308,7 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	lines := block.Comments.Lines
 	var docblock FuncDoc
 	tempArgs := make(map[string]Arg)
+	var contReCache map[string]*regexp.Regexp
 	isInternal := false
 
 	// pendingDesc holds the most-recently-seen @description content. When a
@@ -482,8 +483,15 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 			entry := strings.TrimRight(value, " \t")
 			j := i + 1
 			if indent != "" {
-				escapedIndent := regexp.QuoteMeta(indent)
-				contRe := regexp.MustCompile(`^` + escapedIndent + `\s+\S.*$`)
+				if contReCache == nil {
+					contReCache = make(map[string]*regexp.Regexp)
+				}
+				key := regexp.QuoteMeta(indent)
+				contRe, ok := contReCache[key]
+				if !ok {
+					contRe = regexp.MustCompile(`^` + key + `\s+\S.*$`)
+					contReCache[key] = contRe
+				}
 				for j < len(lines) && contRe.MatchString(lines[j].Raw) {
 					cont := bpStripContRe.ReplaceAllString(lines[j].Raw, "")
 					cont = strings.TrimRight(cont, " \t")
