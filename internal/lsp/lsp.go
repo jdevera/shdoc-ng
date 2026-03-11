@@ -677,7 +677,7 @@ func completion(_ *glsp.Context, p *protocol.CompletionParams) (any, error) {
 	stripped := shdoc.StripCommentPrefix(lineText)
 
 	// Only offer completions on comment lines.
-	if lineIdx < len(state.lines) && state.lines[lineIdx].Kind != shdoc.LineComment {
+	if state.lines[lineIdx].Kind != shdoc.LineComment {
 		return nil, nil
 	}
 

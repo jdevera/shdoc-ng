@@ -172,10 +172,9 @@ func checkOutputMatchesSchema(t *testing.T, jsonObj map[string]any, schemaNode m
 			if !ok {
 				continue
 			}
-			for i, elem := range v {
+			for _, elem := range v {
 				if obj, ok := elem.(map[string]any); ok {
 					checkOutputMatchesSchema(t, obj, items, path+"."+key+"[*]")
-					_ = i
 				}
 			}
 		}
