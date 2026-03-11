@@ -113,7 +113,9 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("rendering markdown: %w", err)
 		}
-		_, _ = fmt.Fprint(output, out)
+		if _, err := fmt.Fprint(output, out); err != nil {
+			return fmt.Errorf("writing output: %w", err)
+		}
 	case "html":
 		tmplText := shdoc.DefaultHTMLTemplate
 		if genTemplateFile != "" {
@@ -127,13 +129,17 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("rendering HTML: %w", err)
 		}
-		_, _ = fmt.Fprint(output, out)
+		if _, err := fmt.Fprint(output, out); err != nil {
+			return fmt.Errorf("writing output: %w", err)
+		}
 	case "json":
 		out, err := shdoc.RenderDocumentJSON(&doc)
 		if err != nil {
 			return fmt.Errorf("rendering JSON: %w", err)
 		}
-		_, _ = fmt.Fprint(output, out)
+		if _, err := fmt.Fprint(output, out); err != nil {
+			return fmt.Errorf("writing output: %w", err)
+		}
 	default:
 		return fmt.Errorf("unknown format: %q (supported: markdown, html, json)", genFormat)
 	}
