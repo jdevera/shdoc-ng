@@ -172,6 +172,14 @@ var (
 	store = map[string]*docState{}
 )
 
+// getState returns the parsed state for a document URI, or nil if
+// the document is not open.
+func getState(uri string) *docState {
+	mu.RLock()
+	defer mu.RUnlock()
+	return store[uri]
+}
+
 // Run starts the LSP server on stdio.
 func Run() {
 	commonlog.Configure(1, nil)
@@ -370,9 +378,7 @@ func didClose(_ *glsp.Context, p *protocol.DidCloseTextDocumentParams) error {
 
 // documentSymbol returns a hierarchy: file name > sections > functions.
 func documentSymbol(_ *glsp.Context, p *protocol.DocumentSymbolParams) (any, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
@@ -497,9 +503,7 @@ func documentSymbol(_ *glsp.Context, p *protocol.DocumentSymbolParams) (any, err
 
 // foldingRange returns one folding range per comment block.
 func foldingRange(_ *glsp.Context, p *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
@@ -554,9 +558,7 @@ func cursorOnTag(raw string, cursorCol int) string {
 
 // hover shows a rendered preview of the function doc block under the cursor.
 func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
@@ -661,9 +663,7 @@ var funcTags = []string{"description", "desc", "internal", "deprecated", "warnin
 
 // completion offers @tag completions inside comment blocks.
 func completion(_ *glsp.Context, p *protocol.CompletionParams) (any, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
@@ -730,9 +730,7 @@ func completion(_ *glsp.Context, p *protocol.CompletionParams) (any, error) {
 
 // definition resolves @see funcName() to the target function's comment block.
 func definition(_ *glsp.Context, p *protocol.DefinitionParams) (any, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
@@ -776,9 +774,7 @@ func docBlockSkeleton(funcName string) string {
 
 // codeAction offers to insert a doc block skeleton above undocumented functions.
 func codeAction(_ *glsp.Context, p *protocol.CodeActionParams) (any, error) {
-	mu.RLock()
-	state := store[string(p.TextDocument.URI)]
-	mu.RUnlock()
+	state := getState(string(p.TextDocument.URI))
 	if state == nil {
 		return nil, nil
 	}
