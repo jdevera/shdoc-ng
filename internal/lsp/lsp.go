@@ -349,6 +349,8 @@ func didChange(ctx *glsp.Context, p *protocol.DidChangeTextDocumentParams) error
 		if t, ok := c["text"].(string); ok {
 			text = t
 		}
+	default:
+		commonlog.GetLogger("shdoc-lsp").Warningf("unexpected ContentChange type: %T", p.ContentChanges[0])
 	}
 	if text != "" {
 		parse(ctx, string(p.TextDocument.URI), text)
