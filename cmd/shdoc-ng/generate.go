@@ -99,6 +99,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	var out string
 	switch genFormat {
 	case "markdown", "md":
 		tmplText := shdoc.DefaultMarkdownTemplate
@@ -109,12 +110,10 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 			}
 			tmplText = string(data)
 		}
-		out, err := shdoc.RenderWithTemplate(&doc, tmplText)
+		var err error
+		out, err = shdoc.RenderWithTemplate(&doc, tmplText)
 		if err != nil {
 			return fmt.Errorf("rendering markdown: %w", err)
-		}
-		if _, err := fmt.Fprint(output, out); err != nil {
-			return fmt.Errorf("writing output: %w", err)
 		}
 	case "html":
 		tmplText := shdoc.DefaultHTMLTemplate
@@ -125,23 +124,23 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 			}
 			tmplText = string(data)
 		}
-		out, err := shdoc.RenderWithTemplate(&doc, tmplText)
+		var err error
+		out, err = shdoc.RenderWithTemplate(&doc, tmplText)
 		if err != nil {
 			return fmt.Errorf("rendering HTML: %w", err)
 		}
-		if _, err := fmt.Fprint(output, out); err != nil {
-			return fmt.Errorf("writing output: %w", err)
-		}
 	case "json":
-		out, err := shdoc.RenderDocumentJSON(&doc)
+		var err error
+		out, err = shdoc.RenderDocumentJSON(&doc)
 		if err != nil {
 			return fmt.Errorf("rendering JSON: %w", err)
 		}
-		if _, err := fmt.Fprint(output, out); err != nil {
-			return fmt.Errorf("writing output: %w", err)
-		}
 	default:
 		return fmt.Errorf("unknown format: %q (supported: markdown, html, json)", genFormat)
+	}
+
+	if _, err := fmt.Fprint(output, out); err != nil {
+		return fmt.Errorf("writing output: %w", err)
 	}
 
 	return nil
