@@ -127,8 +127,21 @@ func tagCol(raw string) int {
 }
 
 // isTagLine returns true if a raw comment line contains a @tag.
+// Scans manually instead of using regex to avoid allocating a new string
+// on every call — this is a hot path during block collection.
 func isTagLine(raw string) bool {
-	return strings.HasPrefix(bpStripRe.ReplaceAllString(raw, ""), "@")
+	i := 0
+	for i < len(raw) && (raw[i] == ' ' || raw[i] == '\t') {
+		i++
+	}
+	if i >= len(raw) || raw[i] != '#' {
+		return false
+	}
+	i++
+	for i < len(raw) && (raw[i] == ' ' || raw[i] == '\t') {
+		i++
+	}
+	return i < len(raw) && raw[i] == '@'
 }
 
 // collectUntilNextTag collects non-tag lines from lines[start:], stopping
