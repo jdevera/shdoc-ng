@@ -316,8 +316,10 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		}
 		for _, f := range state.doc.Functions {
 			if f.Name == b.FuncName && f.IsNoArgs {
-				// EndNum is 1-based; func decl line has 0-based index = EndNum.
-				funcDeclIdx := b.Comments.EndNum
+				// The func declaration is the line after the comment block.
+				// EndNum is 1-based, so its 0-based index is EndNum-1;
+				// adding 1 to skip to the next line gives EndNum-1+1 = EndNum.
+				funcDeclIdx := b.Comments.EndNum // -1 +1
 				// Scan forward tracking brace depth to find function end.
 				// Skip braces inside comments and quoted strings to avoid
 				// miscounting function boundaries.
@@ -423,6 +425,10 @@ func documentSymbol(_ *glsp.Context, p *protocol.DocumentSymbolParams) (any, err
 	var sectionOrder []string
 	var ungrouped []protocol.DocumentSymbol
 
+	// Use SymbolKindString (not Function) so doc-block symbols are visually
+	// distinct from the actual function symbols reported by other extensions
+	// (e.g. bash-language-server), avoiding duplicate-looking entries in the
+	// outline view.
 	funcKind := protocol.SymbolKindString
 
 	for _, f := range state.doc.Functions {
