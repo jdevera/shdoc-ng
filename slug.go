@@ -27,11 +27,8 @@ func slug(text string) string {
 	return s
 }
 
-// urlPattern matches URLs not already inside markdown links.
-// Matches: a non-] character followed by a non-lowercase-letter-or-paren (or a paren), then a URL scheme.
-var urlDetectPattern = regexp.MustCompile(`[^\]]([^a-z(]|\()[a-z]+://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`)
-
-// urlReplacePattern is used to wrap bare URLs in markdown link syntax.
+// urlReplacePattern matches bare URLs not already inside markdown links
+// and is used both for detection and for wrapping them in markdown link syntax.
 var urlReplacePattern = regexp.MustCompile(`([^\]]([^a-z(]|\())([a-z]+://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])`)
 
 // markdownLinkPattern detects if text contains a markdown link anywhere.
@@ -68,7 +65,7 @@ func parseSeeRef(text string) SeeRef {
 
 	// 5. Mixed content — text containing embedded URLs or markdown links
 	padded := "  " + text + " "
-	if urlDetectPattern.MatchString(padded) || markdownLinkPattern.MatchString(text) {
+	if urlReplacePattern.MatchString(padded) || markdownLinkPattern.MatchString(text) {
 		return SeeRef{Kind: "text", Text: text}
 	}
 
