@@ -27,6 +27,30 @@ func inSingleQuotes(line string, pos int) bool {
 	return inSQ
 }
 
+// countBraces updates depth by counting { and } in line, skipping braces
+// inside comments and single- or double-quoted strings.
+func countBraces(line string, depth *int) {
+	inSQ := false
+	inDQ := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		switch {
+		case ch == '\\' && inDQ:
+			i++ // skip escaped character in double quotes
+		case ch == '\'' && !inDQ:
+			inSQ = !inSQ
+		case ch == '"' && !inSQ:
+			inDQ = !inDQ
+		case ch == '#' && !inSQ && !inDQ:
+			return // rest of line is a comment
+		case ch == '{' && !inSQ && !inDQ:
+			*depth++
+		case ch == '}' && !inSQ && !inDQ:
+			*depth--
+		}
+	}
+}
+
 const serverName = "shdoc-lsp"
 
 // hoverTemplate renders a single FuncDoc without TOC, section headers, or file metadata.
@@ -295,17 +319,12 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 				// EndNum is 1-based; func decl line has 0-based index = EndNum.
 				funcDeclIdx := b.Comments.EndNum
 				// Scan forward tracking brace depth to find function end.
+				// Skip braces inside comments and quoted strings to avoid
+				// miscounting function boundaries.
 				depth := 0
 				for li := funcDeclIdx; li < len(state.lines); li++ {
 					raw := state.lines[li].Raw
-					for _, ch := range raw {
-						switch ch {
-						case '{':
-							depth++
-						case '}':
-							depth--
-						}
-					}
+					countBraces(raw, &depth)
 					// Skip the declaration line itself for param scanning.
 					if li > funcDeclIdx {
 						locs := positionalParamRe.FindAllStringIndex(raw, -1)
