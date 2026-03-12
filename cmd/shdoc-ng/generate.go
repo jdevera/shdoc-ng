@@ -41,7 +41,7 @@ func init() {
 	rootCmd.AddCommand(generateCmd)
 }
 
-func runGenerate(cmd *cobra.Command, args []string) error {
+func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 	var output io.Writer
 	if genOutputFile == "-" {
 		output = os.Stdout
@@ -50,7 +50,11 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("opening output file: %w", err)
 		}
-		defer func() { _ = f.Close() }()
+		defer func() {
+			if cerr := f.Close(); cerr != nil && retErr == nil {
+				retErr = fmt.Errorf("closing output file: %w", cerr)
+			}
+		}()
 		output = f
 	}
 
