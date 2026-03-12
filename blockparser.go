@@ -427,7 +427,7 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 				argNumber := argMatch[1]
 				sortKey := argNumber
 				if sortKey != "@" {
-					sortKey = fmt.Sprintf("%03s", sortKey)
+					sortKey = fmt.Sprintf("%3s", sortKey)
 				}
 				var arg Arg
 				if m := bpArgNRe.FindStringSubmatch(value); m != nil {
