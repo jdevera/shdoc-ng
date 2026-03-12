@@ -9,47 +9,32 @@ import (
 func unindent(text string) string {
 	lines := strings.Split(text, "\n")
 
-	// Find first non-empty line and max indent
-	// Use -1 as sentinel since Go arrays are 0-indexed (awk uses 1-indexed)
+	// Find first non-empty line and minimum indent in a single pass.
 	start := -1
-	maxIndent := 0
-	for i := 0; i < len(lines); i++ {
-		if lines[i] != "" && start == -1 {
+	indent := -1 // -1 = not yet set
+	for i, line := range lines {
+		if line == "" {
+			continue
+		}
+		if start == -1 {
 			start = i
 		}
-		// Count leading spaces
 		spaces := 0
-		for _, ch := range lines[i] {
+		for _, ch := range line {
 			if ch == ' ' {
 				spaces++
 			} else {
 				break
 			}
 		}
-		if spaces > maxIndent {
-			maxIndent = spaces
+		if indent == -1 || spaces < indent {
+			indent = spaces
 		}
 	}
 
 	// If no non-empty lines found, return empty
 	if start == -1 {
 		return ""
-	}
-
-	// Find minimum indent from start
-	indent := maxIndent
-	for i := start; i < len(lines); i++ {
-		spaces := 0
-		for _, ch := range lines[i] {
-			if ch == ' ' {
-				spaces++
-			} else {
-				break
-			}
-		}
-		if spaces < indent {
-			indent = spaces
-		}
 	}
 
 	// Remove indent and join from start
