@@ -278,34 +278,38 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		})
 	}
 
+	// Index functions by name for O(1) lookup in the block loops below.
+	funcByName := make(map[string]*shdoc.FuncDoc, len(state.doc.Functions))
+	for i := range state.doc.Functions {
+		funcByName[state.doc.Functions[i].Name] = &state.doc.Functions[i]
+	}
+
 	// Add deprecated strikethrough on function declaration lines.
 	for _, b := range state.blocks {
 		if b.Kind != shdoc.FuncDocBlockKind {
 			continue
 		}
-		for _, f := range state.doc.Functions {
-			if f.Name == b.FuncName && f.IsDeprecated {
-				// EndNum is 1-based; func decl is the line after the comment block.
-				// 0-based decl index = (EndNum - 1) + 1 = EndNum.
-				funcDeclLine := uint32(b.Comments.EndNum)
-				sev := protocol.DiagnosticSeverityHint
-				tag := protocol.DiagnosticTagDeprecated
-				msg := "deprecated"
-				if f.DeprecatedMessage != "" {
-					msg = "deprecated: " + f.DeprecatedMessage
-				}
-				diags = append(diags, protocol.Diagnostic{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: funcDeclLine, Character: 0},
-						End:   protocol.Position{Line: funcDeclLine, Character: 1000},
-					},
-					Severity: &sev,
-					Message:  msg,
-					Source:   &src,
-					Tags:     []protocol.DiagnosticTag{tag},
-				})
-				break
+		f := funcByName[b.FuncName]
+		if f != nil && f.IsDeprecated {
+			// EndNum is 1-based; func decl is the line after the comment block.
+			// 0-based decl index = (EndNum - 1) + 1 = EndNum.
+			funcDeclLine := uint32(b.Comments.EndNum)
+			sev := protocol.DiagnosticSeverityHint
+			tag := protocol.DiagnosticTagDeprecated
+			msg := "deprecated"
+			if f.DeprecatedMessage != "" {
+				msg = "deprecated: " + f.DeprecatedMessage
 			}
+			diags = append(diags, protocol.Diagnostic{
+				Range: protocol.Range{
+					Start: protocol.Position{Line: funcDeclLine, Character: 0},
+					End:   protocol.Position{Line: funcDeclLine, Character: 1000},
+				},
+				Severity: &sev,
+				Message:  msg,
+				Source:   &src,
+				Tags:     []protocol.DiagnosticTag{tag},
+			})
 		}
 	}
 
@@ -314,45 +318,44 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		if b.Kind != shdoc.FuncDocBlockKind {
 			continue
 		}
-		for _, f := range state.doc.Functions {
-			if f.Name == b.FuncName && f.IsNoArgs {
-				// The func declaration is the line after the comment block.
-				// EndNum is 1-based, so its 0-based index is EndNum-1;
-				// adding 1 to skip to the next line gives EndNum-1+1 = EndNum.
-				funcDeclIdx := b.Comments.EndNum // -1 +1
-				// Scan forward tracking brace depth to find function end.
-				// Skip braces inside comments and quoted strings to avoid
-				// miscounting function boundaries.
-				depth := 0
-				for li := funcDeclIdx; li < len(state.lines); li++ {
-					raw := state.lines[li].Raw
-					countBraces(raw, &depth)
-					// Skip the declaration line itself for param scanning.
-					if li > funcDeclIdx {
-						locs := positionalParamRe.FindAllStringIndex(raw, -1)
-						for _, loc := range locs {
-							if inSingleQuotes(raw, loc[0]) {
-								continue
-							}
-							lineNum := uint32(li)
-							col := uint32(loc[0])
-							sev := protocol.DiagnosticSeverityWarning
-							param := raw[loc[0]:loc[1]]
-							diags = append(diags, protocol.Diagnostic{
-								Range: protocol.Range{
-									Start: protocol.Position{Line: lineNum, Character: col},
-									End:   protocol.Position{Line: lineNum, Character: uint32(loc[1])},
-								},
-								Severity: &sev,
-								Message:  "function " + f.Name + " is marked @noargs but uses " + param,
-								Source:   &src,
-							})
-						}
+		f := funcByName[b.FuncName]
+		if f == nil || !f.IsNoArgs {
+			continue
+		}
+		// The func declaration is the line after the comment block.
+		// EndNum is 1-based, so its 0-based index is EndNum-1;
+		// adding 1 to skip to the next line gives EndNum-1+1 = EndNum.
+		funcDeclIdx := b.Comments.EndNum // -1 +1
+		// Scan forward tracking brace depth to find function end.
+		// Skip braces inside comments and quoted strings to avoid
+		// miscounting function boundaries.
+		depth := 0
+		for li := funcDeclIdx; li < len(state.lines); li++ {
+			raw := state.lines[li].Raw
+			countBraces(raw, &depth)
+			// Skip the declaration line itself for param scanning.
+			if li > funcDeclIdx {
+				locs := positionalParamRe.FindAllStringIndex(raw, -1)
+				for _, loc := range locs {
+					if inSingleQuotes(raw, loc[0]) {
+						continue
 					}
-					if depth == 0 && li > funcDeclIdx {
-						break
-					}
+					lineNum := uint32(li)
+					col := uint32(loc[0])
+					sev := protocol.DiagnosticSeverityWarning
+					param := raw[loc[0]:loc[1]]
+					diags = append(diags, protocol.Diagnostic{
+						Range: protocol.Range{
+							Start: protocol.Position{Line: lineNum, Character: col},
+							End:   protocol.Position{Line: lineNum, Character: uint32(loc[1])},
+						},
+						Severity: &sev,
+						Message:  "function " + f.Name + " is marked @noargs but uses " + param,
+						Source:   &src,
+					})
 				}
+			}
+			if depth == 0 && li > funcDeclIdx {
 				break
 			}
 		}
