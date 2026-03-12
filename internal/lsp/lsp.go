@@ -152,7 +152,7 @@ _Function has no arguments._
 #### See also
 
 {{range $i, $s := .See}}{{if $i}}
-{{end}}* {{renderSeeRef $s}}{{end}}
+{{end}}* {{if eq $s.Kind "path"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "url"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "link"}}{{mdLink $s.Text $s.Href}}{{else if eq $s.Kind "ref"}}{{mdAnchor $s.Text}}{{else}}{{mdLinkify $s.Text}}{{end}}{{end}}
 {{- end}}
 {{end}}`
 

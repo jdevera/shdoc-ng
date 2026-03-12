@@ -43,7 +43,7 @@ OptionForm:   .Name string (e.g. "-v"), .Value string, .ValueSep string ("" | " 
 ArgEntry:     .Name string, .Type string, .Description string
 VarEntry:     .Name string, .Type string, .Description string
 ExitEntry:    .Code string, .Description string
-SeeRef:       opaque — pass to renderSeeRef to produce a markdown link
+SeeRef:       .Kind string ("ref"|"url"|"path"|"link"|"text"), .Text string, .Href string
 
 TEMPLATE FUNCTIONS
 ------------------
@@ -57,7 +57,7 @@ TEMPLATE FUNCTIONS
   mdAnchor text        — produce [text](#slug)
   mdLinkify text       — wrap bare URLs in markdown links, leave existing links
   optionFormStr form   — reconstruct display string for an OptionForm
-  renderSeeRef ref     — render a SeeRef to a markdown link or text
+  renderSeeRef ref     — render a SeeRef to a markdown link or text (convenience; see secSee for manual approach)
 
 SECTION TEMPLATE CONTRACT
 -------------------------
@@ -143,9 +143,9 @@ Bad options (entries that failed format validation) follow with no blank lines.
 {{- if .Stderr}}{{"\n\n#### Output on stderr\n\n"}}{{range $i, $s := .Stderr}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $s "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
-{{- /* secSee — @see list; each entry rendered via renderSeeRef */ -}}
+{{- /* secSee — @see list; renders each SeeRef using its Kind/Text/Href fields */ -}}
 {{- define "secSee" -}}
-{{- if .See}}{{"\n\n#### See also\n\n"}}{{range $i, $s := .See}}{{if $i}}{{"\n"}}{{end}}* {{renderSeeRef $s}}{{end}}{{- end -}}
+{{- if .See}}{{"\n\n#### See also\n\n"}}{{range $i, $s := .See}}{{if $i}}{{"\n"}}{{end}}* {{if eq $s.Kind "path"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "url"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "link"}}{{mdLink $s.Text $s.Href}}{{else if eq $s.Kind "ref"}}{{mdAnchor $s.Text}}{{else}}{{mdLinkify $s.Text}}{{end}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /*
