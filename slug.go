@@ -37,8 +37,8 @@ var markdownLinkPattern = regexp.MustCompile(`\[[^\]]*\]\([^)]*\)`)
 // markdownLinkParseRegex matches text that is entirely a single markdown link.
 var markdownLinkParseRegex = regexp.MustCompile(`^\[([^\]]*)\]\(([^)]*)\)$`)
 
-// bareURLRegex matches text that is entirely a URL.
-var bareURLRegex = regexp.MustCompile(`^[a-z]+://\S`)
+// bareURLRegex matches text that is entirely a URL (no trailing text).
+var bareURLRegex = regexp.MustCompile(`^[a-z]+://\S+$`)
 
 // parseSeeRef classifies a raw @see value into a structured SeeRef.
 // Classification order matches the awk implementation.
