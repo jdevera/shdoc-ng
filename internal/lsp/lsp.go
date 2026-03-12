@@ -249,7 +249,7 @@ func initialize(_ *glsp.Context, _ *protocol.InitializeParams) (any, error) {
 func parse(ctx *glsp.Context, uri, src string) {
 	lines := shdoc.LexLines(src)
 	blocks := shdoc.SegmentBlocks(lines)
-	doc, warns := shdoc.ParseDocument(src)
+	doc, warns := shdoc.ParseBlocks(blocks)
 
 	st := &docState{source: src, lines: lines, blocks: blocks, doc: doc, warns: warns}
 	mu.Lock()

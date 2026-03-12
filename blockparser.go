@@ -62,6 +62,11 @@ var (
 func ParseDocument(src string) (Document, []Warning) {
 	lines := LexLines(src)
 	blocks := SegmentBlocks(lines)
+	return ParseBlocks(blocks)
+}
+
+// ParseBlocks parses pre-segmented blocks and returns the document and any warnings.
+func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 	bp := &blockParser{}
 	for _, block := range blocks {
 		if block.Kind == MetaBlockKind {
