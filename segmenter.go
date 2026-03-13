@@ -26,10 +26,10 @@ type ParsedBlock struct {
 
 var (
 	segFuncDeclWithBrace = regexp.MustCompile(
-		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.\-]+)[\t ]*(\([\t ]*\))?[\t ]*[{(]`,
+		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.]+)[\t ]*(\([\t ]*\))?[\t ]*[{(]`,
 	)
 	segFuncDeclWithoutBrace = regexp.MustCompile(
-		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.\-]+)[\t ]*(\([\t ]*\))?[\t ]*$`,
+		`^[\t ]*(function[\t ]+)?([a-zA-Z0-9_\-:.]+)[\t ]*(\([\t ]*\))?[\t ]*$`,
 	)
 	segLoneBrace  = regexp.MustCompile(`^[\t ]*[{(]`)
 	segFuncNameRe = regexp.MustCompile(
