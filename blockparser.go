@@ -76,17 +76,22 @@ func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 		}
 	}
 
-	// Mark the first function in each section.
+	RecomputeFirstInSection(bp.doc.Functions)
+
+	return bp.doc, bp.warns
+}
+
+// RecomputeFirstInSection sets IsFirstInSection on the first function in each
+// section and clears it on all others. Call after sorting or reordering functions.
+func RecomputeFirstInSection(funcs []FuncDoc) {
 	seenSections := map[string]bool{}
-	for i := range bp.doc.Functions {
-		f := &bp.doc.Functions[i]
-		if f.Section != "" && !seenSections[f.Section] {
-			f.IsFirstInSection = true
+	for i := range funcs {
+		f := &funcs[i]
+		f.IsFirstInSection = f.Section != "" && !seenSections[f.Section]
+		if f.Section != "" {
 			seenSections[f.Section] = true
 		}
 	}
-
-	return bp.doc, bp.warns
 }
 
 type blockParser struct {

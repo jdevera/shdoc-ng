@@ -92,15 +92,7 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 			}
 			return doc.Functions[i].Name < doc.Functions[j].Name
 		})
-		// Recompute IsFirstInSection after reordering.
-		seenSections := map[string]bool{}
-		for i := range doc.Functions {
-			f := &doc.Functions[i]
-			f.IsFirstInSection = f.Section != "" && !seenSections[f.Section]
-			if f.Section != "" {
-				seenSections[f.Section] = true
-			}
-		}
+		shdoc.RecomputeFirstInSection(doc.Functions)
 	}
 
 	var out string
