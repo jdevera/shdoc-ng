@@ -29,7 +29,25 @@ func slug(text string) string {
 
 // urlReplacePattern matches bare URLs not already inside markdown links
 // and is used both for detection and for wrapping them in markdown link syntax.
+// The regex requires leading context characters, so callers must pad the input;
+// use hasBareURL for detection and linkifyBareURLs for replacement.
 var urlReplacePattern = regexp.MustCompile(`([^\]]([^a-z(]|\())([a-z]+://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])`)
+
+// hasBareURL reports whether text contains a bare URL that is not already
+// inside a markdown link.
+func hasBareURL(text string) bool {
+	return urlReplacePattern.MatchString("  " + text + " ")
+}
+
+// linkifyBareURLs wraps bare URLs in markdown link syntax, leaving existing
+// markdown links alone.
+func linkifyBareURLs(text string) string {
+	padded := "  " + text + " "
+	padded = urlReplacePattern.ReplaceAllString(padded, "${1}[${3}](${3})")
+	padded = strings.TrimLeft(padded, " ")
+	padded = strings.TrimRight(padded, " ")
+	return padded
+}
 
 // markdownLinkPattern detects if text contains a markdown link anywhere.
 var markdownLinkPattern = regexp.MustCompile(`\[[^\]]*\]\([^)]*\)`)
@@ -64,8 +82,7 @@ func parseSeeRef(text string) SeeRef {
 	}
 
 	// 5. Mixed content — text containing embedded URLs or markdown links
-	padded := "  " + text + " "
-	if urlReplacePattern.MatchString(padded) || markdownLinkPattern.MatchString(text) {
+	if hasBareURL(text) || markdownLinkPattern.MatchString(text) {
 		return SeeRef{Kind: "text", Text: text}
 	}
 
@@ -85,12 +102,7 @@ func renderSeeRef(ref SeeRef) string {
 	case "ref":
 		return "[" + ref.Text + "](#" + slug(ref.Text) + ")"
 	case "text":
-		// Mixed content: wrap bare URLs but leave existing markdown links alone
-		padded := "  " + ref.Text + " "
-		padded = urlReplacePattern.ReplaceAllString(padded, "${1}[${3}](${3})")
-		padded = strings.TrimLeft(padded, " ")
-		padded = strings.TrimRight(padded, " ")
-		return padded
+		return linkifyBareURLs(ref.Text)
 	}
 	return ref.Text
 }

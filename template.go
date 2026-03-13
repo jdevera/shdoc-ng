@@ -48,11 +48,7 @@ func mdAnchor(text string) string {
 
 // mdLinkify wraps bare URLs in markdown link syntax, leaving existing links alone.
 func mdLinkify(s string) string {
-	padded := "  " + s + " "
-	padded = urlReplacePattern.ReplaceAllString(padded, "${1}[${3}](${3})")
-	padded = strings.TrimLeft(padded, " ")
-	padded = strings.TrimRight(padded, " ")
-	return padded
+	return linkifyBareURLs(s)
 }
 
 // md2html converts a Markdown string to an HTML string.
