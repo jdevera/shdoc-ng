@@ -326,6 +326,9 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 		// EndNum is 1-based, so its 0-based index is EndNum-1;
 		// adding 1 to skip to the next line gives EndNum-1+1 = EndNum.
 		funcDeclIdx := b.Comments.EndNum // -1 +1
+		if funcDeclIdx >= len(state.lines) {
+			continue
+		}
 		// Scan forward tracking brace depth to find function end.
 		// Skip braces inside comments and quoted strings to avoid
 		// miscounting function boundaries.
