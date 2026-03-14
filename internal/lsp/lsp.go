@@ -814,6 +814,13 @@ func codeAction(_ *glsp.Context, p *protocol.CodeActionParams) (any, error) {
 	startLine := int(p.Range.Start.Line)
 	endLine := int(p.Range.End.Line)
 
+	documentedFuncs := make(map[string]bool, len(state.blocks))
+	for _, b := range state.blocks {
+		if b.Kind == shdoc.FuncDocBlockKind {
+			documentedFuncs[b.FuncName] = true
+		}
+	}
+
 	for lineIdx := startLine; lineIdx <= endLine && lineIdx < len(state.lines); lineIdx++ {
 		line := state.lines[lineIdx]
 		if line.Kind != shdoc.LineCode {
@@ -827,14 +834,7 @@ func codeAction(_ *glsp.Context, p *protocol.CodeActionParams) (any, error) {
 			continue
 		}
 
-		documented := false
-		for _, b := range state.blocks {
-			if b.Kind == shdoc.FuncDocBlockKind && b.FuncName == funcName {
-				documented = true
-				break
-			}
-		}
-		if documented {
+		if documentedFuncs[funcName] {
 			continue
 		}
 
