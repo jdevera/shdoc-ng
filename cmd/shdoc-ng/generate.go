@@ -19,6 +19,12 @@ var (
 	genTemplateFile string
 )
 
+var defaultTemplates = map[string]string{
+	"markdown": shdoc.DefaultMarkdownTemplate,
+	"md":       shdoc.DefaultMarkdownTemplate,
+	"html":     shdoc.DefaultHTMLTemplate,
+}
+
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate documentation from a shell script",
@@ -96,9 +102,9 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	var out string
-	switch genFormat {
-	case "markdown", "md":
-		tmplText := shdoc.DefaultMarkdownTemplate
+	switch {
+	case defaultTemplates[genFormat] != "":
+		tmplText := defaultTemplates[genFormat]
 		if genTemplateFile != "" {
 			data, err := os.ReadFile(genTemplateFile)
 			if err != nil {
@@ -109,23 +115,9 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 		var err error
 		out, err = shdoc.RenderWithTemplate(&doc, tmplText)
 		if err != nil {
-			return fmt.Errorf("rendering markdown: %w", err)
+			return fmt.Errorf("rendering %s: %w", genFormat, err)
 		}
-	case "html":
-		tmplText := shdoc.DefaultHTMLTemplate
-		if genTemplateFile != "" {
-			data, err := os.ReadFile(genTemplateFile)
-			if err != nil {
-				return fmt.Errorf("reading template file: %w", err)
-			}
-			tmplText = string(data)
-		}
-		var err error
-		out, err = shdoc.RenderWithTemplate(&doc, tmplText)
-		if err != nil {
-			return fmt.Errorf("rendering HTML: %w", err)
-		}
-	case "json":
+	case genFormat == "json":
 		var err error
 		out, err = shdoc.RenderDocumentJSON(&doc)
 		if err != nil {
