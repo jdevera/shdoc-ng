@@ -2,8 +2,10 @@ package shdoc
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -332,7 +334,7 @@ func (bp *blockParser) parseMetaBlock(block ParsedBlock) {
 func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	lines := block.Comments.Lines
 	var docblock FuncDoc
-	tempArgs := make(map[string]Arg)
+	tempArgs := make(map[int]Arg)
 	isInternal := false
 
 	// pendingDesc holds the most-recently-seen @description content. When a
@@ -431,9 +433,9 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @arg requires $N type description")
 			} else if argMatch := bpArgStartRe.FindStringSubmatch(value); argMatch != nil {
 				argNumber := argMatch[1]
-				sortKey := argNumber
-				if sortKey != "@" {
-					sortKey = fmt.Sprintf("%3s", sortKey)
+				sortKey := math.MaxInt
+				if argNumber != "@" {
+					sortKey, _ = strconv.Atoi(argNumber)
 				}
 				var arg Arg
 				if m := bpArgNRe.FindStringSubmatch(value); m != nil {
@@ -559,12 +561,12 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 		return
 	}
 
-	// Sort args by key (zero-padded numeric, "@" last).
-	sortKeys := make([]string, 0, len(tempArgs))
+	// Sort args numerically ($1, $2, …), with $@ last.
+	sortKeys := make([]int, 0, len(tempArgs))
 	for k := range tempArgs {
 		sortKeys = append(sortKeys, k)
 	}
-	sort.Strings(sortKeys)
+	sort.Ints(sortKeys)
 	for _, k := range sortKeys {
 		docblock.Args = append(docblock.Args, tempArgs[k])
 	}
