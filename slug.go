@@ -42,10 +42,16 @@ func hasBareURL(text string) bool {
 // linkifyBareURLs wraps bare URLs in markdown link syntax, leaving existing
 // markdown links alone.
 func linkifyBareURLs(text string) string {
+	// urlReplacePattern requires two characters of leading context to
+	// distinguish bare URLs from those already inside markdown links (the
+	// first capture group consumes two chars before the scheme). Padding
+	// ensures URLs at the very start/end of text are still matched.
+	// TrimPrefix/TrimSuffix (not TrimLeft/TrimRight) are used to remove
+	// only the exact padding without stripping spaces that belong to text.
 	padded := "  " + text + " "
 	padded = urlReplacePattern.ReplaceAllString(padded, "${1}[${3}](${3})")
-	padded = strings.TrimLeft(padded, " ")
-	padded = strings.TrimRight(padded, " ")
+	padded = strings.TrimPrefix(padded, "  ")
+	padded = strings.TrimSuffix(padded, " ")
 	return padded
 }
 
