@@ -102,9 +102,9 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	var out string
+	tmplText, hasTemplate := defaultTemplates[genFormat]
 	switch {
-	case defaultTemplates[genFormat] != "":
-		tmplText := defaultTemplates[genFormat]
+	case hasTemplate:
 		if genTemplateFile != "" {
 			data, err := os.ReadFile(genTemplateFile)
 			if err != nil {

@@ -435,7 +435,11 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 				argNumber := argMatch[1]
 				sortKey := math.MaxInt
 				if argNumber != "@" {
-					sortKey, _ = strconv.Atoi(argNumber)
+					var err error
+					sortKey, err = strconv.Atoi(argNumber)
+					if err != nil {
+						sortKey = math.MaxInt - 1 // overflow fallback, keep near end
+					}
 				}
 				var arg Arg
 				if m := bpArgNRe.FindStringSubmatch(value); m != nil {
