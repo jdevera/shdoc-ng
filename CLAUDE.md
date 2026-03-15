@@ -48,7 +48,12 @@ See `DEVELOPMENT.md` for full details on the test framework and documenting devi
 - **`@arg` with invalid format falls through to `@option` processing** — preserving original awk behaviour.
 - **`IsFirstInSection` flag** on `FuncDoc` — set in the parser after all functions are collected, recomputed after `--sort`. Templates check this flag to emit section headers once.
 - **Function descriptions don't route to section descriptions** — unlike the original awk. See `DEVELOPMENT.md` for known deviations.
+- **Double description routing** — `routeDescription()` does NOT return early after setting `section.desc` — it falls through to also try `FileDescription`. This mirrors the old parser's dual-call pattern.
+- **sectionDesc persistence** — When `@section` sets a new section name, the desc is intentionally NOT cleared, allowing a previous section's description to carry over (tested in `section-no-functions`).
+- **Function description → FileDescription** — At the end of `parseFuncBlock`, the description is routed via `routeDescription()` BEFORE being set on `docblock.Description`, so the first function's description can populate `doc.FileDescription` if still empty.
+- **`@example` continuation** — Uses `^[\s]*#[ ]+` (one or more spaces after `#`). A bare `#` (no space) ends the example. Implemented in `collectExampleLines()`.
+- **`@description` collection** — `collectUntilNextTag()` stops at `@`-tagged lines but continues through bare `#` blank comment lines.
 
 ## Reference Implementation
 
-`shdoc-awk/` (if present) contains the original gawk shdoc. It is gitignored and not required for building or testing.
+The original gawk shdoc at [reconquest/shdoc](https://github.com/reconquest/shdoc) is the reference implementation. It is not required for building or testing.

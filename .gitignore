@@ -1,9 +1,10 @@
+# Build artifacts
 /shdoc-ng
 /shdoc-lsp
 /shdoc-ng-test
-shdoc-awk/
-github/
-memory/
-skills/
+
+.private/
+
+# Editor extensions
 editors/vscode/node_modules/
 editors/vscode/out/
