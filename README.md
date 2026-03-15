@@ -7,10 +7,16 @@ shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc
 ## Installation
 
 ```bash
-go install github.com/jdevera/shdoc-ng/cmd/shdoc-ng@latest
-```
+# Homebrew
+brew install jdevera/tap/shdoc-ng
 
-Or download a binary from the [releases page](https://github.com/jdevera/shdoc-ng/releases).
+# Go
+go install github.com/jdevera/shdoc-ng/cmd/shdoc-ng@latest
+
+# Or download a binary from the releases page
+# https://github.com/jdevera/shdoc-ng/releases
+# Linux packages (deb/rpm/apk) are also available there.
+```
 
 ## Quick Start
 
@@ -77,7 +83,7 @@ shdoc-ng generate < script.sh > docs.md
 | `@noargs` | Declares the function takes no arguments |
 | `@set` | Variable set by the function: `@set VAR type Description` |
 | `@env` | Environment variable used: `@env VAR type Description` |
-| `@exitcode` | Exit code: `@exitcode 0 Description` |
+| `@exitcode` | Exit code: `@exitcode 0 Description`. Supports prefixes: `>N` (greater than), `!N` (not equal) |
 | `@stdin` | Description of stdin usage |
 | `@stdout` | Description of stdout output |
 | `@stderr` | Description of stderr output |

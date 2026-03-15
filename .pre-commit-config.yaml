@@ -7,3 +7,11 @@ repos:
       - id: go-vet-repo-mod
       - id: golangci-lint-repo-mod
       - id: go-mod-tidy-repo
+  - repo: local
+    hooks:
+      - id: regenerate-showcase
+        name: regenerate-showcase
+        language: system
+        entry: scripts/regenerate-showcase.sh
+        files: ^examples/showcase\.sh$
+        pass_filenames: false

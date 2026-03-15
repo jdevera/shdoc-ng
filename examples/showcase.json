@@ -11,7 +11,7 @@
   "functions": [
     {
       "name": "greet",
-      "description": "Greet someone by name.\n\nPrints a friendly greeting to stdout. Returns non-zero\nif no name is provided.",
+      "description": "Greet someone by name.\n\nPrints a friendly **greeting** to stdout. Returns non-zero\nif no name is provided.",
       "example": "   greet \"World\"\n   greet \"$(whoami)\"",
       "options": [
         {
@@ -309,7 +309,7 @@
     },
     {
       "name": "multi_exitcode",
-      "description": "Multiple exit codes.",
+      "description": "Multiple exit codes with prefix variants.",
       "is_noargs": true,
       "exitcodes": [
         {
@@ -327,6 +327,14 @@
         {
           "code": "127",
           "description": "Command not found."
+        },
+        {
+          "code": ">0",
+          "description": "Any failure."
+        },
+        {
+          "code": "!0",
+          "description": "Non-zero exit."
         }
       ],
       "section": "LSP & Highlight Testing",

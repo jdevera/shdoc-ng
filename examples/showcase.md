@@ -57,7 +57,7 @@ Common string operations.
 
 Greet someone by name.
 
-Prints a friendly greeting to stdout. Returns non-zero
+Prints a friendly **greeting** to stdout. Returns non-zero
 if no name is provided.
 
 #### Warnings
@@ -228,7 +228,7 @@ _Function has no arguments._
 
 ### multi_exitcode
 
-Multiple exit codes.
+Multiple exit codes with prefix variants.
 
 _Function has no arguments._
 
@@ -238,6 +238,8 @@ _Function has no arguments._
 * **1**: General error.
 * **2**: Misuse of shell builtins.
 * **127**: Command not found.
+* **>0**: Any failure.
+* **!0**: Non-zero exit.
 
 ### noargs_but_uses_params
 

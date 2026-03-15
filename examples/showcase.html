@@ -742,7 +742,7 @@
     <a href="#greet" class="func-anchor" aria-label="permalink">¶</a>
   </div>
   <div class="func-desc"><p>Greet someone by name.</p>
-<p>Prints a friendly greeting to stdout. Returns non-zero
+<p>Prints a friendly <strong>greeting</strong> to stdout. Returns non-zero
 if no name is provided.</p>
 </div>
   <div class="sec warnings">
@@ -1078,7 +1078,7 @@ instead of braces.</p>
     <h3 class="func-name"><span class="func-sigil">fn</span> multi_exitcode</h3>
     <a href="#multi_exitcode" class="func-anchor" aria-label="permalink">¶</a>
   </div>
-  <div class="func-desc"><p>Multiple exit codes.</p>
+  <div class="func-desc"><p>Multiple exit codes with prefix variants.</p>
 </div>
   <p class="no-args">This function takes no arguments.</p>
   <div class="sec exitcodes">
@@ -1101,6 +1101,14 @@ instead of braces.</p>
         <tr>
           <td><code>127</code></td>
           <td>Command not found.</td>
+        </tr>
+        <tr>
+          <td><code>&gt;0</code></td>
+          <td>Any failure.</td>
+        </tr>
+        <tr>
+          <td><code>!0</code></td>
+          <td>Non-zero exit.</td>
         </tr>
       </tbody>
     </table>

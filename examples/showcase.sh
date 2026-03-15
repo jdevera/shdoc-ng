@@ -151,14 +151,16 @@ env_and_set_func() {
     export OUTPUT_PATH="/tmp/out"
 }
 
-# --- Highlighting: @exitcode numbers ---
+# --- Highlighting: @exitcode numbers and prefixes ---
 
-# @desc Multiple exit codes.
+# @desc Multiple exit codes with prefix variants.
 #
 # @exit 0 Success.
 # @exit 1 General error.
 # @exit 2 Misuse of shell builtins.
 # @exit 127 Command not found.
+# @exit >0 Any failure.
+# @exit !0 Non-zero exit.
 #
 # @noargs
 multi_exitcode() {
