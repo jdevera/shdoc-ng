@@ -23,6 +23,30 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+nfpms:
+  - package_name: shdoc-ng
+    homepage: "https://github.com/jdevera/shdoc-ng"
+    maintainer: "Jacobo de Vera <devel@jacobodevera.com>"
+    description: "Documentation generator for shell scripts"
+    license: "MIT"
+    formats:
+      - deb
+      - rpm
+      - apk
+
+brews:
+  - repository:
+      owner: jdevera
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: "https://github.com/jdevera/shdoc-ng"
+    description: "Documentation generator for shell scripts"
+    license: "MIT"
+    install: |
+      bin.install "shdoc-ng"
+    test: |
+      system "#{bin}/shdoc-ng", "--version"
+
 changelog:
   sort: asc
   use: github
