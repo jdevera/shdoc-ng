@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts and produces Markdown, HTML, or JSON documentation. The root package is a library (`package shdoc`); CLIs live under `cmd/`.
+shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc), a shell documentation generator. It reads annotated shell scripts and produces Markdown, HTML, or JSON documentation. The library is `package shdoc` in `shdoc/`; CLIs live under `cmd/`.
 
 ## Build & Test Commands
 
@@ -20,22 +20,25 @@ Usage: `shdoc-ng generate -i script.sh -o output.md` or `shdoc-ng generate < scr
 
 **Pipeline:** input → `LexLines()` → `SegmentBlocks()` → `ParseDocument()` → `RenderWithTemplate()` → output
 
-- **`lexer.go`** — Line classification (comment, code, blank).
-- **`segmenter.go`** — Groups comment lines into blocks, identifies function declarations.
-- **`blockparser.go`** — Core parser. Processes blocks into `Document`/`FuncDoc`. All `@tag` parsing, validation, warnings. Tag shorthands (`@desc`→`@description`, etc.) normalized in `ParseTag()`.
-- **`template.go`** — Template rendering with `text/template`. Function map for slugs, markdown helpers.
-- **`templates/`** — Embedded Markdown and HTML (Catppuccin) templates.
-- **`types.go`** — Data structs: `Document`, `FuncDoc`, `OptionEntry`, `Arg`, `SetVar`, etc.
-- **`option.go`** — `@option` format validation and rendering.
-- **`slug.go`** — GitHub-compatible anchors, `@see` link rendering.
+- **`shdoc/`** — Library package (`package shdoc`), importable as `github.com/jdevera/shdoc-ng/shdoc`.
+  - **`lexer.go`** — Line classification (comment, code, blank).
+  - **`segmenter.go`** — Groups comment lines into blocks, identifies function declarations.
+  - **`blockparser.go`** — Core parser. Processes blocks into `Document`/`FuncDoc`. All `@tag` parsing, validation, warnings. Tag shorthands (`@desc`→`@description`, etc.) normalized in `ParseTag()`.
+  - **`template.go`** — Template rendering with `text/template`. Function map for slugs, markdown helpers.
+  - **`templates/`** — Embedded Markdown and HTML (Catppuccin) templates.
+  - **`types.go`** — Data structs: `Document`, `FuncDoc`, `OptionEntry`, `Arg`, `SetVar`, etc.
+  - **`option.go`** — `@option` format validation and rendering.
+  - **`slug.go`** — GitHub-compatible anchors, `@see` link rendering.
+  - **`testdata/`** — Conformance test suite.
 - **`cmd/shdoc-ng/`** — Cobra CLI with subcommands: `generate`, `check`, `template`, `schema`, `lsp`.
 - **`internal/lsp/`** — LSP server (diagnostics, hover, completion, go-to-def, symbols, folding, code actions).
 - **`editors/vscode/`** — VSCode extension (syntax highlighting, snippets, LSP client, doc preview).
 - **`editors/neovim/`** — Neovim integration (LSP, snippets, syntax).
+- **`skills/shdoc-ng/`** — Agent Skills spec skill for documenting shell scripts.
 
 ## Conformance Tests
 
-Tests in `testdata/*/input.sh` + `expected.md`. Two test modes:
+Tests in `shdoc/testdata/*/input.sh` + `expected.md`. Two test modes:
 
 - **`TestConformance`** — validates shdoc-ng behavior. Uses `expected-ng.md` when present (intentional deviations), falls back to `expected.md`.
 - **`TestLegacyConformance`** — validates original awk behavior. Always uses `expected.md`, skips cases with `knownDeviations` in `meta.json`.
