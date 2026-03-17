@@ -1,5 +1,13 @@
 # shdoc-ng
 
+[![CI](https://github.com/jdevera/shdoc-ng/actions/workflows/ci.yml/badge.svg)](https://github.com/jdevera/shdoc-ng/actions/workflows/ci.yml)
+[![Release](https://github.com/jdevera/shdoc-ng/actions/workflows/release.yml/badge.svg)](https://github.com/jdevera/shdoc-ng/actions/workflows/release.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/jdevera/shdoc-ng/shdoc.svg)](https://pkg.go.dev/github.com/jdevera/shdoc-ng/shdoc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/jdevera/shdoc-ng)](https://github.com/jdevera/shdoc-ng/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jdevera/shdoc-ng)](https://goreportcard.com/report/github.com/jdevera/shdoc-ng)
+[![Agent Skill](https://img.shields.io/badge/Agent_Skill-shdoc--ng-8A2BE2)](https://github.com/jdevera/shdoc-ng/tree/main/skills/shdoc-ng)
+
 A documentation generator for shell scripts. Reads annotated comments above functions and produces **Markdown**, **HTML**, or **JSON** documentation.
 
 shdoc-ng is a Go reimplementation of [shdoc](https://github.com/reconquest/shdoc) with additional features: multiple output formats, an LSP server, editor integrations, a linting mode, custom templates, and structured JSON output with schema.
@@ -58,6 +66,8 @@ shdoc-ng generate --format json -i script.sh
 # Pipe-friendly
 shdoc-ng generate < script.sh > docs.md
 ```
+
+The HTML output uses the [Catppuccin](https://catppuccin.com) color palette.
 
 ## Supported Tags
 
