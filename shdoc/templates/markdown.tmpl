@@ -71,7 +71,7 @@ Content never ends with a trailing newline; funcBlock appends a final "\n".
 {{- /* secDeprecated — @deprecated notice */ -}}
 {{- define "secDeprecated" -}}
 {{- if .IsDeprecated -}}
-{{if eq .DeprecatedMessage ""}}{{"\n\n**DEPRECATED.**"}}{{else}}{{"\n\n**DEPRECATED:** "}}{{.DeprecatedMessage}}{{end}}{{- end -}}
+{{if eq .DeprecatedMessage ""}}{{"\n\n**DEPRECATED.**"}}{{else}}{{"\n\n**DEPRECATED:** "}}{{replaceAll .DeprecatedMessage "\n" "\n"}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secDescription — @description block */ -}}
@@ -81,7 +81,7 @@ Content never ends with a trailing newline; funcBlock appends a final "\n".
 
 {{- /* secWarnings — @warning list */ -}}
 {{- define "secWarnings" -}}
-{{- if .Warnings}}{{"\n\n#### Warnings\n\n"}}{{range $i, $w := .Warnings}}{{if $i}}{{"\n"}}{{end}}* {{$w}}{{end}}{{- end -}}
+{{- if .Warnings}}{{"\n\n#### Warnings\n\n"}}{{range $i, $w := .Warnings}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $w "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secExample — @example fenced code block */ -}}
@@ -100,12 +100,12 @@ Each valid option entry renders as:
 Bad options (entries that failed format validation) follow with no blank lines.
 */ -}}
 {{- define "secOptions" -}}
-{{- if or .Options .BadOptions}}{{"\n\n#### Options\n\n"}}{{range $i, $o := .Options}}{{if $i}}{{"\n\n"}}{{end}}* {{range $j, $f := $o.Forms}}{{if $j}} | {{end}}{{mdBold (mdEscape (optionFormStr $f))}}{{end}}{{"\n\n  "}}{{$o.Definition}}{{end}}{{if and .Options .BadOptions}}{{"\n\n"}}{{end}}{{range $i, $b := .BadOptions}}{{if $i}}{{"\n"}}{{end}}* {{$b}}{{end}}{{- end -}}
+{{- if or .Options .BadOptions}}{{"\n\n#### Options\n\n"}}{{range $i, $o := .Options}}{{if $i}}{{"\n\n"}}{{end}}* {{range $j, $f := $o.Forms}}{{if $j}} | {{end}}{{mdBold (mdEscape (optionFormStr $f))}}{{end}}{{"\n\n  "}}{{replaceAll $o.Definition "\n" "\n  "}}{{end}}{{if and .Options .BadOptions}}{{"\n\n"}}{{end}}{{range $i, $b := .BadOptions}}{{if $i}}{{"\n"}}{{end}}* {{$b}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secArgs — @arg list; $@ renders as **...** */ -}}
 {{- define "secArgs" -}}
-{{- if .Args}}{{"\n\n#### Arguments\n\n"}}{{range $i, $a := .Args}}{{if $i}}{{"\n"}}{{end}}{{if eq $a.Name "$@"}}* **...** ({{$a.Type}}): {{$a.Description}}{{else}}* **{{$a.Name}}** ({{$a.Type}}): {{$a.Description}}{{end}}{{end}}{{- end -}}
+{{- if .Args}}{{"\n\n#### Arguments\n\n"}}{{range $i, $a := .Args}}{{if $i}}{{"\n"}}{{end}}{{if eq $a.Name "$@"}}* **...** ({{$a.Type}}): {{replaceAll $a.Description "\n" "\n  "}}{{else}}* **{{$a.Name}}** ({{$a.Type}}): {{replaceAll $a.Description "\n" "\n  "}}{{end}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secNoArgs — @noargs marker */ -}}
@@ -115,17 +115,17 @@ Bad options (entries that failed format validation) follow with no blank lines.
 
 {{- /* secSets — @set list */ -}}
 {{- define "secSets" -}}
-{{- if .Sets}}{{"\n\n#### Variables set\n\n"}}{{range $i, $s := .Sets}}{{if $i}}{{"\n"}}{{end}}* **{{$s.Name}}** ({{$s.Type}}): {{$s.Description}}{{end}}{{- end -}}
+{{- if .Sets}}{{"\n\n#### Variables set\n\n"}}{{range $i, $s := .Sets}}{{if $i}}{{"\n"}}{{end}}* **{{$s.Name}}** ({{$s.Type}}): {{replaceAll $s.Description "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secEnv — @env list */ -}}
 {{- define "secEnv" -}}
-{{- if .Env}}{{"\n\n#### Environment variables\n\n"}}{{range $i, $e := .Env}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Name}}** ({{$e.Type}}): {{$e.Description}}{{end}}{{- end -}}
+{{- if .Env}}{{"\n\n#### Environment variables\n\n"}}{{range $i, $e := .Env}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Name}}** ({{$e.Type}}): {{replaceAll $e.Description "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secExitCodes — @exitcode list */ -}}
 {{- define "secExitCodes" -}}
-{{- if .ExitCodes}}{{"\n\n#### Exit codes\n\n"}}{{range $i, $e := .ExitCodes}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Code}}**: {{$e.Description}}{{end}}{{- end -}}
+{{- if .ExitCodes}}{{"\n\n#### Exit codes\n\n"}}{{range $i, $e := .ExitCodes}}{{if $i}}{{"\n"}}{{end}}* **{{$e.Code}}**: {{replaceAll $e.Description "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
 {{- /* secStdin — @stdin list; multi-line items get continuation lines indented */ -}}

@@ -26,10 +26,6 @@ var (
 	// Used for example-line stripping to preserve indentation.
 	bpStripHashRe = regexp.MustCompile(`^\s*#`)
 
-	// Strips leading whitespace + # + one-or-more whitespace.
-	// Used for stripping multi-line stdin/stdout/stderr continuations.
-	bpStripContRe = regexp.MustCompile(`^\s*#\s+`)
-
 	// Matches a tag line: @tagname optionally followed by whitespace + value.
 	bpTagRe = regexp.MustCompile(`^@(\w+)(?:\s+(.*))?$`)
 
@@ -47,10 +43,6 @@ var (
 
 	// Parses @exitcode: code description
 	bpExitCodeRe = regexp.MustCompile(`^([>!]?[0-9]{1,3}) (.*)$`)
-
-	// Extracts the indentation prefix from a @stdin/@stdout/@stderr tag line.
-	// The prefix is everything up to and including the # plus trailing whitespace.
-	bpStdioIndentRe = regexp.MustCompile(`^([\t ]*#[\t ]+)`)
 
 	// Matches a valid @example continuation line: any comment with >= 1 space after #.
 	bpExampleContRe = regexp.MustCompile(`^[\s]*#[ ]+`)
@@ -102,8 +94,6 @@ type blockParser struct {
 	section pendingSection
 	// Track which file-level singleton tags have been set, to warn on duplicates.
 	seenFileTags map[string]int // tag -> first line number
-	// Cache compiled continuation regexes for @stdin/@stdout/@stderr across blocks.
-	contReCache map[string]*regexp.Regexp
 }
 
 // fileLevelTags are tags that only make sense at the file level (meta blocks).
@@ -129,10 +119,16 @@ func (bp *blockParser) warn(lineNum int, col int, msg string) {
 	bp.warns = append(bp.warns, Warning{Line: lineNum, Col: col, Message: msg})
 }
 
-// tagCol returns the 0-based column offset of the '@' in a raw comment line,
+// tagCol returns the absolute 0-based column of the '@' in a raw comment line,
 // or 0 if not found.
 func tagCol(raw string) int {
 	return strings.Index(raw, "@")
+}
+
+// commentCol returns the absolute 0-based column of the '#' in a raw comment line,
+// or 0 if not found.
+func commentCol(raw string) int {
+	return strings.Index(raw, "#")
 }
 
 // isTagLine returns true if a raw comment line contains a @tag.
@@ -155,6 +151,7 @@ func isTagLine(raw string) bool {
 
 // collectUntilNextTag collects non-tag lines from lines[start:], stopping
 // before the first tag line or the end of the slice.
+// Used by @description which flows at the same indent level as the tag.
 // Returns the collected lines and the index of the first tag line (or len(lines)).
 func collectUntilNextTag(lines []LexedLine, start int) ([]LexedLine, int) {
 	i := start
@@ -162,6 +159,90 @@ func collectUntilNextTag(lines []LexedLine, start int) ([]LexedLine, int) {
 		i++
 	}
 	return lines[start:i], i
+}
+
+// collectContinuation collects indented continuation lines from lines[start:].
+//
+// tagAbsCol is the absolute 0-based column of the '@' in the tag line.
+// tagHashCol is the absolute 0-based column of the '#' in the tag line.
+//
+// A continuation line must:
+//   - have its '#' at the same column as the tag line's '#'
+//   - have text content starting at an absolute column greater than tagAbsCol
+//
+// The indentation of the first continuation line (spaces after '#') sets the
+// baseline. That baseline is stripped from all continuation lines, preserving
+// any additional indentation.
+//
+// Collection stops at: a @tag line, mismatched '#' column, insufficient
+// indentation, bare '#' (no content), or end of the block.
+//
+// Returns the collected text lines (with baseline stripped) and the next index.
+func collectContinuation(lines []LexedLine, start int, tagAbsCol int, tagHashCol int) ([]string, int) {
+	i := start
+	baseline := -1 // spaces after '#' of the first continuation line
+	var result []string
+
+	for i < len(lines) {
+		raw := lines[i].Raw
+
+		// Find the '#' (absolute column) and get everything after it.
+		lineHashCol := strings.Index(raw, "#")
+		if lineHashCol < 0 {
+			break
+		}
+		after := raw[lineHashCol+1:]
+
+		// The '#' must be at the same column as the tag line's '#'.
+		if lineHashCol != tagHashCol {
+			break
+		}
+
+		// A bare '#' with nothing after it (or only whitespace) is not a continuation.
+		if strings.TrimSpace(after) == "" {
+			break
+		}
+
+		// Check if this is a @tag line — if so, stop.
+		if isTagLine(raw) {
+			break
+		}
+
+		// Count leading spaces/tabs after '#' to find the absolute content column.
+		spacesAfterHash := 0
+		for _, ch := range after {
+			if ch == ' ' || ch == '\t' {
+				spacesAfterHash++
+			} else {
+				break
+			}
+		}
+		contentCol := lineHashCol + 1 + spacesAfterHash
+
+		// Content must start past the tag column.
+		if contentCol <= tagAbsCol {
+			break
+		}
+
+		// First continuation line sets the baseline indent (spaces after '#').
+		if baseline < 0 {
+			baseline = spacesAfterHash
+		}
+
+		// Strip exactly the baseline number of leading whitespace characters from after-'#' text.
+		stripped := after
+		toStrip := baseline
+		for toStrip > 0 && len(stripped) > 0 && (stripped[0] == ' ' || stripped[0] == '\t') {
+			stripped = stripped[1:]
+			toStrip--
+		}
+		stripped = strings.TrimRight(stripped, " \t")
+
+		result = append(result, stripped)
+		i++
+	}
+
+	return result, i
 }
 
 // collectExampleLines collects @example continuation lines. A line continues
@@ -374,15 +455,28 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 
 		case "deprecated":
 			docblock.IsDeprecated = true
-			docblock.DeprecatedMessage = value
-			i++
+			parts := []string{}
+			if value != "" {
+				parts = append(parts, value)
+			}
+			cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+			parts = append(parts, cont...)
+			docblock.DeprecatedMessage = strings.Join(parts, "\n")
+			i = next
 
 		case "warning":
-			if value == "" {
+			parts := []string{}
+			if value != "" {
+				parts = append(parts, value)
+			}
+			cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+			parts = append(parts, cont...)
+			msg := strings.Join(parts, "\n")
+			if msg == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @warning requires a message")
 			}
-			docblock.Warnings = append(docblock.Warnings, value)
-			i++
+			docblock.Warnings = append(docblock.Warnings, msg)
+			i = next
 
 		case "description":
 			// Only the last @description becomes the function description;
@@ -417,20 +511,27 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 		case "option":
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @option requires a flag definition")
+				i++
 			} else {
 				forms, def, valid := processAtOption(value)
 				if valid {
+					cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+					if len(cont) > 0 {
+						def = def + "\n" + strings.Join(cont, "\n")
+					}
 					docblock.Options = append(docblock.Options, OptionEntry{Forms: forms, Definition: def})
+					i = next
 				} else {
 					bp.warn(lineNum, tagCol(raw), "Invalid format: @option "+value)
 					docblock.BadOptions = append(docblock.BadOptions, value)
+					i++
 				}
 			}
-			i++
 
 		case "arg":
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @arg requires $N type description")
+				i++
 			} else if argMatch := bpArgStartRe.FindStringSubmatch(value); argMatch != nil {
 				argNumber := argMatch[1]
 				sortKey := math.MaxInt
@@ -453,7 +554,12 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 					}
 					arg = Arg{Name: "$@", Type: m[1], Description: m[2]}
 				}
+				cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+				if len(cont) > 0 {
+					arg.Description = arg.Description + "\n" + strings.Join(cont, "\n")
+				}
 				tempArgs[sortKey] = arg
+				i = next
 			} else {
 				// Invalid @arg format — fall through to @option processing,
 				// preserving the original awk behaviour.
@@ -465,8 +571,8 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 					bp.warn(lineNum, tagCol(raw), "Invalid format: @option "+value)
 					docblock.BadOptions = append(docblock.BadOptions, value)
 				}
+				i++
 			}
-			i++
 
 		case "noargs":
 			docblock.IsNoArgs = true
@@ -474,61 +580,61 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 
 		case "set":
 			if m := bpSetVarRe.FindStringSubmatch(value); m != nil {
+				desc := strings.TrimSpace(m[3])
+				cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+				if len(cont) > 0 {
+					desc = desc + "\n" + strings.Join(cont, "\n")
+				}
 				docblock.Sets = append(docblock.Sets, SetVar{
-					Name: m[1], Type: m[2], Description: strings.TrimSpace(m[3]),
+					Name: m[1], Type: m[2], Description: desc,
 				})
+				i = next
 			} else {
 				bp.warn(lineNum, tagCol(raw), "Invalid format: @set requires at least a variable name")
+				i++
 			}
-			i++
 
 		case "env":
 			if m := bpSetVarRe.FindStringSubmatch(value); m != nil {
+				desc := strings.TrimSpace(m[3])
+				cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+				if len(cont) > 0 {
+					desc = desc + "\n" + strings.Join(cont, "\n")
+				}
 				docblock.Env = append(docblock.Env, SetVar{
-					Name: m[1], Type: m[2], Description: strings.TrimSpace(m[3]),
+					Name: m[1], Type: m[2], Description: desc,
 				})
+				i = next
 			} else {
 				bp.warn(lineNum, tagCol(raw), "Invalid format: @env requires at least a variable name")
+				i++
 			}
-			i++
 
 		case "exitcode":
 			if m := bpExitCodeRe.FindStringSubmatch(value); m != nil {
 				if strings.TrimSpace(m[2]) == "" {
 					bp.warn(lineNum, tagCol(raw), "Empty value: @exitcode requires 'code description'")
 				}
-				docblock.ExitCodes = append(docblock.ExitCodes, ExitCode{Code: m[1], Description: m[2]})
+				desc := m[2]
+				cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+				if len(cont) > 0 {
+					desc = desc + "\n" + strings.Join(cont, "\n")
+				}
+				docblock.ExitCodes = append(docblock.ExitCodes, ExitCode{Code: m[1], Description: desc})
+				i = next
 			} else {
 				bp.warn(lineNum, tagCol(raw), "Invalid format: @exitcode requires 'code description'")
+				i++
 			}
-			i++
 
 		case "stdin", "stdout", "stderr":
-			// Extract the indentation prefix from the raw tag line to build
-			// the continuation regex (same logic as the original multiLineIndentRegex).
-			var indent string
-			if m := bpStdioIndentRe.FindStringSubmatch(raw); m != nil {
-				indent = m[1]
+			parts := []string{}
+			if value != "" {
+				parts = append(parts, strings.TrimRight(value, " \t"))
 			}
-			entry := strings.TrimRight(value, " \t")
-			j := i + 1
-			if indent != "" {
-				if bp.contReCache == nil {
-					bp.contReCache = make(map[string]*regexp.Regexp)
-				}
-				key := regexp.QuoteMeta(indent)
-				contRe, ok := bp.contReCache[key]
-				if !ok {
-					contRe = regexp.MustCompile(`^` + key + `\s+\S.*$`)
-					bp.contReCache[key] = contRe
-				}
-				for j < len(lines) && contRe.MatchString(lines[j].Raw) {
-					cont := bpStripContRe.ReplaceAllString(lines[j].Raw, "")
-					cont = strings.TrimRight(cont, " \t")
-					entry += "\n" + cont
-					j++
-				}
-			}
+			cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+			parts = append(parts, cont...)
+			entry := strings.Join(parts, "\n")
 			if strings.TrimSpace(entry) == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @"+tag+" requires a description")
 			}
@@ -540,14 +646,19 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 			case "stderr":
 				docblock.Stderr = append(docblock.Stderr, entry)
 			}
-			i = j
+			i = next
 
 		case "see":
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @see requires a reference")
 			}
-			docblock.See = append(docblock.See, parseSeeRef(value))
-			i++
+			cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+			fullValue := value
+			if len(cont) > 0 {
+				fullValue = fullValue + "\n" + strings.Join(cont, "\n")
+			}
+			docblock.See = append(docblock.See, parseSeeRef(fullValue))
+			i = next
 
 		default:
 			i++

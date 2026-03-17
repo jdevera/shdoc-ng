@@ -1,0 +1,6 @@
+{
+  "tags": ["compat"],
+  "knownDeviations": [
+    "Multi-line continuation for @arg, @option, @set, @env, @exitcode, @see, @warning, and @deprecated. The original awk only supports single-line values for these tags."
+  ]
+}

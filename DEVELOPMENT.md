@@ -113,6 +113,12 @@ When shdoc-ng intentionally differs from the original awk:
 
 ## Known Deviations from Original shdoc
 
+### Multi-line continuation for all text-bearing tags
+
+The original awk only supports multi-line continuation for `@description`, `@stdin`, `@stdout`, `@stderr`, and `@example`. In shdoc-ng, all tags that carry free text support indented continuation lines: `@arg`, `@option`, `@set`, `@env`, `@exitcode`, `@see`, `@warning`, and `@deprecated`.
+
+A continuation line must have its `#` at the same column as the tag line and its text content indented past the `@` tag position. The first continuation line's indentation sets the baseline; that baseline is stripped from all continuation lines, preserving any additional indentation (for nested lists, etc.).
+
 ### Sections are sticky
 
 In the original awk, `@section` only applied to the immediately following function. In shdoc-ng, all functions after `@section Foo` belong to that section until the next `@section` or end of file.
