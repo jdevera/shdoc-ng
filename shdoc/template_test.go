@@ -18,7 +18,7 @@ func TestCustomTemplate(t *testing.T) {
 }
 
 func TestPrintTemplateRoundtrip(t *testing.T) {
-	input, err := os.ReadFile("examples/showcase.sh")
+	input, err := os.ReadFile("../examples/showcase.sh")
 	if err != nil {
 		t.Fatalf("open showcase.sh: %v", err)
 	}

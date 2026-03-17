@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	shdoc "github.com/jdevera/shdoc-ng"
+	shdoc "github.com/jdevera/shdoc-ng/shdoc"
 
 	"github.com/spf13/cobra"
 )

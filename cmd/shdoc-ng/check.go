@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	shdoc "github.com/jdevera/shdoc-ng"
+	shdoc "github.com/jdevera/shdoc-ng/shdoc"
 
 	"github.com/spf13/cobra"
 )

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	shdoc "github.com/jdevera/shdoc-ng"
+	shdoc "github.com/jdevera/shdoc-ng/shdoc"
 
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
