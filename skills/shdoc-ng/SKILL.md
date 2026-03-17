@@ -105,23 +105,23 @@ greet() {
 
 #### Tag reference
 
-| Tag            | Format | Notes |
-|----------------|--------|-------|
-| `@description` | `@description <text>` or `@description` followed by continuation lines | Multi-line, markdown. `@desc` is a shorthand. |
-| `@arg`         | `@arg $N type Description` or `@arg $@ type Description` | `$1`..`$9`, `$@`. Type is required (e.g. `string`, `int`, `bool`). |
-| `@option`      | `@option <flags> Description` | Flag forms: `-f`, `--flag`, `-f/--flag`, `-f \| --flag`, `--flag=<value>`, `-f <value>`. `@opt` is a shorthand. |
-| `@noargs`      | `@noargs` | Marks function as taking no arguments. Mutually exclusive with `@arg`. |
-| `@set`         | `@set VARNAME [type [Description]]` | Documents a variable the function sets/exports. Type and description are optional. |
-| `@env`         | `@env VARNAME [type [Description]]` | Documents an environment variable the function reads. Type and description are optional. |
-| `@exitcode`    | `@exitcode [>\|!]N Description` | `N` is a numeric exit code. Supports prefixes: `>N` (greater than), `!N` (not equal). `@exit` is a shorthand. |
-| `@stdin`       | `@stdin Description` | Multi-line: continuation lines indented under `#`. Repeatable. |
-| `@stdout`      | `@stdout Description` | Multi-line, same as `@stdin`. Repeatable. |
-| `@stderr`      | `@stderr Description` | Multi-line, same as `@stdin`. Repeatable. |
-| `@example`     | `@example` followed by indented continuation lines | Lines must have at least one space after `#`. |
-| `@see`         | `@see func_name()` or `@see <URL>` or `@see [text](URL)` | Cross-references. Function refs use `()` suffix. |
-| `@warning`     | `@warning <text>` | `@warn` is a shorthand. |
-| `@deprecated`  | `@deprecated [message]` | Marks the function as deprecated. Message is optional. |
-| `@internal`    | `@internal` | Excludes the function from generated documentation. |
+| Tag            | Format | Lines | Notes |
+|----------------|--------|-------|-------|
+| `@description` | `@description <text>` or `@description` + continuation lines | Multi | Markdown. `@desc` is a shorthand. |
+| `@arg`         | `@arg $N type Description` | Single | `$1`..`$9`, `$@`. Type is required (e.g. `string`, `int`, `bool`). |
+| `@option`      | `@option <flags> Description` | Single | Flag forms: `-f`, `--flag`, `-f/--flag`, `-f \| --flag`, `--flag=<value>`, `-f <value>`. `@opt` is a shorthand. |
+| `@noargs`      | `@noargs` | — | Marks function as taking no arguments. Mutually exclusive with `@arg`. |
+| `@set`         | `@set VARNAME [type [Description]]` | Single | Documents a variable the function sets/exports. |
+| `@env`         | `@env VARNAME [type [Description]]` | Single | Documents an environment variable the function reads. |
+| `@exitcode`    | `@exitcode [>\|!]N Description` | Single | Supports prefixes: `>N` (greater than), `!N` (not equal). `@exit` is a shorthand. |
+| `@stdin`       | `@stdin Description` | Multi | Continuation lines indented under `#`. Repeatable. |
+| `@stdout`      | `@stdout Description` | Multi | Same as `@stdin`. Repeatable. |
+| `@stderr`      | `@stderr Description` | Multi | Same as `@stdin`. Repeatable. |
+| `@example`     | `@example` + indented continuation lines | Multi | Lines must have at least one space after `#`. |
+| `@see`         | `@see func_name()` or `@see <URL>` or `@see [text](URL)` | Single | Cross-references. Function refs use `()` suffix. |
+| `@warning`     | `@warning <text>` | Single | `@warn` is a shorthand. |
+| `@deprecated`  | `@deprecated [message]` | Single | Message is optional. |
+| `@internal`    | `@internal` | — | Excludes the function from generated documentation. |
 
 #### Tag shorthands
 
