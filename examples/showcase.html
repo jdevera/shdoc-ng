@@ -107,7 +107,7 @@
       --theme-link:        var(--ctp-blue);      /* hyperlinks */
 
       /* Code */
-      --theme-code-text:   var(--ctp-sky);       /* inline code foreground */
+      --theme-code-text:   var(--ctp-text);       /* inline code foreground */
 
       /* Semantic badges */
       --theme-type:        var(--ctp-peach);     /* type badges (string, int, …) */
@@ -126,9 +126,33 @@
     */
 
     /* ── Reset & base ───────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
 
-    html { font-size: 16px; scroll-behavior: smooth; }
+    html { font-size: 18px; scroll-behavior: smooth; }
+
+    body, section, nav, aside, header, footer, h1, h2, h3, h4, h5, h6,
+    dl, dt, dd, figure { margin: 0; padding: 0; }
+
+    /* Semantic content elements get proper spacing */
+    .func-desc p, .section-desc p, .file-overview p,
+    .opt-def p, .badge-reason p { margin: 0 0 0.75em; }
+    .func-desc p:last-child, .section-desc p:last-child,
+    .file-overview p:last-child, .opt-def p:last-child,
+    .badge-reason p:last-child { margin-bottom: 0; }
+
+    .func-desc ul, .func-desc ol, .section-desc ul, .section-desc ol,
+    .file-overview ul, .file-overview ol,
+    .opt-def ul, .opt-def ol { margin: 0.5em 0; padding-left: 1.5em; }
+    .func-desc li, .section-desc li, .file-overview li,
+    .opt-def li { margin: 0.25em 0; }
+
+    .func-desc blockquote, .section-desc blockquote,
+    .file-overview blockquote {
+      margin: 0.75em 0;
+      padding: 0.5em 1em;
+      border-left: 3px solid var(--theme-border-faint);
+      color: var(--theme-text-secondary);
+    }
 
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -312,9 +336,8 @@
 
     /* ── File header ────────────────────────────────────────────────── */
     .file-header {
-      margin-bottom: 3rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--theme-border);
+      margin-bottom: 1rem;
+      padding-bottom: 0;
     }
 
     .file-title {
@@ -368,16 +391,17 @@
 
     /* ── Function block ─────────────────────────────────────────────── */
     .func {
-      padding: 2.5rem 0;
-      border-bottom: 1px solid var(--theme-border);
+      padding: 0;
+      margin: 1.5rem 0 0;
     }
 
     .func:last-child { border-bottom: none; }
 
     .section-heading {
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--theme-border);
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1.5rem 0 0;
+      border-top: 1px solid var(--theme-border);
     }
 
     .section-title {
@@ -527,7 +551,9 @@
     .copy-btn.copied { color: var(--theme-success); }
 
     /* ── Tables ─────────────────────────────────────────────────────── */
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: auto; }
+    .data-table td:first-child, .data-table th:first-child { white-space: nowrap; width: 1%; }
+    .data-table td:nth-child(2):not(:last-child), .data-table th:nth-child(2):not(:last-child) { white-space: nowrap; width: 1%; }
 
     .data-table th {
       text-align: left;
@@ -560,26 +586,12 @@
     }
 
     /* ── Options ────────────────────────────────────────────────────── */
-    .option-list { display: grid; gap: 0.75rem; }
-
-    .opt-term { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-
-    .opt-term code {
+    .opt-flag {
       color: var(--theme-option);
       background: color-mix(in srgb, var(--theme-option) 10%, transparent);
     }
 
-    .opt-bad .opt-term code { color: var(--theme-text-muted); }
-
     .opt-pipe { color: var(--theme-text-faint); font-size: 0.8em; }
-
-    .opt-def {
-      margin: 0.2rem 0 0 0;
-      font-size: 0.85rem;
-      color: var(--theme-text-secondary);
-      padding-left: 0.5rem;
-      border-left: 2px solid var(--theme-border-faint);
-    }
 
     .opt-bad-note { font-size: 0.75rem; color: var(--theme-text-faint); font-style: italic; }
 
@@ -622,8 +634,9 @@
     }
 
     /* ── Links ──────────────────────────────────────────────────────── */
+    a { color: var(--theme-link); }
+
     a.link-ref, a.link-ext, a.link-path {
-      color: var(--theme-link);
       text-decoration: none;
     }
 
@@ -763,14 +776,23 @@ greet &#34;$(whoami)&#34;</code></pre>
   </div>
   <div class="sec options">
     <h4 class="sec-label">Options</h4>
-    <dl class="option-list">
-      <dt class="opt-term"><code>-u</code> <span class="opt-pipe">|</span> <code>--uppercase</code> </dt>
-      <dd class="opt-def">Uppercase the name.</dd>
-      <dt class="opt-term"><code>-n &lt;count&gt;</code> <span class="opt-pipe">|</span> <code>--repeat=&lt;count&gt;</code> </dt>
-      <dd class="opt-def">Repeat the greeting.</dd>
-      <dt class="opt-term"><code>-r</code> <span class="opt-pipe">|</span> <code>--reverse</code> </dt>
-      <dd class="opt-def">Reverse the greeting.</dd>
-    </dl>
+    <table class="data-table">
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code class="opt-flag">-u</code> <span class="opt-pipe">|</span> <code class="opt-flag">--uppercase</code></td>
+          <td>Uppercase the name.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">-n &lt;count&gt;</code> <span class="opt-pipe">|</span> <code class="opt-flag">--repeat=&lt;count&gt;</code></td>
+          <td>Repeat the greeting.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">-r</code> <span class="opt-pipe">|</span> <code class="opt-flag">--reverse</code></td>
+          <td>Reverse the greeting.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <div class="sec args">
     <h4 class="sec-label">Arguments</h4>
@@ -849,7 +871,7 @@ greet &#34;$(whoami)&#34;</code></pre>
   </div>
   <div class="sec see">
     <h4 class="sec-label">See also</h4>
-    <ul class="see-list"><li><a href="#farewell" class="link-ref">farewell()</a></li><li><a href="https://www.gnu.org/software/bash/" class="link-ext" target="_blank" rel="noopener">https://www.gnu.org/software/bash/</a></li><li><a href="./lib/helpers.sh" class="link-path">./lib/helpers.sh</a></li><li><a href="https://www.gnu.org/software/bash/manual/" class="link-ext" target="_blank" rel="noopener">Bash manual</a></li><li>See also the <a href="https://tldp.org/LDP/abs/html/">bash guide</a> and https://mywiki.wooledge.org/BashFAQ.</li>
+    <ul class="see-list"><li><a href="#farewell" class="link-ref">farewell()</a></li><li><a href="https://www.gnu.org/software/bash/" class="link-ext" target="_blank" rel="noopener">https://www.gnu.org/software/bash/</a></li><li><a href="./lib/helpers.sh" class="link-path">./lib/helpers.sh</a></li><li><a href="https://www.gnu.org/software/bash/manual/" class="link-ext" target="_blank" rel="noopener">Bash manual</a></li><li>See also the <a href="https://tldp.org/LDP/abs/html/">bash guide</a> and <a href="https://mywiki.wooledge.org/BashFAQ">https://mywiki.wooledge.org/BashFAQ</a>.</li>
     </ul>
   </div>
 
@@ -1010,18 +1032,31 @@ instead of braces.</p>
 </div>
   <div class="sec options">
     <h4 class="sec-label">Options</h4>
-    <dl class="option-list">
-      <dt class="opt-term"><code>-v</code> </dt>
-      <dd class="opt-def">Enable verbose mode.</dd>
-      <dt class="opt-term"><code>--dry-run</code> </dt>
-      <dd class="opt-def">Do not actually execute.</dd>
-      <dt class="opt-term"><code>-o &lt;path&gt;</code> <span class="opt-pipe">|</span> <code>--output &lt;path&gt;</code> </dt>
-      <dd class="opt-def">Write output to file.</dd>
-      <dt class="opt-term"><code>-f</code> <span class="opt-pipe">|</span> <code>--force</code> </dt>
-      <dd class="opt-def">Force overwrite.</dd>
-      <dt class="opt-term"><code>--timeout=&lt;seconds&gt;</code> </dt>
-      <dd class="opt-def">Timeout in seconds.</dd>
-    </dl>
+    <table class="data-table">
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code class="opt-flag">-v</code></td>
+          <td>Enable verbose mode.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">--dry-run</code></td>
+          <td>Do not actually execute.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">-o &lt;path&gt;</code> <span class="opt-pipe">|</span> <code class="opt-flag">--output &lt;path&gt;</code></td>
+          <td>Write output to file.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">-f</code> <span class="opt-pipe">|</span> <code class="opt-flag">--force</code></td>
+          <td>Force overwrite.</td>
+        </tr>
+        <tr>
+          <td><code class="opt-flag">--timeout=&lt;seconds&gt;</code></td>
+          <td>Timeout in seconds.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
 </section>
@@ -1191,12 +1226,6 @@ instead of braces.</p>
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> empty_tags_func</h3>
     <a href="#empty_tags_func" class="func-anchor" aria-label="permalink">¶</a>
-  </div>
-  <div class="sec warnings">
-    <h4 class="sec-label">Warnings</h4>
-    <ul class="warning-list">
-      <li></li>
-    </ul>
   </div>
   <div class="sec env">
     <h4 class="sec-label">Environment variables</h4>

@@ -405,9 +405,6 @@
           "kind": "ref"
         }
       ],
-      "warnings": [
-        ""
-      ],
       "section": "LSP & Highlight Testing",
       "section_description": "Cases to exercise syntax highlighting, diagnostics, and LSP features."
     },

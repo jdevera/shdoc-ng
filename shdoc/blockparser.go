@@ -474,8 +474,9 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 			msg := strings.Join(parts, "\n")
 			if msg == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @warning requires a message")
+			} else {
+				docblock.Warnings = append(docblock.Warnings, msg)
 			}
-			docblock.Warnings = append(docblock.Warnings, msg)
 			i = next
 
 		case "description":

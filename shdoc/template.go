@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 //go:embed templates/markdown.tmpl
@@ -52,9 +53,13 @@ func mdLinkify(s string) string {
 }
 
 // md2html converts a Markdown string to an HTML string.
+var mdRenderer = goldmark.New(
+	goldmark.WithExtensions(extension.Linkify),
+)
+
 func md2html(s string) string {
 	var buf bytes.Buffer
-	if err := goldmark.Convert([]byte(s), &buf); err != nil {
+	if err := mdRenderer.Convert([]byte(s), &buf); err != nil {
 		return s
 	}
 	return buf.String()

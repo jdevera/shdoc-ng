@@ -273,10 +273,6 @@ New parser.
 
 ### empty_tags_func
 
-#### Warnings
-
-* 
-
 #### Environment variables
 
 * **FOO** (): 

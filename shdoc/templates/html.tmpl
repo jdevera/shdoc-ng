@@ -59,16 +59,23 @@
 {{- if or .Options .BadOptions}}
   <div class="sec options">
     <h4 class="sec-label">Options</h4>
-    <dl class="option-list">
-      {{- range .Options}}
-      <dt class="opt-term">{{range $j, $f := .Forms}}{{if $j}}<span class="opt-pipe">|</span> {{end}}<code>{{optionFormStr $f | html}}</code> {{end}}</dt>
-      <dd class="opt-def">{{.Definition | md2inline}}</dd>
-      {{- end}}
-      {{- range .BadOptions}}
-      <dt class="opt-term opt-bad"><code>{{. | html}}</code></dt>
-      <dd class="opt-def opt-bad-note">invalid option format</dd>
-      {{- end}}
-    </dl>
+    <table class="data-table">
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        {{- range .Options}}
+        <tr>
+          <td>{{range $j, $f := .Forms}}{{if $j}} <span class="opt-pipe">|</span> {{end}}<code class="opt-flag">{{optionFormStr $f | html}}</code>{{end}}</td>
+          <td>{{.Definition | md2inline}}</td>
+        </tr>
+        {{- end}}
+        {{- range .BadOptions}}
+        <tr>
+          <td><code>{{. | html}}</code></td>
+          <td class="opt-bad-note">invalid option format</td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
   </div>
 {{- end}}
 
@@ -295,7 +302,7 @@
       --theme-link:        var(--ctp-blue);      /* hyperlinks */
 
       /* Code */
-      --theme-code-text:   var(--ctp-sky);       /* inline code foreground */
+      --theme-code-text:   var(--ctp-text);       /* inline code foreground */
 
       /* Semantic badges */
       --theme-type:        var(--ctp-peach);     /* type badges (string, int, …) */
@@ -314,9 +321,33 @@
     */
 
     /* ── Reset & base ───────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
 
-    html { font-size: 16px; scroll-behavior: smooth; }
+    html { font-size: 18px; scroll-behavior: smooth; }
+
+    body, section, nav, aside, header, footer, h1, h2, h3, h4, h5, h6,
+    dl, dt, dd, figure { margin: 0; padding: 0; }
+
+    /* Semantic content elements get proper spacing */
+    .func-desc p, .section-desc p, .file-overview p,
+    .opt-def p, .badge-reason p { margin: 0 0 0.75em; }
+    .func-desc p:last-child, .section-desc p:last-child,
+    .file-overview p:last-child, .opt-def p:last-child,
+    .badge-reason p:last-child { margin-bottom: 0; }
+
+    .func-desc ul, .func-desc ol, .section-desc ul, .section-desc ol,
+    .file-overview ul, .file-overview ol,
+    .opt-def ul, .opt-def ol { margin: 0.5em 0; padding-left: 1.5em; }
+    .func-desc li, .section-desc li, .file-overview li,
+    .opt-def li { margin: 0.25em 0; }
+
+    .func-desc blockquote, .section-desc blockquote,
+    .file-overview blockquote {
+      margin: 0.75em 0;
+      padding: 0.5em 1em;
+      border-left: 3px solid var(--theme-border-faint);
+      color: var(--theme-text-secondary);
+    }
 
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -500,9 +531,8 @@
 
     /* ── File header ────────────────────────────────────────────────── */
     .file-header {
-      margin-bottom: 3rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--theme-border);
+      margin-bottom: 1rem;
+      padding-bottom: 0;
     }
 
     .file-title {
@@ -556,16 +586,17 @@
 
     /* ── Function block ─────────────────────────────────────────────── */
     .func {
-      padding: 2.5rem 0;
-      border-bottom: 1px solid var(--theme-border);
+      padding: 0;
+      margin: 1.5rem 0 0;
     }
 
     .func:last-child { border-bottom: none; }
 
     .section-heading {
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--theme-border);
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1.5rem 0 0;
+      border-top: 1px solid var(--theme-border);
     }
 
     .section-title {
@@ -715,7 +746,9 @@
     .copy-btn.copied { color: var(--theme-success); }
 
     /* ── Tables ─────────────────────────────────────────────────────── */
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: auto; }
+    .data-table td:first-child, .data-table th:first-child { white-space: nowrap; width: 1%; }
+    .data-table td:nth-child(2):not(:last-child), .data-table th:nth-child(2):not(:last-child) { white-space: nowrap; width: 1%; }
 
     .data-table th {
       text-align: left;
@@ -748,26 +781,12 @@
     }
 
     /* ── Options ────────────────────────────────────────────────────── */
-    .option-list { display: grid; gap: 0.75rem; }
-
-    .opt-term { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-
-    .opt-term code {
+    .opt-flag {
       color: var(--theme-option);
       background: color-mix(in srgb, var(--theme-option) 10%, transparent);
     }
 
-    .opt-bad .opt-term code { color: var(--theme-text-muted); }
-
     .opt-pipe { color: var(--theme-text-faint); font-size: 0.8em; }
-
-    .opt-def {
-      margin: 0.2rem 0 0 0;
-      font-size: 0.85rem;
-      color: var(--theme-text-secondary);
-      padding-left: 0.5rem;
-      border-left: 2px solid var(--theme-border-faint);
-    }
 
     .opt-bad-note { font-size: 0.75rem; color: var(--theme-text-faint); font-style: italic; }
 
@@ -810,8 +829,9 @@
     }
 
     /* ── Links ──────────────────────────────────────────────────────── */
+    a { color: var(--theme-link); }
+
     a.link-ref, a.link-ext, a.link-path {
-      color: var(--theme-link);
       text-decoration: none;
     }
 
