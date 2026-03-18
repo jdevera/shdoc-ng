@@ -51,7 +51,7 @@
       <button class="copy-btn" onclick="copyCode(this)" title="Copy">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       </button>
-      <pre><code>{{unindent .Example | html}}</code></pre>
+      <pre><code>{{highlightCode "bash" (unindent .Example)}}</code></pre>
     </div>
   </div>
 {{- end}}
@@ -858,6 +858,11 @@
       .sidebar { display: none; }
       .content { overflow: visible; height: auto; }
     }
+
+    /* ── Syntax highlighting (chroma, per-theme) ─────────────────────── */
+    .code-block code .line { display: inline; }
+    .code-block code .chroma { background: none; }
+    {{chromaThemeCSS}}
   </style>
 </head>
 <body>

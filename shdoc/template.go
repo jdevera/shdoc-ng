@@ -3,9 +3,14 @@ package shdoc
 import (
 	_ "embed"
 	"bytes"
+	"fmt"
 	"strings"
 	"text/template"
 
+	"github.com/alecthomas/chroma/v2"
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 )
@@ -74,6 +79,88 @@ func md2inline(s string) string {
 	return strings.TrimSpace(result)
 }
 
+// highlightCode syntax-highlights code using chroma. The language parameter
+// selects the lexer (e.g. "bash", "json"). Falls back to plain text if the
+// language is unknown. Returns HTML using CSS classes (chroma token classes
+// like .k, .s, .nv) so that theme-specific color rules can be applied.
+func highlightCode(lang, code string) string {
+	lexer := lexers.Get(lang)
+	if lexer == nil {
+		lexer = lexers.Fallback
+	}
+	lexer = chroma.Coalesce(lexer)
+
+	formatter := chromahtml.New(chromahtml.WithClasses(true), chromahtml.PreventSurroundingPre(true))
+
+	iterator, err := lexer.Tokenise(nil, code)
+	if err != nil {
+		return template.HTMLEscapeString(code)
+	}
+
+	var buf bytes.Buffer
+	if err := formatter.Format(&buf, styles.Fallback, iterator); err != nil {
+		return template.HTMLEscapeString(code)
+	}
+	return buf.String()
+}
+
+// chromaThemeCSS generates CSS rules for chroma token classes scoped under
+// [data-theme="name"] .code-block code selectors. Iterates chroma's token
+// types directly to build properly scoped CSS without string hacks.
+// Background colors are omitted — the code block background is managed
+// by --theme-bg-code in the main CSS.
+func chromaThemeCSS() string {
+	themes := []struct {
+		dataTheme  string
+		chromaName string
+	}{
+		{"mocha", "catppuccin-mocha"},
+		{"macchiato", "catppuccin-macchiato"},
+		{"frappe", "catppuccin-frappe"},
+		{"latte", "catppuccin-latte"},
+	}
+
+	var buf bytes.Buffer
+	for _, t := range themes {
+		style := styles.Get(t.chromaName)
+		if style == nil {
+			continue
+		}
+		prefix := fmt.Sprintf("[data-theme=%q] .code-block code", t.dataTheme)
+
+		for _, ttype := range style.Types() {
+			entry := style.Get(ttype)
+			if entry.IsZero() {
+				continue
+			}
+			cls := chroma.StandardTypes[ttype]
+			if cls == "" {
+				continue
+			}
+
+			var props []string
+			if entry.Colour.IsSet() {
+				props = append(props, fmt.Sprintf("color: %s", entry.Colour.String()))
+			}
+			if entry.Bold == chroma.Yes {
+				props = append(props, "font-weight: bold")
+			}
+			if entry.Italic == chroma.Yes {
+				props = append(props, "font-style: italic")
+			}
+			if entry.Underline == chroma.Yes {
+				props = append(props, "text-decoration: underline")
+			}
+			if len(props) > 0 {
+				fmt.Fprintf(&buf, "%s .%s { %s }\n", prefix, cls, strings.Join(props, "; "))
+			}
+		}
+		buf.WriteByte('\n')
+	}
+
+	return buf.String()
+}
+
 // funcMap is the template function map used for rendering.
 var funcMap = template.FuncMap{
 	"slug":          slug,
@@ -87,8 +174,10 @@ var funcMap = template.FuncMap{
 	"renderSeeRef": renderSeeRef,
 	"trimSpace":    strings.TrimSpace,
 	"replaceAll":   strings.ReplaceAll,
-	"md2html":      md2html,
-	"md2inline":    md2inline,
+	"md2html":       md2html,
+	"md2inline":     md2inline,
+	"highlightCode":  highlightCode,
+	"chromaThemeCSS": chromaThemeCSS,
 }
 
 // renderWithTemplate renders a Document using the given template text.
