@@ -184,6 +184,18 @@ shdoc-ng is compatible with the original shdoc annotation format but intentional
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the full list of known deviations.
 
+## Pre-commit Hook
+
+shdoc-ng can be used as a [pre-commit](https://pre-commit.com/) hook to check shell script annotations:
+
+```yaml
+repos:
+  - repo: https://github.com/jdevera/shdoc-ng
+    rev: v0.4.0  # check https://github.com/jdevera/shdoc-ng/releases for latest
+    hooks:
+      - id: shdoc-ng-check
+```
+
 ## Building from Source
 
 ```bash

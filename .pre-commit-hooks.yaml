@@ -1,0 +1,6 @@
+- id: shdoc-ng-check
+  name: shdoc-ng check
+  description: Check shell script documentation annotations for warnings.
+  entry: shdoc-ng check
+  language: golang
+  types: [shell]

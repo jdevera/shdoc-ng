@@ -13,28 +13,57 @@ import (
 var checkInputFile string
 
 var checkCmd = &cobra.Command{
-	Use:   "check",
+	Use:   "check [files...]",
 	Short: "Check a shell script for documentation warnings",
-	Long: `Check a shell script for documentation warnings without generating output.
+	Long: `Check shell scripts for documentation warnings without generating output.
 Exits with code 1 if any warnings are found.
 
+Files can be passed as positional arguments, via -i, or on stdin.
+
 Examples:
+  shdoc-ng check script.sh lib.sh
   shdoc-ng check -i script.sh
   shdoc-ng check < script.sh`,
 	RunE: runCheck,
 }
 
 func init() {
-	checkCmd.Flags().StringVarP(&checkInputFile, "input", "i", "-", "Input file (- for stdin)")
+	checkCmd.Flags().StringVarP(&checkInputFile, "input", "i", "", "Input file (deprecated, use positional args)")
 	rootCmd.AddCommand(checkCmd)
 }
 
 func runCheck(cmd *cobra.Command, args []string) error {
+	// Build file list: -i flag, positional args, or stdin
+	files := args
+	if checkInputFile != "" {
+		files = append([]string{checkInputFile}, files...)
+	}
+
+	if len(files) == 0 {
+		return checkFile("-")
+	}
+
+	var totalWarns int
+	for _, f := range files {
+		if err := checkFile(f); err != nil {
+			totalWarns++
+		}
+	}
+
+	if totalWarns > 0 {
+		return fmt.Errorf("%d file(s) with warnings", totalWarns)
+	}
+	return nil
+}
+
+func checkFile(path string) error {
 	var input io.Reader
-	if checkInputFile == "-" {
+	warnFile := path
+	if path == "-" {
 		input = os.Stdin
+		warnFile = "<stdin>"
 	} else {
-		f, err := os.Open(checkInputFile)
+		f, err := os.Open(path)
 		if err != nil {
 			return fmt.Errorf("opening input file: %w", err)
 		}
@@ -49,10 +78,6 @@ func runCheck(cmd *cobra.Command, args []string) error {
 
 	_, warns := shdoc.ParseDocument(string(src))
 
-	warnFile := checkInputFile
-	if warnFile == "-" {
-		warnFile = "<stdin>"
-	}
 	for _, w := range warns {
 		fmt.Fprintf(os.Stderr, "%s:%d:%d: warning: %s\n", warnFile, w.Line, w.Col+1, w.Message)
 	}
