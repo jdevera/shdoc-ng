@@ -49,7 +49,7 @@ See `DEVELOPMENT.md` for full details on the test framework and documenting devi
 
 - **Sections are sticky** — all functions after `@section Foo` belong to that section until the next `@section`. This deviates from the original awk (which only applied to the next function).
 - **`@arg` with invalid format falls through to `@option` processing** — preserving original awk behaviour.
-- **`IsFirstInSection` flag** on `FuncDoc` — set in the parser after all functions are collected, recomputed after `--sort`. Templates check this flag to emit section headers once.
+- **`IsFirstInSection` flag** on `FuncDoc` — set in the parser after all functions are collected. Templates check this flag to emit section headers once.
 - **Function descriptions don't route to section descriptions** — unlike the original awk. See `DEVELOPMENT.md` for known deviations.
 - **Double description routing** — `routeDescription()` does NOT return early after setting `section.desc` — it falls through to also try `FileDescription`. This mirrors the old parser's dual-call pattern.
 - **sectionDesc persistence** — When `@section` sets a new section name, the desc is intentionally NOT cleared, allowing a previous section's description to carry over (tested in `section-no-functions`).

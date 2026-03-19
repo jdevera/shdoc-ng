@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 
 	shdoc "github.com/jdevera/shdoc-ng/shdoc"
 
@@ -13,7 +12,6 @@ import (
 
 var (
 	genFormat       string
-	genSort         bool
 	genInputFile    string
 	genOutputFile   string
 	genTemplateFile string
@@ -40,7 +38,6 @@ Examples:
 
 func init() {
 	generateCmd.Flags().StringVar(&genFormat, "format", "markdown", "Output format: markdown, html, json")
-	generateCmd.Flags().BoolVar(&genSort, "sort", false, "Sort functions alphabetically")
 	generateCmd.Flags().StringVarP(&genInputFile, "input", "i", "-", "Input file (- for stdin)")
 	generateCmd.Flags().StringVarP(&genOutputFile, "output", "o", "-", "Output file (- for stdout)")
 	generateCmd.Flags().StringVar(&genTemplateFile, "template", "", "Use a custom template file instead of the built-in one")
@@ -89,16 +86,6 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 	}
 	for _, w := range warns {
 		fmt.Fprintf(os.Stderr, "%s:%d:%d: warning: %s\n", warnFile, w.Line, w.Col+1, w.Message)
-	}
-
-	if genSort {
-		sort.SliceStable(doc.Functions, func(i, j int) bool {
-			if doc.Functions[i].Section != doc.Functions[j].Section {
-				return false // preserve section order
-			}
-			return doc.Functions[i].Name < doc.Functions[j].Name
-		})
-		shdoc.RecomputeFirstInSection(doc.Functions)
 	}
 
 	var out string

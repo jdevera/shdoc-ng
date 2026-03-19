@@ -70,14 +70,14 @@ func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 		}
 	}
 
-	RecomputeFirstInSection(bp.doc.Functions)
+	recomputeFirstInSection(bp.doc.Functions)
 
 	return bp.doc, bp.warns
 }
 
-// RecomputeFirstInSection sets IsFirstInSection on the first function in each
-// section and clears it on all others. Call after sorting or reordering functions.
-func RecomputeFirstInSection(funcs []FuncDoc) {
+// recomputeFirstInSection sets IsFirstInSection on the first function in each
+// section and clears it on all others.
+func recomputeFirstInSection(funcs []FuncDoc) {
 	seenSections := map[string]bool{}
 	for i := range funcs {
 		f := &funcs[i]

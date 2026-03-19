@@ -61,8 +61,8 @@ In `option.go:80`, `pipeRe := regexp.MustCompile(...)` is compiled inside `proce
 #### F6. `cmd/shdoc-ng/` has no tests
 The CLI subcommands (generate, check, schema, template, lsp) have no test coverage at all.
 
-#### F7. Sorting in generate doesn't match sorting in test
-`generate.go` uses `sort.SliceStable` (preserving section order), but `shdoc_test.go:TestSortOutput` uses `sort.Slice` (unstable). The test doesn't exercise the actual CLI sorting logic.
+#### ~~F7. Sorting in generate doesn't match sorting in test~~ REMOVED
+The `--sort` feature has been removed entirely.
 
 #### F8. `unindent` counts max indent unnecessarily
 `render.go` first finds `maxIndent`, then finds `indent` (minimum). The `maxIndent` pass is wasted work — it's computed but only used as the initial value for the minimum search.

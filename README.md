@@ -126,7 +126,6 @@ Flags:
   -i, --input string      Input file (default stdin)
   -o, --output string     Output file (default stdout)
       --format string     Output format: markdown, html, json (default "markdown")
-      --sort              Sort functions alphabetically within sections
       --template string   Use a custom template file
 ```
 

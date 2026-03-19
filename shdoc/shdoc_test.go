@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 )
@@ -312,66 +311,6 @@ farewell() {
 	}
 	if !f2.IsNoArgs {
 		t.Errorf("Expected IsNoArgs to be true")
-	}
-}
-
-func TestSortOutput(t *testing.T) {
-	input := `#!/bin/bash
-
-# @description Zulu function.
-# @noargs
-zulu() {
-    :
-}
-
-# @description Alpha function.
-# @noargs
-alpha() {
-    :
-}
-
-# @description Mike function.
-# @noargs
-mike() {
-    :
-}`
-
-	doc, _ := ParseDocument(input)
-
-	// Sort functions
-	sort.Slice(doc.Functions, func(i, j int) bool {
-		return doc.Functions[i].Name < doc.Functions[j].Name
-	})
-
-	output, err := RenderWithTemplate(&doc, DefaultMarkdownTemplate)
-	if err != nil {
-		t.Fatalf("RenderWithTemplate() error: %v", err)
-	}
-
-	// Functions should appear in alphabetical order
-	alphaIdx := strings.Index(output, "### alpha")
-	mikeIdx := strings.Index(output, "### mike")
-	zuluIdx := strings.Index(output, "### zulu")
-
-	if alphaIdx == -1 || mikeIdx == -1 || zuluIdx == -1 {
-		t.Fatalf("Missing function headers in output:\n%s", output)
-	}
-
-	if alphaIdx >= mikeIdx || mikeIdx >= zuluIdx {
-		t.Errorf("Functions not in alphabetical order: alpha@%d, mike@%d, zulu@%d", alphaIdx, mikeIdx, zuluIdx)
-	}
-
-	// TOC should also be sorted
-	tocAlpha := strings.Index(output, "* [alpha](#alpha)")
-	tocMike := strings.Index(output, "* [mike](#mike)")
-	tocZulu := strings.Index(output, "* [zulu](#zulu)")
-
-	if tocAlpha == -1 || tocMike == -1 || tocZulu == -1 {
-		t.Fatalf("Missing TOC entries in output:\n%s", output)
-	}
-
-	if tocAlpha >= tocMike || tocMike >= tocZulu {
-		t.Errorf("TOC not in alphabetical order: alpha@%d, mike@%d, zulu@%d", tocAlpha, tocMike, tocZulu)
 	}
 }
 
