@@ -32,7 +32,7 @@ func TestSchemaTopLevelProperties(t *testing.T) {
 	if !ok {
 		t.Fatal("top-level properties missing or wrong type")
 	}
-	for _, key := range []string{"name", "brief", "description", "functions", "authors", "license", "version"} {
+	for _, key := range []string{"name", "brief", "description", "sections", "authors", "license", "version"} {
 		if _, exists := props[key]; !exists {
 			t.Errorf("top-level property %q not found in schema", key)
 		}
@@ -111,27 +111,27 @@ func TestSchemaRequiredFields(t *testing.T) {
 	}{
 		{
 			name:     "JSONFunc",
-			path:     []string{"functions", "items"},
+			path:     []string{"sections", "items", "functions", "items"},
 			required: []string{"name"},
 		},
 		{
 			name:     "JSONArg",
-			path:     []string{"functions", "items", "args", "items"},
+			path:     []string{"sections", "items", "functions", "items", "args", "items"},
 			required: []string{"name", "type", "description"},
 		},
 		{
 			name:     "JSONSetVar (set)",
-			path:     []string{"functions", "items", "set", "items"},
+			path:     []string{"sections", "items", "functions", "items", "set", "items"},
 			required: []string{"name", "type", "description"},
 		},
 		{
 			name:     "JSONExitCode",
-			path:     []string{"functions", "items", "exitcodes", "items"},
+			path:     []string{"sections", "items", "functions", "items", "exitcodes", "items"},
 			required: []string{"code", "description"},
 		},
 		{
 			name:     "OptionEntry",
-			path:     []string{"functions", "items", "options", "items"},
+			path:     []string{"sections", "items", "functions", "items", "options", "items"},
 			required: []string{"forms", "description"},
 		},
 	}

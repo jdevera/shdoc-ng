@@ -54,7 +54,7 @@ func countBraces(line string, depth *int) {
 const serverName = "shdoc-lsp"
 
 // hoverTemplate renders a single FuncDoc without TOC, section headers, or file metadata.
-const hoverTemplate = `{{- range .Functions -}}
+const hoverTemplate = `{{- range .Sections}}{{range .Functions -}}
 ### {{.Name}}
 {{- if .IsDeprecated}}
 {{if eq .DeprecatedMessage ""}}
@@ -154,7 +154,7 @@ _Function has no arguments._
 {{range $i, $s := .See}}{{if $i}}
 {{end}}* {{if eq $s.Kind "path"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "url"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "link"}}{{mdLink $s.Text $s.Href}}{{else if eq $s.Kind "ref"}}{{mdAnchor $s.Text}}{{else}}{{mdLinkify $s.Text}}{{end}}{{end}}
 {{- end}}
-{{end}}`
+{{end}}{{end}}`
 
 // fileHoverTemplate renders the file-level metadata for hover on meta block tags.
 const fileHoverTemplate = `{{- if .FileTitle}}# {{.FileTitle}}{{end}}
@@ -279,9 +279,12 @@ func publishDiagnostics(ctx *glsp.Context, uri string, state *docState) {
 	}
 
 	// Index functions by name for O(1) lookup in the block loops below.
-	funcByName := make(map[string]*shdoc.FuncDoc, len(state.doc.Functions))
-	for i := range state.doc.Functions {
-		funcByName[state.doc.Functions[i].Name] = &state.doc.Functions[i]
+	funcByName := make(map[string]*shdoc.FuncDoc)
+	for si := range state.doc.Sections {
+		for fi := range state.doc.Sections[si].Functions {
+			f := &state.doc.Sections[si].Functions[fi]
+			funcByName[f.Name] = f
+		}
 	}
 
 	// Add deprecated strikethrough on function declaration lines.
@@ -437,41 +440,43 @@ func documentSymbol(_ *glsp.Context, p *protocol.DocumentSymbolParams) (any, err
 	// outline view.
 	funcKind := protocol.SymbolKindString
 
-	for _, f := range state.doc.Functions {
-		b := blockByFunc[f.Name]
-		if b == nil {
-			continue
-		}
-		start := uint32(b.Comments.StartNum - 1)
-		end := uint32(b.Comments.EndNum - 1)
-		sym := protocol.DocumentSymbol{
-			Name: f.Name,
-			Kind: funcKind,
-			Range: protocol.Range{
-				Start: protocol.Position{Line: start},
-				End:   protocol.Position{Line: end},
-			},
-			SelectionRange: protocol.Range{
-				Start: protocol.Position{Line: start},
-				End:   protocol.Position{Line: start},
-			},
-		}
+	for _, docSec := range state.doc.Sections {
+		for _, f := range docSec.Functions {
+			b := blockByFunc[f.Name]
+			if b == nil {
+				continue
+			}
+			start := uint32(b.Comments.StartNum - 1)
+			end := uint32(b.Comments.EndNum - 1)
+			sym := protocol.DocumentSymbol{
+				Name: f.Name,
+				Kind: funcKind,
+				Range: protocol.Range{
+					Start: protocol.Position{Line: start},
+					End:   protocol.Position{Line: end},
+				},
+				SelectionRange: protocol.Range{
+					Start: protocol.Position{Line: start},
+					End:   protocol.Position{Line: start},
+				},
+			}
 
-		if f.Section == "" {
-			ungrouped = append(ungrouped, sym)
-		} else {
-			sec, ok := sections[f.Section]
-			if !ok {
-				sec = &sectionInfo{name: f.Section, startLine: start, endLine: end}
-				sections[f.Section] = sec
-				sectionOrder = append(sectionOrder, f.Section)
-			}
-			sec.children = append(sec.children, sym)
-			if start < sec.startLine {
-				sec.startLine = start
-			}
-			if end > sec.endLine {
-				sec.endLine = end
+			if docSec.Name == "" {
+				ungrouped = append(ungrouped, sym)
+			} else {
+				sec, ok := sections[docSec.Name]
+				if !ok {
+					sec = &sectionInfo{name: docSec.Name, startLine: start, endLine: end}
+					sections[docSec.Name] = sec
+					sectionOrder = append(sectionOrder, docSec.Name)
+				}
+				sec.children = append(sec.children, sym)
+				if start < sec.startLine {
+					sec.startLine = start
+				}
+				if end > sec.endLine {
+					sec.endLine = end
+				}
 			}
 		}
 	}
@@ -611,11 +616,11 @@ func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
 		stripped := shdoc.StripCommentPrefix(lineRaw)
 		_, value := shdoc.ParseTag(stripped)
 		target := strings.TrimRight(strings.TrimSuffix(value, "()"), " ")
-		for i := range state.doc.Functions {
-			if state.doc.Functions[i].Name == target {
-				fd := state.doc.Functions[i]
+		allFuncs := state.doc.AllFunctions()
+		for _, fd := range allFuncs {
+			if fd.Name == target {
 				md, err := shdoc.RenderWithTemplate(
-					&shdoc.Document{Functions: []shdoc.FuncDoc{fd}},
+					&shdoc.Document{Sections: []shdoc.Section{{Functions: []shdoc.FuncDoc{fd}}}},
 					hoverTemplate,
 				)
 				if err != nil {
@@ -661,9 +666,14 @@ func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
 		}
 
 		var fd *shdoc.FuncDoc
-		for i := range state.doc.Functions {
-			if state.doc.Functions[i].Name == b.FuncName {
-				fd = &state.doc.Functions[i]
+		for si := range state.doc.Sections {
+			for fi := range state.doc.Sections[si].Functions {
+				if state.doc.Sections[si].Functions[fi].Name == b.FuncName {
+					fd = &state.doc.Sections[si].Functions[fi]
+					break
+				}
+			}
+			if fd != nil {
 				break
 			}
 		}
@@ -672,7 +682,7 @@ func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
 		}
 
 		md, err := shdoc.RenderWithTemplate(
-			&shdoc.Document{Functions: []shdoc.FuncDoc{*fd}},
+			&shdoc.Document{Sections: []shdoc.Section{{Functions: []shdoc.FuncDoc{*fd}}}},
 			hoverTemplate,
 		)
 		if err != nil {

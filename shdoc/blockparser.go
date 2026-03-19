@@ -62,6 +62,10 @@ func ParseDocument(src string) (Document, []Warning) {
 // ParseBlocks parses pre-segmented blocks and returns the document and any warnings.
 func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 	bp := &blockParser{}
+	// Start with one unnamed section for functions before any @section tag.
+	bp.doc.Sections = []Section{{}}
+	bp.currentSection = 0
+
 	for _, block := range blocks {
 		if block.Kind == MetaBlockKind {
 			bp.parseMetaBlock(block)
@@ -70,28 +74,23 @@ func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 		}
 	}
 
-	recomputeFirstInSection(bp.doc.Functions)
+	// Prune sections with no functions.
+	var pruned []Section
+	for _, s := range bp.doc.Sections {
+		if len(s.Functions) == 0 {
+			continue
+		}
+		pruned = append(pruned, s)
+	}
+	bp.doc.Sections = pruned
 
 	return bp.doc, bp.warns
 }
 
-// recomputeFirstInSection sets IsFirstInSection on the first function in each
-// section and clears it on all others.
-func recomputeFirstInSection(funcs []FuncDoc) {
-	seenSections := map[string]bool{}
-	for i := range funcs {
-		f := &funcs[i]
-		f.IsFirstInSection = f.Section != "" && !seenSections[f.Section]
-		if f.Section != "" {
-			seenSections[f.Section] = true
-		}
-	}
-}
-
 type blockParser struct {
-	doc     Document
-	warns   []Warning
-	section pendingSection
+	doc            Document
+	warns          []Warning
+	currentSection int // index into doc.Sections
 	// Track which file-level singleton tags have been set, to warn on duplicates.
 	seenFileTags map[string]int // tag -> first line number
 }
@@ -108,11 +107,6 @@ var fileLevelTags = map[string]bool{
 var fileSingletonTags = map[string]bool{
 	"name": true, "file": true, "brief": true,
 	"license": true, "version": true,
-}
-
-type pendingSection struct {
-	name string
-	desc string
 }
 
 func (bp *blockParser) warn(lineNum int, col int, msg string) {
@@ -309,14 +303,15 @@ func cleanDescription(s string) string {
 }
 
 // routeDescription routes a description from a meta block to the appropriate
-// document field: section description (if a section is pending) or file
+// document field: current section description (if named and empty) or file
 // description.
 func (bp *blockParser) routeDescription(desc string) {
 	if desc == "" {
 		return
 	}
-	if bp.section.name != "" && bp.section.desc == "" {
-		bp.section.desc = desc
+	sec := &bp.doc.Sections[bp.currentSection]
+	if sec.Name != "" && sec.Description == "" {
+		sec.Description = desc
 		return
 	}
 	if bp.doc.FileDescription == "" {
@@ -387,7 +382,8 @@ func (bp *blockParser) parseMetaBlock(block ParsedBlock) {
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @section requires a name")
 			}
-			bp.section = pendingSection{name: value}
+			bp.doc.Sections = append(bp.doc.Sections, Section{Name: value})
+			bp.currentSection = len(bp.doc.Sections) - 1
 			i++
 		case "description":
 			var parts []string
@@ -446,7 +442,8 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @section requires a name")
 			}
-			bp.section = pendingSection{name: value}
+			bp.doc.Sections = append(bp.doc.Sections, Section{Name: value})
+			bp.currentSection = len(bp.doc.Sections) - 1
 			i++
 
 		case "internal":
@@ -688,8 +685,7 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	}
 
 	docblock.Name = block.FuncName
-	docblock.Section = bp.section.name
-	docblock.SectionDesc = bp.section.desc
 
-	bp.doc.Functions = append(bp.doc.Functions, docblock)
+	sec := &bp.doc.Sections[bp.currentSection]
+	sec.Functions = append(sec.Functions, docblock)
 }

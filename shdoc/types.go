@@ -1,6 +1,14 @@
 package shdoc
 
-// Document holds the top-level file metadata and stored function docs.
+// Section groups functions under an optional heading.
+// A section with an empty Name holds functions that appear before any @section tag.
+type Section struct {
+	Name        string    `json:"name,omitempty"        desc:"Section heading (@section)"`
+	Description string    `json:"description,omitempty" desc:"Section description"`
+	Functions   []FuncDoc `json:"functions,omitempty"    desc:"Functions in this section"`
+}
+
+// Document holds the top-level file metadata and documented sections/functions.
 type Document struct {
 	FileTitle       string    `json:"name,omitempty"        desc:"Title or name of the shell script (@file)"`
 	FileBrief       string    `json:"brief,omitempty"       desc:"One-line summary of the script (@brief)"`
@@ -8,7 +16,16 @@ type Document struct {
 	Authors         []string  `json:"authors,omitempty"     desc:"List of authors (@author)"`
 	License         string    `json:"license,omitempty"     desc:"License identifier (@license)"`
 	Version         string    `json:"version,omitempty"     desc:"Version string (@version)"`
-	Functions       []FuncDoc `json:"functions,omitempty"   desc:"Documented functions found in the script"`
+	Sections        []Section `json:"sections,omitempty"    desc:"Documented sections with their functions"`
+}
+
+// AllFunctions returns a flat list of all functions across all sections.
+func (d *Document) AllFunctions() []FuncDoc {
+	var all []FuncDoc
+	for _, s := range d.Sections {
+		all = append(all, s.Functions...)
+	}
+	return all
 }
 
 // FuncDoc holds the parsed documentation for a single function.
@@ -30,9 +47,6 @@ type FuncDoc struct {
 	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
 	IsDeprecated    bool          `json:"is_deprecated,omitempty"      desc:"True if the function is deprecated (@deprecated)"`
 	DeprecatedMessage string      `json:"deprecated_message,omitempty" desc:"Deprecation notice, if provided (@deprecated message)"`
-	Section          string `json:"section,omitempty"              desc:"Section the function belongs to (@section)"`
-	SectionDesc      string `json:"section_description,omitempty"  desc:"Description of the section"`
-	IsFirstInSection bool   `json:"is_first_in_section,omitempty"  desc:"True if this is the first function in its section"`
 }
 
 // hasDocumentation returns true if the FuncDoc has any documentation content.

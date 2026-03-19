@@ -8,14 +8,7 @@
 {{- end -}}
 
 {{- define "funcBlock" -}}
-<section class="func{{if .Section}} has-section{{end}}" id="{{slug .Name}}">
-
-{{- if .IsFirstInSection}}
-  <div class="section-heading">
-    <h2 class="section-title">{{.Section | html}}</h2>
-    {{- if .SectionDesc}}<div class="section-desc">{{.SectionDesc | md2html}}</div>{{end}}
-  </div>
-{{- end}}
+<section class="func" id="{{slug .Name}}">
 
   <div class="func-header">
     <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}</h3>
@@ -895,11 +888,13 @@
   </div>
 
   <nav class="toc" id="toc">
-    {{- range .Functions}}
-    {{- if .IsFirstInSection}}
-    <span class="toc-section" data-section="{{.Section | html}}">{{.Section | html}}</span>
+    {{- range $sec := .Sections}}
+    {{- if $sec.Name}}
+    <span class="toc-section" data-section="{{$sec.Name | html}}">{{$sec.Name | html}}</span>
     {{- end}}
-    <a href="#{{slug .Name}}" class="toc-item{{if .Section}} toc-item-in-section{{end}}" data-name="{{.Name | html}}" data-section="{{.Section | html}}">{{.Name | html}}</a>
+    {{- range .Functions}}
+    <a href="#{{slug .Name}}" class="toc-item{{if $sec.Name}} toc-item-in-section{{end}}" data-name="{{.Name | html}}" data-section="{{$sec.Name | html}}">{{.Name | html}}</a>
+    {{- end}}
     {{- end}}
   </nav>
 
@@ -954,8 +949,16 @@
     </header>
     {{- end}}
 
+    {{- range .Sections}}
+    {{- if .Name}}
+    <div class="section-heading">
+      <h2 class="section-title">{{.Name | html}}</h2>
+      {{- if .Description}}<div class="section-desc">{{.Description | md2html}}</div>{{end}}
+    </div>
+    {{- end}}
     {{- range .Functions}}
     {{template "funcBlock" .}}
+    {{- end}}
     {{- end}}
 
     <footer class="page-footer">

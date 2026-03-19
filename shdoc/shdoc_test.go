@@ -249,20 +249,26 @@ farewell() {
 		t.Errorf("Expected description 'The full description.', got %q", parsedDoc.FileDescription)
 	}
 
-	if len(parsedDoc.Functions) != 2 {
-		t.Fatalf("Expected 2 functions, got %d", len(parsedDoc.Functions))
+	allFuncs := parsedDoc.AllFunctions()
+	if len(allFuncs) != 2 {
+		t.Fatalf("Expected 2 functions, got %d", len(allFuncs))
+	}
+
+	// Check section structure
+	if len(parsedDoc.Sections) != 1 {
+		t.Fatalf("Expected 1 section, got %d", len(parsedDoc.Sections))
+	}
+	if parsedDoc.Sections[0].Name != "Utils" {
+		t.Errorf("Expected section name 'Utils', got %q", parsedDoc.Sections[0].Name)
+	}
+	if parsedDoc.Sections[0].Description != "Helper functions." {
+		t.Errorf("Expected section description 'Helper functions.', got %q", parsedDoc.Sections[0].Description)
 	}
 
 	// Check first function
-	f := parsedDoc.Functions[0]
+	f := allFuncs[0]
 	if f.Name != "greet" {
 		t.Errorf("Expected function name 'greet', got %q", f.Name)
-	}
-	if f.Section != "Utils" {
-		t.Errorf("Expected section 'Utils', got %q", f.Section)
-	}
-	if f.SectionDesc != "Helper functions." {
-		t.Errorf("Expected section_description 'Helper functions.', got %q", f.SectionDesc)
 	}
 	if !f.IsDeprecated {
 		t.Errorf("Expected IsDeprecated to be true")
@@ -305,7 +311,7 @@ farewell() {
 	}
 
 	// Check second function
-	f2 := parsedDoc.Functions[1]
+	f2 := allFuncs[1]
 	if f2.Name != "farewell" {
 		t.Errorf("Expected function name 'farewell', got %q", f2.Name)
 	}

@@ -47,12 +47,12 @@ See `DEVELOPMENT.md` for full details on the test framework and documenting devi
 
 ## Key Implementation Details
 
+- **Sections are nested** — `Document.Sections []Section`, each containing `Name`, `Description`, and `Functions []FuncDoc`. Functions before any `@section` go in an unnamed section. Sections with no functions are pruned after parsing.
 - **Sections are sticky** — all functions after `@section Foo` belong to that section until the next `@section`. This deviates from the original awk (which only applied to the next function).
 - **`@arg` with invalid format falls through to `@option` processing** — preserving original awk behaviour.
-- **`IsFirstInSection` flag** on `FuncDoc` — set in the parser after all functions are collected. Templates check this flag to emit section headers once.
+- **`AllFunctions()`** on `Document` — returns a flat list of all functions across all sections, for code that needs linear iteration.
 - **Function descriptions don't route to section descriptions** — unlike the original awk. See `DEVELOPMENT.md` for known deviations.
-- **Double description routing** — `routeDescription()` does NOT return early after setting `section.desc` — it falls through to also try `FileDescription`. This mirrors the old parser's dual-call pattern.
-- **sectionDesc persistence** — When `@section` sets a new section name, the desc is intentionally NOT cleared, allowing a previous section's description to carry over (tested in `section-no-functions`).
+- **Double description routing** — `routeDescription()` does NOT return early after setting the section description — it falls through to also try `FileDescription`. This mirrors the old parser's dual-call pattern.
 - **Function description → FileDescription** — At the end of `parseFuncBlock`, the description is routed via `routeDescription()` BEFORE being set on `docblock.Description`, so the first function's description can populate `doc.FileDescription` if still empty.
 - **`@example` continuation** — Uses `^[\s]*#[ ]+` (one or more spaces after `#`). A bare `#` (no space) ends the example. Implemented in `collectExampleLines()`.
 - **`@description` collection** — `collectUntilNextTag()` stops at `@`-tagged lines but continues through bare `#` blank comment lines.

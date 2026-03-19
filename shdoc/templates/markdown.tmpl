@@ -9,18 +9,21 @@ This template receives a Document at the top level. When rendering each
 function, funcBlock receives a FuncDoc value.
 
 Document fields (top-level):
-  .FileTitle       string    — @name value
-  .FileBrief       string    — brief description on @name line
-  .FileDescription string    — @description block at file level
-  .Authors         []string  — @author values
-  .License         string    — @license value
-  .Version         string    — @version value
-  .Functions       []FuncDoc
+  .FileTitle       string     — @name value
+  .FileBrief       string     — brief description on @name line
+  .FileDescription string     — @description block at file level
+  .Authors         []string   — @author values
+  .License         string     — @license value
+  .Version         string     — @version value
+  .Sections        []Section
+
+Section fields:
+  .Name        string     — @section heading (## level), may be empty
+  .Description string     — text block after @section, may be empty
+  .Functions   []FuncDoc
 
 FuncDoc fields (passed to funcBlock and all sec* templates):
   .Name        string        — function name
-  .Section     string        — @section heading (## level), may be empty
-  .SectionDesc string        — text block after @section, may be empty
   .IsDeprecated     bool          — true when @deprecated is present
   .DeprecatedMessage string       — @deprecated message, may be empty
   .Description string        — @description block
@@ -150,14 +153,10 @@ Bad options (entries that failed format validation) follow with no blank lines.
 
 {{- /*
 funcBlock renders a complete function documentation block.
-If .Section is set, a "## Section" heading (with optional description) is
-emitted first. Then the "### FuncName" heading, followed by all sections.
+The "### FuncName" heading, followed by all sections.
 Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the block.
 */ -}}
 {{- define "funcBlock" -}}
-{{- if .IsFirstInSection -}}
-## {{.Section}}{{if .SectionDesc}}{{"\n\n"}}{{.SectionDesc}}{{end}}{{"\n\n"}}
-{{- end -}}
 ### {{.Name}}
 {{- template "secDeprecated"  .}}
 {{- template "secDescription" .}}
@@ -207,12 +206,36 @@ Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the bloc
 {{- end -}}
 
 {{- /* Table of contents */}}
-{{- if .Functions}}## Index
+{{- if .Sections}}## Index
 
-{{range .Functions}}* {{mdAnchor .Name}}
-{{end}}
+{{range .Sections}}{{range .Functions}}* {{mdAnchor .Name}}
+{{end}}{{end}}
 {{end -}}
 
-{{- /* Function blocks — blank line between consecutive blocks */}}
-{{- range $i, $f := .Functions}}{{if $i}}
+{{- /*
+Section and function blocks.
+
+Outer loop: iterate sections ($si = section index, $sec = section).
+  - Named sections emit a ## heading with optional description.
+  - Unnamed sections (functions before any @section) emit no heading.
+
+Inner loop: iterate functions within each section ($fi = function index).
+
+Blank-line logic:
+  - Between consecutive functions: $fi > 0 always inserts a separator.
+  - Before the section heading: $si > 0 inserts a separator (skip for the
+    very first section to avoid a leading blank line).
+  - First function in a named section: NO separator — the heading already
+    ends with \n\n.
+  - First function in an unnamed section after section 0: separator needed
+    because there's no heading to provide spacing.
+*/ -}}
+{{- range $si, $sec := .Sections -}}
+{{- /* Section heading (only for named sections, with separator before non-first ones) */ -}}
+{{- if $sec.Name}}{{if $si}}
+{{end}}## {{$sec.Name}}{{if $sec.Description}}{{"\n\n"}}{{$sec.Description}}{{end}}{{"\n\n"}}
+{{- end -}}
+{{- /* Functions within section, with blank-line separators where needed */ -}}
+{{- range $fi, $f := $sec.Functions}}{{if or $fi (and (not $sec.Name) $si)}}
 {{end}}{{template "funcBlock" $f}}{{end}}
+{{- end}}
