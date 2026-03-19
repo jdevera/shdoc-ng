@@ -461,10 +461,22 @@
 
     .toc-item:hover { color: var(--theme-text); background: var(--theme-surface); }
 
+    .toc-item-in-section { padding-left: 1.75rem; }
+
     .toc-item.active {
       color: var(--theme-accent);
       border-left-color: var(--theme-accent);
       background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+    }
+
+    .toc-section {
+      display: block;
+      padding: 0.5rem 1rem 0.2rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--theme-section);
     }
 
     /* ── Theme picker ───────────────────────────────────────────────── */
@@ -884,7 +896,10 @@
 
   <nav class="toc" id="toc">
     {{- range .Functions}}
-    <a href="#{{slug .Name}}" class="toc-item" data-name="{{.Name | html}}">{{.Name | html}}</a>
+    {{- if .IsFirstInSection}}
+    <span class="toc-section" data-section="{{.Section | html}}">{{.Section | html}}</span>
+    {{- end}}
+    <a href="#{{slug .Name}}" class="toc-item{{if .Section}} toc-item-in-section{{end}}" data-name="{{.Name | html}}" data-section="{{.Section | html}}">{{.Name | html}}</a>
     {{- end}}
   </nav>
 
@@ -989,11 +1004,20 @@
   sections.forEach(s => observer.observe(s));
 
   // ── TOC filter ───────────────────────────────────────────────────────
+  const tocSections = document.querySelectorAll('.toc-section');
   function filterToc(query) {
     const q = query.toLowerCase();
     tocItems.forEach(item => {
       const match = item.dataset.name.toLowerCase().includes(q);
       item.style.display = match ? '' : 'none';
+    });
+    // Hide section labels if all their functions are hidden
+    tocSections.forEach(sec => {
+      const sectionName = sec.dataset.section;
+      const hasVisible = Array.from(tocItems).some(
+        item => item.dataset.section === sectionName && item.style.display !== 'none'
+      );
+      sec.style.display = hasVisible ? '' : 'none';
     });
   }
 

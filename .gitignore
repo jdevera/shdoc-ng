@@ -4,6 +4,7 @@
 /shdoc-ng-test
 
 .private/
+.claude/
 
 # Editor extensions
 editors/vscode/node_modules/
