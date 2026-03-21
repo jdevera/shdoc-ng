@@ -348,7 +348,8 @@
       color: var(--theme-text);
       line-height: 1.6;
       display: grid;
-      grid-template-columns: 260px 1fr;
+      --sidebar-width: 260px;
+      grid-template-columns: var(--sidebar-width) auto 1fr;
       grid-template-rows: 100vh;
       overflow: hidden;
     }
@@ -356,13 +357,29 @@
     /* ── Sidebar ────────────────────────────────────────────────────── */
     .sidebar {
       background: var(--theme-bg-sidebar);
-      border-right: 1px solid var(--theme-border);
+      border-right: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       height: 100vh;
       position: sticky;
       top: 0;
+    }
+
+    /* ── Resize handle ─────────────────────────────────────────────── */
+    .resize-handle {
+      width: 4px;
+      cursor: col-resize;
+      background: var(--theme-border);
+      transition: background 0.15s;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+
+    .resize-handle:hover,
+    .resize-handle.dragging {
+      background: var(--theme-accent);
     }
 
     .sidebar-brand {
@@ -853,6 +870,7 @@
     @media (max-width: 720px) {
       body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow: auto; }
       .sidebar { height: auto; max-height: 40vh; position: relative; }
+      .resize-handle { display: none; }
       .content { height: auto; overflow: visible; }
       .content-inner { padding: 1.5rem 1rem 4rem; }
     }
@@ -860,7 +878,7 @@
     /* ── Print ──────────────────────────────────────────────────────── */
     @media print {
       body { grid-template-columns: 1fr; background: white; color: black; }
-      .sidebar { display: none; }
+      .sidebar, .resize-handle { display: none; }
       .content { overflow: visible; height: auto; }
     }
 
@@ -899,6 +917,8 @@
   </nav>
 
 </aside>
+
+<div class="resize-handle" id="resize-handle"></div>
 
 <div class="theme-picker">
   <select id="theme-select" onchange="setTheme(this.value)" title="Colour flavour">
@@ -1033,6 +1053,38 @@
       setTimeout(() => { btn.classList.remove('copied'); btn.title = 'Copy'; }, 1500);
     });
   }
+
+  // ── Sidebar resize ─────────────────────────────────────────────────
+  (function() {
+    const handle = document.getElementById('resize-handle');
+    const body = document.body;
+    const minWidth = 140;
+    const maxWidth = 500;
+
+    let dragging = false;
+
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      dragging = true;
+      handle.classList.add('dragging');
+      body.style.cursor = 'col-resize';
+      body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      const width = Math.min(maxWidth, Math.max(minWidth, e.clientX));
+      body.style.setProperty('--sidebar-width', width + 'px');
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      body.style.cursor = '';
+      body.style.userSelect = '';
+    });
+  })();
 </script>
 
 </body>
