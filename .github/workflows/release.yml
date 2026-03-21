@@ -27,3 +27,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+  copr:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install copr-cli
+        run: pip install copr-cli
+
+      - name: Configure copr-cli
+        run: |
+          mkdir -p ~/.config
+          cat > ~/.config/copr <<EOF
+          [copr-cli]
+          login = ${{ secrets.COPR_LOGIN }}
+          username = ${{ secrets.COPR_USERNAME }}
+          token = ${{ secrets.COPR_TOKEN }}
+          copr_url = https://copr.fedorainfracloud.org
+          EOF
+
+      - name: Download RPMs from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download ${{ github.ref_name }} \
+            --repo ${{ github.repository }} \
+            --pattern '*.rpm' \
+            --dir rpms/
+
+      - name: Upload RPMs to COPR
+        run: |
+          for rpm in rpms/*.rpm; do
+            copr-cli build shdoc-ng "$rpm"
+          done

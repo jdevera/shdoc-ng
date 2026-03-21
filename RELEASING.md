@@ -9,6 +9,7 @@ Releases are fully automated via [GoReleaser](https://goreleaser.com/) and GitHu
 3. Generates a changelog from conventional commit messages
 4. Publishes a GitHub Release with archives, checksums, and Linux packages (deb/rpm/apk)
 5. Updates the Homebrew formula in [jdevera/homebrew-tap](https://github.com/jdevera/homebrew-tap)
+6. Uploads RPM packages to [COPR](https://copr.fedorainfracloud.org/coprs/jdevera/shdoc-ng/) for Fedora users
 
 ## Cutting a release
 
@@ -78,6 +79,15 @@ brew install jdevera/tap/shdoc-ng
 
 The formula in [jdevera/homebrew-tap](https://github.com/jdevera/homebrew-tap) is updated automatically on each release by GoReleaser.
 
+### Fedora (COPR)
+
+```bash
+sudo dnf copr enable jdevera/shdoc-ng
+sudo dnf install shdoc-ng
+```
+
+RPM packages are automatically uploaded to [COPR](https://copr.fedorainfracloud.org/coprs/jdevera/shdoc-ng/) after each release. Supported chroots: Fedora 42, 43, 44, and Rawhide (x86_64 and aarch64).
+
 ### Linux packages (deb/rpm/apk)
 
 `.deb`, `.rpm`, and `.apk` packages are attached to each GitHub Release, built automatically by GoReleaser's nfpms integration.
@@ -86,7 +96,7 @@ The formula in [jdevera/homebrew-tap](https://github.com/jdevera/homebrew-tap) i
 # Debian/Ubuntu
 sudo dpkg -i shdoc-ng_0.2.0_amd64.deb
 
-# Fedora/RHEL
+# Fedora/RHEL (manual install without COPR)
 sudo rpm -i shdoc-ng_0.2.0_amd64.rpm
 
 # Alpine
@@ -103,6 +113,17 @@ The following secrets must be configured in the GitHub repository settings:
 |-----------------------------|--------------------------------------------------|
 | `GITHUB_TOKEN`              | Built-in. Used for creating releases.            |
 | `HOMEBREW_TAP_TOKEN` | PAT with `repo` scope on `jdevera/homebrew-tap`. |
+| `COPR_LOGIN`          | COPR API login (from https://copr.fedorainfracloud.org/api/). |
+| `COPR_USERNAME`       | COPR username.                                   |
+| `COPR_TOKEN`          | COPR API token.                                  |
+
+### Setting up the COPR token
+
+1. Log in to [COPR](https://copr.fedorainfracloud.org) with your Fedora account
+2. Go to the [API page](https://copr.fedorainfracloud.org/api/) to get your login, username, and token
+3. Add them as repository secrets named `COPR_LOGIN`, `COPR_USERNAME`, and `COPR_TOKEN`
+
+Note: COPR API tokens expire periodically. If the COPR upload step fails, regenerate the token and update the secrets.
 
 ### Setting up the Homebrew tap token
 
