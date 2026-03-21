@@ -46,17 +46,12 @@ jobs:
           copr_url = https://copr.fedorainfracloud.org
           EOF
 
-      - name: Download RPMs from release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Submit build to COPR
         run: |
-          gh release download ${{ github.ref_name }} \
-            --repo ${{ github.repository }} \
-            --pattern '*.rpm' \
-            --dir rpms/
-
-      - name: Upload RPMs to COPR
-        run: |
-          for rpm in rpms/*.rpm; do
-            copr-cli build shdoc-ng "$rpm"
-          done
+          copr-cli buildscm shdoc-ng \
+            --clone-url https://github.com/${{ github.repository }}.git \
+            --commit ${{ github.ref_name }} \
+            --subdir . \
+            --spec shdoc-ng.spec \
+            --type git \
+            --method make_srpm
