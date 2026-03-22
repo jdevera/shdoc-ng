@@ -10,8 +10,8 @@ endif
 	tar czf rpmbuild/SOURCES/shdoc-ng-$(VERSION).tar.gz \
 		--transform 's,^\.,shdoc-ng-$(VERSION),' \
 		--exclude=.git --exclude=rpmbuild .
-	rpmbuild -bs $(SPEC) \
+	sed 's/@@VERSION@@/$(VERSION)/' $(SPEC) > rpmbuild/SPECS/$(SPEC)
+	rpmbuild -bs rpmbuild/SPECS/$(SPEC) \
 		--define "_topdir $(CURDIR)/rpmbuild" \
-		--define "_sourcedir $(CURDIR)/rpmbuild/SOURCES" \
-		--define "version $(VERSION)"
+		--define "_sourcedir $(CURDIR)/rpmbuild/SOURCES"
 	mv rpmbuild/SRPMS/*.src.rpm $(outdir)

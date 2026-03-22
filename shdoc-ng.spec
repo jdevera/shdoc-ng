@@ -1,7 +1,7 @@
 %global goipath github.com/jdevera/shdoc-ng
 
 Name:           shdoc-ng
-Version:        %{version}
+Version:        @@VERSION@@
 Release:        1%{?dist}
 Summary:        Documentation generator for shell scripts
 
