@@ -1,4 +1,5 @@
 %global goipath github.com/jdevera/shdoc-ng
+%global debug_package %{nil}
 
 Name:           shdoc-ng
 Version:        @@VERSION@@
