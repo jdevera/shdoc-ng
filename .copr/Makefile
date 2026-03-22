@@ -1,5 +1,8 @@
 .PHONY: srpm
 
+# COPR's make_srpm method requires builddeps listed here
+builddeps: git
+
 # Extract version from the latest git tag (strips leading 'v')
 VERSION := $(shell git describe --tags --abbrev=0 | sed 's/^v//')
 SPEC := shdoc-ng.spec
