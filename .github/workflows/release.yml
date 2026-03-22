@@ -32,8 +32,13 @@ jobs:
     needs: goreleaser
     runs-on: ubuntu-latest
     steps:
-      - name: Install copr-cli
-        run: pip install copr-cli
+      - uses: actions/checkout@v6
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rpm
+          pip install copr-cli
 
       - name: Configure copr-cli
         run: |
@@ -46,13 +51,12 @@ jobs:
           copr_url = https://copr.fedorainfracloud.org
           EOF
 
-      - name: Submit build to COPR
+      - name: Build source RPM
         run: |
-          copr-cli buildscm shdoc-ng \
-            --clone-url https://github.com/${{ github.repository }}.git \
-            --commit ${{ github.ref_name }} \
-            --subdir . \
-            --spec shdoc-ng.spec \
-            --type git \
-            --method make_srpm \
-            --script-builddeps git
+          VERSION=${GITHUB_REF_NAME#v}
+          make -f .copr/Makefile srpm \
+            outdir=${{ github.workspace }} \
+            VERSION="$VERSION"
+
+      - name: Upload source RPM to COPR
+        run: copr-cli build shdoc-ng ${{ github.workspace }}/*.src.rpm
