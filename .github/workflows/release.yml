@@ -54,4 +54,5 @@ jobs:
             --subdir . \
             --spec shdoc-ng.spec \
             --type git \
-            --method make_srpm
+            --method make_srpm \
+            --script-builddeps git
