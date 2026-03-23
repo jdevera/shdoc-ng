@@ -15,3 +15,9 @@ repos:
         entry: scripts/regenerate-showcase.sh
         files: ^examples/showcase\.sh$
         pass_filenames: false
+      - id: vscode-extension-build
+        name: vscode-extension-build
+        language: system
+        entry: bash -c 'cd editors/vscode && npm ci --silent && npm run compile'
+        files: ^editors/vscode/
+        pass_filenames: false

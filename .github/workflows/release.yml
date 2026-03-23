@@ -20,6 +20,13 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: stable
+      - name: Build VSCode extension
+        run: |
+          cd editors/vscode
+          cp ../../LICENSE .
+          npm ci
+          npx @vscode/vsce package -o ../../shdoc-ng.vsix
+
       - uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"

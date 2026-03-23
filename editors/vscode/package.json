@@ -4,6 +4,11 @@
   "description": "Syntax highlighting, snippets, and LSP support for shdoc-ng shell documentation annotations",
   "version": "0.1.0",
   "publisher": "shdoc-ng",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jdevera/shdoc-ng"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
