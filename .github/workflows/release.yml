@@ -25,6 +25,7 @@ jobs:
           cd editors/vscode
           cp ../../LICENSE .
           npm ci
+          npm run compile
           npx @vscode/vsce package -o ../../shdoc-ng.vsix
 
       - uses: goreleaser/goreleaser-action@v7
