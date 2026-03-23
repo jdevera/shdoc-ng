@@ -163,16 +163,30 @@ shdoc-ng includes a Language Server Protocol server that provides:
 
 ### Editor Setup
 
-**VSCode:** Install the extension from `editors/vscode/`. Set `shdoc-ng.serverCommand` to the path of the `shdoc-ng` binary.
+**VSCode:**
 
-**Neovim:**
+Download `shdoc-ng-<version>.vsix` from the [latest release](https://github.com/jdevera/shdoc-ng/releases) and install it:
+
+```bash
+code --install-extension shdoc-ng-*.vsix
+```
+
+Requires `shdoc-ng` on your PATH for the LSP server and documentation preview.
+
+**Neovim (lazy.nvim):**
 
 ```lua
-require('shdoc-ng').setup({
-    cmd = 'shdoc-ng',
-    args = { 'lsp' },
-})
+{
+  "jdevera/shdoc-ng",
+  subdir = "editors/neovim",
+  ft = "sh",
+  config = function()
+    require("shdoc-ng").setup()
+  end,
+}
 ```
+
+Requires `shdoc-ng` on your PATH for the LSP server.
 
 ## Differences from shdoc
 
