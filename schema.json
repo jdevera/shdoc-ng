@@ -136,6 +136,13 @@
                   "description": "True if the function explicitly takes no arguments (@noargs)",
                   "type": "boolean"
                 },
+                "labels": {
+                  "description": "Freeform labels for categorization (@label)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
                 "name": {
                   "description": "Function name as it appears in the source",
                   "type": "string"

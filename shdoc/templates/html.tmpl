@@ -11,7 +11,9 @@
 <section class="func" id="{{slug .Name}}">
 
   <div class="func-header">
-    <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}</h3>
+    <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}{{- if .Labels}}
+      {{- range .Labels}} <span class="func-label">{{. | html}}</span>{{end}}
+    {{- end}}</h3>
     <a href="#{{slug .Name}}" class="func-anchor" aria-label="permalink">¶</a>
   </div>
 
@@ -669,6 +671,18 @@
     }
 
     .func-header:hover .func-anchor { opacity: 1; }
+
+    .func-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 0.15em 0.6em;
+      border-radius: 9999px;
+      border: 1px solid var(--theme-border);
+      background: var(--theme-bg);
+      color: var(--theme-text-muted);
+      vertical-align: middle;
+      margin-left: 0.2em;
+    }
 
     .func-desc {
       font-size: 0.9rem;

@@ -121,6 +121,7 @@ greet() {
 | `@see`         | `@see func_name()` or `@see <URL>` or `@see [text](URL)` | Multi | Cross-references. Function refs use `()` suffix. |
 | `@warning`     | `@warning <text>` | Multi | `@warn` is a shorthand. |
 | `@deprecated`  | `@deprecated [message]` | Multi | Message is optional. |
+| `@label`       | `@label label1, label2, ...` | — | Freeform labels for categorization. Comma-separated. Repeatable. |
 | `@internal`    | `@internal` | — | Excludes the function from generated documentation. |
 
 #### Tag shorthands

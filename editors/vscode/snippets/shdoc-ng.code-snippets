@@ -57,6 +57,13 @@
     ],
     "description": "Insert a @deprecated annotation"
   },
+  "shdoc label": {
+    "prefix": "@label",
+    "body": [
+      "@label $0"
+    ],
+    "description": "Insert a @label annotation for categorization"
+  },
   "shdoc docblock": {
     "prefix": "docblock",
     "body": [

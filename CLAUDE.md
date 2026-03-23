@@ -56,6 +56,7 @@ See `DEVELOPMENT.md` for full details on the test framework and documenting devi
 - **Function description → FileDescription** — At the end of `parseFuncBlock`, the description is routed via `routeDescription()` BEFORE being set on `docblock.Description`, so the first function's description can populate `doc.FileDescription` if still empty.
 - **`@example` continuation** — Uses `^[\s]*#[ ]+` (one or more spaces after `#`). A bare `#` (no space) ends the example. Implemented in `collectExampleLines()`.
 - **`@description` collection** — `collectUntilNextTag()` stops at `@`-tagged lines but continues through bare `#` blank comment lines.
+- **`@label` parsing** — Comma-separated values on a single line, split and trimmed. Multiple `@label` lines accumulate. Stored as `Labels []string` on `FuncDoc`.
 
 ## Reference Implementation
 

@@ -47,6 +47,8 @@
 # @stdout The greeting string.
 # @stderr A warning when no name is given.
 #
+# @label couldbeascript, greeting
+#
 # @see farewell()
 # @see https://www.gnu.org/software/bash/
 # @see ./lib/helpers.sh

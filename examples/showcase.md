@@ -115,6 +115,10 @@ greet "$(whoami)"
 
 * A warning when no name is given.
 
+#### Labels
+
+`couldbeascript` · `greeting`
+
 #### See also
 
 * [farewell()](#farewell)

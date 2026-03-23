@@ -700,7 +700,7 @@ var metaTags = []string{"name", "file", "brief", "description", "desc", "author"
 	"license", "version", "section"}
 var funcTags = []string{"description", "desc", "internal", "deprecated", "warning", "warn",
 	"example", "option", "opt", "arg", "noargs", "set", "env", "exitcode", "exit",
-	"stdin", "stdout", "stderr", "see"}
+	"stdin", "stdout", "stderr", "see", "label"}
 
 // completion offers @tag completions inside comment blocks.
 func completion(_ *glsp.Context, p *protocol.CompletionParams) (any, error) {

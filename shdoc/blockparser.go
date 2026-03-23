@@ -476,6 +476,19 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 			}
 			i = next
 
+		case "label":
+			if value == "" {
+				bp.warn(lineNum, tagCol(raw), "Empty value: @label requires at least one label")
+			} else {
+				for _, l := range strings.Split(value, ",") {
+					l = strings.TrimSpace(l)
+					if l != "" {
+						docblock.Labels = append(docblock.Labels, l)
+					}
+				}
+			}
+			i++
+
 		case "description":
 			// Only the last @description becomes the function description;
 			// earlier ones are discarded. Collect the new one.

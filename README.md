@@ -102,6 +102,7 @@ The HTML output uses the [Catppuccin](https://catppuccin.com) color palette.
 | `@internal` | Exclude function from output |
 | `@deprecated` | Mark as deprecated, with optional message |
 | `@warning` / `@warn` | Usage warning |
+| `@label` | Freeform labels for categorization (comma-separated) |
 
 ### Tag shorthands
 

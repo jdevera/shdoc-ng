@@ -124,6 +124,10 @@
               "text": "See also the [bash guide](https://tldp.org/LDP/abs/html/) and https://mywiki.wooledge.org/BashFAQ."
             }
           ],
+          "labels": [
+            "couldbeascript",
+            "greeting"
+          ],
           "warnings": [
             "Do not pass empty strings."
           ]

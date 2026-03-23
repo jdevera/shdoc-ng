@@ -82,6 +82,10 @@ function M.setup()
             t('@deprecated '),
             i(0),
         }),
+        s('@label', {
+            t('@label '),
+            i(0),
+        }),
         s('@noargs', {
             t('@noargs'),
         }),

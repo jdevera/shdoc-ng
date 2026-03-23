@@ -39,6 +39,7 @@ FuncDoc fields (passed to funcBlock and all sec* templates):
   .Stdin       []string      — @stdin values
   .Stdout      []string      — @stdout values
   .Stderr      []string      — @stderr values
+  .Labels      []string      — @label values
   .See         []SeeRef      — @see values
 
 OptionEntry:  .Forms []OptionForm, .Definition string
@@ -146,6 +147,11 @@ Bad options (entries that failed format validation) follow with no blank lines.
 {{- if .Stderr}}{{"\n\n#### Output on stderr\n\n"}}{{range $i, $s := .Stderr}}{{if $i}}{{"\n"}}{{end}}* {{replaceAll $s "\n" "\n  "}}{{end}}{{- end -}}
 {{- end -}}
 
+{{- /* secLabels — @label list; renders as code spans joined by · */ -}}
+{{- define "secLabels" -}}
+{{- if .Labels}}{{"\n\n#### Labels\n\n"}}{{range $i, $l := .Labels}}{{if $i}} · {{end}}`{{$l}}`{{end}}{{- end -}}
+{{- end -}}
+
 {{- /* secSee — @see list; renders each SeeRef using its Kind/Text/Href fields */ -}}
 {{- define "secSee" -}}
 {{- if .See}}{{"\n\n#### See also\n\n"}}{{range $i, $s := .See}}{{if $i}}{{"\n"}}{{end}}* {{if eq $s.Kind "path"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "url"}}{{mdLink $s.Href $s.Href}}{{else if eq $s.Kind "link"}}{{mdLink $s.Text $s.Href}}{{else if eq $s.Kind "ref"}}{{mdAnchor $s.Text}}{{else}}{{mdLinkify $s.Text}}{{end}}{{end}}{{- end -}}
@@ -171,6 +177,7 @@ Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the bloc
 {{- template "secStdin"       .}}
 {{- template "secStdout"      .}}
 {{- template "secStderr"      .}}
+{{- template "secLabels"      .}}
 {{- template "secSee"         .}}
 {{- "\n"}}
 {{- end -}}

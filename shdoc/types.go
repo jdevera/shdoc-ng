@@ -44,6 +44,7 @@ type FuncDoc struct {
 	Stdout      []string      `json:"stdout,omitempty"            desc:"Description of stdout output (@stdout)"`
 	Stderr      []string      `json:"stderr,omitempty"            desc:"Description of stderr output (@stderr)"`
 	See         []SeeRef      `json:"see,omitempty"               desc:"See also references (@see)"`
+	Labels      []string      `json:"labels,omitempty"            desc:"Freeform labels for categorization (@label)"`
 	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
 	IsDeprecated    bool          `json:"is_deprecated,omitempty"      desc:"True if the function is deprecated (@deprecated)"`
 	DeprecatedMessage string      `json:"deprecated_message,omitempty" desc:"Deprecation notice, if provided (@deprecated message)"`
@@ -57,7 +58,7 @@ func (f *FuncDoc) hasDocumentation() bool {
 		len(f.ExitCodes) > 0 ||
 		len(f.Stdin) > 0 || len(f.Stdout) > 0 ||
 		len(f.Stderr) > 0 || len(f.See) > 0 ||
-		len(f.Warnings) > 0 ||
+		len(f.Labels) > 0 || len(f.Warnings) > 0 ||
 		f.IsDeprecated || f.Example != ""
 }
 
