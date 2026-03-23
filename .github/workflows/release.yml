@@ -20,14 +20,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: stable
-      - name: Build VSCode extension
-        run: |
-          cd editors/vscode
-          cp ../../LICENSE .
-          npm ci
-          npm run compile
-          npx @vscode/vsce package -o ../../shdoc-ng.vsix
-
       - uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
@@ -35,6 +27,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Build and upload VSCode extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd editors/vscode
+          cp ../../LICENSE .
+          npm ci
+          npm run compile
+          npx @vscode/vsce package -o ../../shdoc-ng-${GITHUB_REF_NAME#v}.vsix
+          cd ../..
+          gh release upload ${{ github.ref_name }} shdoc-ng-${GITHUB_REF_NAME#v}.vsix
 
   copr:
     needs: goreleaser

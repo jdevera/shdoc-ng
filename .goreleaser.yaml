@@ -20,11 +20,6 @@ archives:
       - goos: windows
         formats: [zip]
 
-release:
-  extra_files:
-    - glob: shdoc-ng.vsix
-      name_template: "shdoc-ng-{{ .Version }}.vsix"
-
 checksum:
   name_template: "checksums.txt"
 
