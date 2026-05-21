@@ -698,15 +698,9 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	finalDesc := cleanDescription(pendingDesc)
 	docblock.Description = finalDesc
 
-	if !docblock.hasDocumentation() && docblock.Description == "" {
-		if bp.opts.IncludeUndocumented && block.FuncName != "" {
-			sec := &bp.doc.Sections[bp.currentSection]
-			sec.Functions = append(sec.Functions, FuncDoc{Name: block.FuncName})
-		}
-		return
-	}
-
 	// Sort args numerically ($1, $2, …), with $@ last.
+	// Must run before hasDocumentation() so an @arg-only function still
+	// reports as documented and keeps its args in the output.
 	sortKeys := make([]int, 0, len(tempArgs))
 	for k := range tempArgs {
 		sortKeys = append(sortKeys, k)
@@ -714,6 +708,14 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	sort.Ints(sortKeys)
 	for _, k := range sortKeys {
 		docblock.Args = append(docblock.Args, tempArgs[k])
+	}
+
+	if !docblock.hasDocumentation() && docblock.Description == "" {
+		if bp.opts.IncludeUndocumented && block.FuncName != "" {
+			sec := &bp.doc.Sections[bp.currentSection]
+			sec.Functions = append(sec.Functions, FuncDoc{Name: block.FuncName})
+		}
+		return
 	}
 
 	docblock.Name = block.FuncName

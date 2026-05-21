@@ -320,6 +320,37 @@ farewell() {
 	}
 }
 
+func TestArgOnlyFunctionKeepsArgs(t *testing.T) {
+	src := `# @arg $1 string A name to greet.
+# @arg $2 int How many times.
+greet() {
+    echo "$1 $2"
+}
+`
+	doc, _ := ParseDocument(src)
+	all := doc.AllFunctions()
+	if len(all) != 1 {
+		names := make([]string, len(all))
+		for i, f := range all {
+			names[i] = f.Name
+		}
+		t.Fatalf("expected 1 function, got %d: %v", len(all), names)
+	}
+	f := all[0]
+	if f.Name != "greet" {
+		t.Errorf("Name = %q, want %q", f.Name, "greet")
+	}
+	if len(f.Args) != 2 {
+		t.Fatalf("Args len = %d, want 2 (function with only @arg should still keep them)", len(f.Args))
+	}
+	if f.Args[0].Name != "$1" || f.Args[0].Type != "string" || f.Args[0].Description != "A name to greet." {
+		t.Errorf("Args[0] = %+v, want {$1 string A name to greet.}", f.Args[0])
+	}
+	if f.Args[1].Name != "$2" || f.Args[1].Type != "int" || f.Args[1].Description != "How many times." {
+		t.Errorf("Args[1] = %+v, want {$2 int How many times.}", f.Args[1])
+	}
+}
+
 func TestIncludeUndocumented(t *testing.T) {
 	src := `#!/usr/bin/env bash
 
