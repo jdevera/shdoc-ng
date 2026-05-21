@@ -20,7 +20,7 @@
   "activationEvents": [
     "onLanguage:shellscript"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "grammars": [
       {
@@ -55,8 +55,9 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc --noEmit -p ./ && esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node16 --minify",
+    "watch": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node16 --sourcemap --watch"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.0"
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@types/node": "^25.3.5",
     "@types/vscode": "^1.75.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.0.0"
   }
 }
