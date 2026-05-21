@@ -124,10 +124,11 @@ shdoc-ng lsp         Run the LSP server (stdio)
 shdoc-ng generate [flags]
 
 Flags:
-  -i, --input string      Input file (default stdin)
-  -o, --output string     Output file (default stdout)
-      --format string     Output format: markdown, html, json (default "markdown")
-      --template string   Use a custom template file
+  -i, --input string         Input file (default stdin)
+  -o, --output string        Output file (default stdout)
+      --format string        Output format: markdown, html, json (default "markdown")
+      --template string      Use a custom template file
+      --include-undocumented List functions with no documentation alongside documented ones
 ```
 
 ### check
@@ -209,6 +210,10 @@ repos:
     hooks:
       - id: shdoc-ng-check
 ```
+
+## Wiki
+
+The [project wiki](https://github.com/jdevera/shdoc-ng/wiki) contains additional use cases.
 
 ## Building from Source
 

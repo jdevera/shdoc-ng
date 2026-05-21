@@ -320,6 +320,139 @@ farewell() {
 	}
 }
 
+func TestArgOnlyFunctionKeepsArgs(t *testing.T) {
+	src := `# @arg $1 string A name to greet.
+# @arg $2 int How many times.
+greet() {
+    echo "$1 $2"
+}
+`
+	doc, _ := ParseDocument(src)
+	all := doc.AllFunctions()
+	if len(all) != 1 {
+		names := make([]string, len(all))
+		for i, f := range all {
+			names[i] = f.Name
+		}
+		t.Fatalf("expected 1 function, got %d: %v", len(all), names)
+	}
+	f := all[0]
+	if f.Name != "greet" {
+		t.Errorf("Name = %q, want %q", f.Name, "greet")
+	}
+	if len(f.Args) != 2 {
+		t.Fatalf("Args len = %d, want 2 (function with only @arg should still keep them)", len(f.Args))
+	}
+	if f.Args[0].Name != "$1" || f.Args[0].Type != "string" || f.Args[0].Description != "A name to greet." {
+		t.Errorf("Args[0] = %+v, want {$1 string A name to greet.}", f.Args[0])
+	}
+	if f.Args[1].Name != "$2" || f.Args[1].Type != "int" || f.Args[1].Description != "How many times." {
+		t.Errorf("Args[1] = %+v, want {$2 int How many times.}", f.Args[1])
+	}
+}
+
+func TestIncludeUndocumented(t *testing.T) {
+	src := `#!/usr/bin/env bash
+
+# @description Documented top-level.
+documented_top() {
+    echo "hi"
+}
+
+bare_top() {
+    echo "no docs"
+}
+
+# @section Utils
+# @description Helper functions.
+
+# @description Documented in Utils.
+documented_utils() {
+    echo "hi"
+}
+
+bare_utils() {
+    echo "no docs"
+}
+
+# A random comment that does not form a doc block.
+bare_with_random_comment() {
+    echo "still no docs"
+}
+
+# @description Hidden helper.
+# @internal
+hidden_utils() {
+    echo "internal"
+}
+`
+
+	t.Run("default behavior unchanged", func(t *testing.T) {
+		doc, _ := ParseDocument(src)
+		var names []string
+		for _, f := range doc.AllFunctions() {
+			names = append(names, f.Name)
+		}
+		want := []string{"documented_top", "documented_utils"}
+		if !equalStrings(names, want) {
+			t.Fatalf("default output funcs = %v, want %v", names, want)
+		}
+	})
+
+	t.Run("with include-undocumented places bare funcs in their natural section", func(t *testing.T) {
+		doc, _ := ParseDocumentWithOptions(src, ParseOptions{IncludeUndocumented: true})
+
+		secByName := map[string][]string{}
+		for _, s := range doc.Sections {
+			for _, f := range s.Functions {
+				secByName[s.Name] = append(secByName[s.Name], f.Name)
+			}
+		}
+
+		// Top-level (unnamed) section: documented_top + bare_top.
+		if got, want := secByName[""], []string{"documented_top", "bare_top"}; !equalStrings(got, want) {
+			t.Errorf("unnamed section funcs = %v, want %v", got, want)
+		}
+
+		// Utils section: documented_utils, bare_utils, bare_with_random_comment.
+		// hidden_utils (@internal) must be excluded.
+		want := []string{"documented_utils", "bare_utils", "bare_with_random_comment"}
+		if got := secByName["Utils"]; !equalStrings(got, want) {
+			t.Errorf("Utils section funcs = %v, want %v", got, want)
+		}
+
+		// No synthetic "Undocumented" section.
+		for _, s := range doc.Sections {
+			if s.Name == "Undocumented" {
+				t.Errorf("did not expect a synthetic 'Undocumented' section")
+			}
+		}
+
+		// Bare entries carry no doc content.
+		for _, s := range doc.Sections {
+			for _, f := range s.Functions {
+				if strings.HasPrefix(f.Name, "bare_") {
+					if f.hasDocumentation() || f.Description != "" {
+						t.Errorf("bare func %q unexpectedly carries doc content: %+v", f.Name, f)
+					}
+				}
+			}
+		}
+	})
+}
+
+func equalStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestExternal(t *testing.T) {
 	shdocCmd := os.Getenv("SHDOC_CMD")
 	if shdocCmd == "" {

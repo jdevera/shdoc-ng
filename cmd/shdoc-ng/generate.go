@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	genFormat       string
-	genInputFile    string
-	genOutputFile   string
-	genTemplateFile string
+	genFormat              string
+	genInputFile           string
+	genOutputFile          string
+	genTemplateFile        string
+	genIncludeUndocumented bool
 )
 
 var defaultTemplates = map[string]string{
@@ -41,6 +42,7 @@ func init() {
 	generateCmd.Flags().StringVarP(&genInputFile, "input", "i", "-", "Input file (- for stdin)")
 	generateCmd.Flags().StringVarP(&genOutputFile, "output", "o", "-", "Output file (- for stdout)")
 	generateCmd.Flags().StringVar(&genTemplateFile, "template", "", "Use a custom template file instead of the built-in one")
+	generateCmd.Flags().BoolVar(&genIncludeUndocumented, "include-undocumented", false, "List functions with no documentation under a synthetic 'Undocumented' section")
 	rootCmd.AddCommand(generateCmd)
 }
 
@@ -78,7 +80,9 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("reading input: %w", err)
 	}
 
-	doc, warns := shdoc.ParseDocument(string(src))
+	doc, warns := shdoc.ParseDocumentWithOptions(string(src), shdoc.ParseOptions{
+		IncludeUndocumented: genIncludeUndocumented,
+	})
 
 	warnFile := genInputFile
 	if warnFile == "-" {

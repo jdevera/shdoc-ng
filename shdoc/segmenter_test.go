@@ -42,6 +42,106 @@ greet() { :; }`
 	}
 }
 
+func TestSegmentBareFuncDecls(t *testing.T) {
+	src := `# @description Documented.
+greet() {
+    echo hi
+}
+
+undocumented_one() {
+    echo nope
+}
+
+# A random comment that is not a doc block.
+undocumented_two() {
+    echo nope
+}
+
+brace_next()
+{
+    echo split
+}
+`
+	blocks := SegmentBlocks(LexLines(src))
+
+	var funcNames []string
+	for _, b := range blocks {
+		if b.Kind == FuncDocBlockKind {
+			funcNames = append(funcNames, b.FuncName)
+		}
+	}
+	want := []string{"greet", "undocumented_one", "undocumented_two", "brace_next"}
+	if len(funcNames) != len(want) {
+		t.Fatalf("segmented funcs = %v, want %v", funcNames, want)
+	}
+	for i := range want {
+		if funcNames[i] != want[i] {
+			t.Errorf("func[%d] = %q, want %q", i, funcNames[i], want[i])
+		}
+	}
+
+	// undocumented_one has no preceding comments — its block must have empty Comments.
+	for _, b := range blocks {
+		if b.FuncName == "undocumented_one" {
+			if len(b.Comments.Lines) != 0 {
+				t.Errorf("bare func block should have no comment lines, got %d", len(b.Comments.Lines))
+			}
+		}
+	}
+}
+
+func TestSegmenterRejectsShellKeywords(t *testing.T) {
+	// Shell reserved words can never be function names. The segmenter regex
+	// must not mistake constructs like `for ((...))` or `while ((...))` for
+	// function declarations.
+	src := `for ((i=0; i<10; i++)); do
+    echo "$i"
+done
+
+while ((n > 0)); do
+    n=$((n - 1))
+done
+
+until ((done)); do
+    sleep 1
+done
+
+case "$x" in
+    foo) echo foo ;;
+esac
+
+# @description A real function.
+real_func() {
+    echo "hi"
+}
+`
+	blocks := SegmentBlocks(LexLines(src))
+
+	var funcNames []string
+	for _, b := range blocks {
+		if b.Kind == FuncDocBlockKind {
+			funcNames = append(funcNames, b.FuncName)
+		}
+	}
+
+	want := []string{"real_func"}
+	if len(funcNames) != len(want) || funcNames[0] != want[0] {
+		t.Errorf("segmented funcs = %v, want %v (shell keywords must not be matched as function names)", funcNames, want)
+	}
+
+	// Also verify the line-by-line predicate.
+	for _, line := range []string{
+		"for ((i=0; i<10; i++)); do",
+		"while ((n > 0)); do",
+		"until ((done)); do",
+		"case \"$x\" in",
+	} {
+		if IsFuncDecl(line) {
+			t.Errorf("IsFuncDecl(%q) = true, want false", line)
+		}
+	}
+}
+
 func TestIsFuncDecl(t *testing.T) {
 	tests := []struct {
 		line string
