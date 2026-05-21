@@ -46,6 +46,16 @@ func SegmentBlocks(lines []LexedLine) []ParsedBlock {
 
 	for i < n {
 		if lines[i].Kind != LineComment {
+			if lines[i].Kind == LineCode {
+				if name, consumed := matchBareFuncDecl(lines, i); consumed > 0 {
+					blocks = append(blocks, ParsedBlock{
+						Kind:     FuncDocBlockKind,
+						FuncName: name,
+					})
+					i += consumed
+					continue
+				}
+			}
 			i++
 			continue
 		}
@@ -102,6 +112,25 @@ func SegmentBlocks(lines []LexedLine) []ParsedBlock {
 // IsFuncDecl reports whether line looks like a shell function declaration.
 func IsFuncDecl(line string) bool {
 	return segFuncDeclWithBrace.MatchString(line)
+}
+
+// matchBareFuncDecl checks whether lines[i] (assumed LineCode) is the start of
+// a function declaration, using the same recognition rules SegmentBlocks
+// applies to a function that follows a comment block. Returns the function
+// name and the number of lines consumed (1 or 2). Returns "", 0 if no match.
+func matchBareFuncDecl(lines []LexedLine, i int) (string, int) {
+	raw := lines[i].Raw
+	if segFuncDeclWithBrace.MatchString(raw) {
+		return ExtractFuncName(raw), 1
+	}
+	if segFuncDeclWithoutBrace.MatchString(raw) {
+		if i+1 < len(lines) && (lines[i+1].Kind == LineBlank || lines[i+1].Kind == LineCode) {
+			if segLoneBrace.MatchString(lines[i+1].Raw) {
+				return ExtractFuncName(raw), 2
+			}
+		}
+	}
+	return "", 0
 }
 
 // ExtractFuncName pulls the function name from a declaration line.

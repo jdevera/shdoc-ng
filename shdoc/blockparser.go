@@ -52,17 +52,32 @@ var (
 	bpCleanTrailingRe = regexp.MustCompile(`[\s\n]*$`)
 )
 
+// ParseOptions controls optional parsing behavior.
+type ParseOptions struct {
+	// IncludeUndocumented surfaces functions that have no documentation as
+	// bare FuncDoc entries (Name only) placed in whichever section is
+	// currently active at the point of declaration. @internal functions are
+	// still excluded.
+	IncludeUndocumented bool
+}
+
 // ParseDocument parses src and returns the document and any warnings.
 func ParseDocument(src string) (Document, []Warning) {
-	lines := LexLines(src)
-	blocks := SegmentBlocks(lines)
-	return ParseBlocks(blocks)
+	return ParseDocumentWithOptions(src, ParseOptions{})
+}
+
+// ParseDocumentWithOptions parses src with the given options.
+func ParseDocumentWithOptions(src string, opts ParseOptions) (Document, []Warning) {
+	return parseBlocksWithOptions(SegmentBlocks(LexLines(src)), opts)
 }
 
 // ParseBlocks parses pre-segmented blocks and returns the document and any warnings.
 func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
-	bp := &blockParser{}
-	// Start with one unnamed section for functions before any @section tag.
+	return parseBlocksWithOptions(blocks, ParseOptions{})
+}
+
+func parseBlocksWithOptions(blocks []ParsedBlock, opts ParseOptions) (Document, []Warning) {
+	bp := &blockParser{opts: opts}
 	bp.doc.Sections = []Section{{}}
 	bp.currentSection = 0
 
@@ -74,7 +89,6 @@ func ParseBlocks(blocks []ParsedBlock) (Document, []Warning) {
 		}
 	}
 
-	// Prune sections with no functions.
 	var pruned []Section
 	for _, s := range bp.doc.Sections {
 		if len(s.Functions) == 0 {
@@ -91,6 +105,7 @@ type blockParser struct {
 	doc            Document
 	warns          []Warning
 	currentSection int // index into doc.Sections
+	opts           ParseOptions
 	// Track which file-level singleton tags have been set, to warn on duplicates.
 	seenFileTags map[string]int // tag -> first line number
 }
@@ -684,6 +699,10 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	docblock.Description = finalDesc
 
 	if !docblock.hasDocumentation() && docblock.Description == "" {
+		if bp.opts.IncludeUndocumented && block.FuncName != "" {
+			sec := &bp.doc.Sections[bp.currentSection]
+			sec.Functions = append(sec.Functions, FuncDoc{Name: block.FuncName})
+		}
 		return
 	}
 
