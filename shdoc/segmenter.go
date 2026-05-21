@@ -109,9 +109,19 @@ func SegmentBlocks(lines []LexedLine) []ParsedBlock {
 	return blocks
 }
 
+// shellReservedWords are shell keywords that can appear at the start of a
+// compound command and superficially match the function-declaration regex
+// (e.g. `for ((...))`, `while ((...))`). They can never be function names.
+var shellReservedWords = map[string]bool{
+	"if": true, "then": true, "else": true, "elif": true, "fi": true,
+	"case": true, "esac": true,
+	"for": true, "while": true, "until": true, "do": true, "done": true,
+	"select": true, "function": true, "in": true, "time": true,
+}
+
 // IsFuncDecl reports whether line looks like a shell function declaration.
 func IsFuncDecl(line string) bool {
-	return segFuncDeclWithBrace.MatchString(line)
+	return segFuncDeclWithBrace.MatchString(line) && ExtractFuncName(line) != ""
 }
 
 // matchBareFuncDecl checks whether lines[i] (assumed LineCode) is the start of
@@ -121,12 +131,16 @@ func IsFuncDecl(line string) bool {
 func matchBareFuncDecl(lines []LexedLine, i int) (string, int) {
 	raw := lines[i].Raw
 	if segFuncDeclWithBrace.MatchString(raw) {
-		return ExtractFuncName(raw), 1
+		if name := ExtractFuncName(raw); name != "" {
+			return name, 1
+		}
 	}
 	if segFuncDeclWithoutBrace.MatchString(raw) {
 		if i+1 < len(lines) && (lines[i+1].Kind == LineBlank || lines[i+1].Kind == LineCode) {
 			if segLoneBrace.MatchString(lines[i+1].Raw) {
-				return ExtractFuncName(raw), 2
+				if name := ExtractFuncName(raw); name != "" {
+					return name, 2
+				}
 			}
 		}
 	}
@@ -134,9 +148,15 @@ func matchBareFuncDecl(lines []LexedLine, i int) (string, int) {
 }
 
 // ExtractFuncName pulls the function name from a declaration line.
+// Returns "" if the matched identifier is a shell reserved word (e.g. `for`
+// in `for ((i=0; i<10; i++))`).
 func ExtractFuncName(line string) string {
-	if m := segFuncNameRe.FindStringSubmatch(line); m != nil {
-		return m[1]
+	m := segFuncNameRe.FindStringSubmatch(line)
+	if m == nil {
+		return ""
 	}
-	return ""
+	if shellReservedWords[m[1]] {
+		return ""
+	}
+	return m[1]
 }

@@ -90,6 +90,58 @@ brace_next()
 	}
 }
 
+func TestSegmenterRejectsShellKeywords(t *testing.T) {
+	// Shell reserved words can never be function names. The segmenter regex
+	// must not mistake constructs like `for ((...))` or `while ((...))` for
+	// function declarations.
+	src := `for ((i=0; i<10; i++)); do
+    echo "$i"
+done
+
+while ((n > 0)); do
+    n=$((n - 1))
+done
+
+until ((done)); do
+    sleep 1
+done
+
+case "$x" in
+    foo) echo foo ;;
+esac
+
+# @description A real function.
+real_func() {
+    echo "hi"
+}
+`
+	blocks := SegmentBlocks(LexLines(src))
+
+	var funcNames []string
+	for _, b := range blocks {
+		if b.Kind == FuncDocBlockKind {
+			funcNames = append(funcNames, b.FuncName)
+		}
+	}
+
+	want := []string{"real_func"}
+	if len(funcNames) != len(want) || funcNames[0] != want[0] {
+		t.Errorf("segmented funcs = %v, want %v (shell keywords must not be matched as function names)", funcNames, want)
+	}
+
+	// Also verify the line-by-line predicate.
+	for _, line := range []string{
+		"for ((i=0; i<10; i++)); do",
+		"while ((n > 0)); do",
+		"until ((done)); do",
+		"case \"$x\" in",
+	} {
+		if IsFuncDecl(line) {
+			t.Errorf("IsFuncDecl(%q) = true, want false", line)
+		}
+	}
+}
+
 func TestIsFuncDecl(t *testing.T) {
 	tests := []struct {
 		line string
