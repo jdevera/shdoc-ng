@@ -99,7 +99,7 @@ The HTML output uses the [Catppuccin](https://catppuccin.com) color palette.
 | `@stderr` | Description of stderr output |
 | `@see` | Cross-reference (function, URL, path, or markdown link) |
 | `@section` | Group following functions under a section heading |
-| `@internal` | Exclude function from output |
+| `@internal` | Exclude function from default output (use `--include-internal` to surface) |
 | `@deprecated` | Mark as deprecated, with optional message |
 | `@warning` / `@warn` | Usage warning |
 | `@label` | Freeform labels for categorization (comma-separated) |
@@ -129,6 +129,8 @@ Flags:
       --format string        Output format: markdown, html, json (default "markdown")
       --template string      Use a custom template file
       --include-undocumented List functions with no documentation alongside documented ones
+      --include-internal     Surface @internal functions (marked as internal in the output)
+      --include-all          Shorthand for --include-undocumented --include-internal
 ```
 
 ### check

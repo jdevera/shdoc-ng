@@ -59,6 +59,7 @@ See `DEVELOPMENT.md` for full details on the test framework and documenting devi
 - **`@label` parsing** — Comma-separated values on a single line, split and trimmed. Multiple `@label` lines accumulate. Stored as `Labels []string` on `FuncDoc`.
 - **Bare function declarations are segmented too** — A function declaration with no preceding comment block becomes a `FuncDocBlock` with `Comments.Lines` empty. `parseFuncBlock` emits a bare `FuncDoc{Name: ...}` in the current sticky section only when `ParseOptions.IncludeUndocumented` is set; otherwise it returns silently. Future edits to the segmenter loop or to `parseFuncBlock`'s early-return must preserve this.
 - **`ExtractFuncName` filters shell reserved words** — Returns `""` for `for`, `while`, `until`, `case`, etc., because the function-decl regex matches constructs like `for ((...))`. Extending shell-keyword coverage means updating `shellReservedWords` in `segmenter.go`.
+- **`@internal` is conditionally suppressed** — `parseFuncBlock` returns early on `@internal` unless `ParseOptions.IncludeInternal` is set. When included, the function carries `IsInternal=true` (templates render an `_(internal)_` marker) and the bare-add path under `IncludeUndocumented` propagates the flag too.
 
 ## Reference Implementation
 

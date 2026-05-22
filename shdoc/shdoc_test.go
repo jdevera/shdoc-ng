@@ -453,6 +453,101 @@ func equalStrings(a, b []string) bool {
 	return true
 }
 
+func TestIncludeInternal(t *testing.T) {
+	src := `# @description Public helper.
+public_helper() {
+    echo "hi"
+}
+
+# @description Hidden helper.
+# @internal
+hidden_helper() {
+    echo "internal"
+}
+
+# @internal
+bare_internal() {
+    echo "internal, no description"
+}
+`
+
+	collect := func(doc Document) map[string]FuncDoc {
+		out := map[string]FuncDoc{}
+		for _, s := range doc.Sections {
+			for _, f := range s.Functions {
+				out[f.Name] = f
+			}
+		}
+		return out
+	}
+
+	t.Run("default excludes @internal", func(t *testing.T) {
+		doc, _ := ParseDocument(src)
+		got := collect(doc)
+		if _, ok := got["public_helper"]; !ok {
+			t.Errorf("expected public_helper in output")
+		}
+		if _, ok := got["hidden_helper"]; ok {
+			t.Errorf("expected hidden_helper to be excluded by default")
+		}
+		if _, ok := got["bare_internal"]; ok {
+			t.Errorf("expected bare_internal to be excluded by default")
+		}
+	})
+
+	t.Run("IncludeInternal surfaces documented @internal with IsInternal=true", func(t *testing.T) {
+		doc, _ := ParseDocumentWithOptions(src, ParseOptions{IncludeInternal: true})
+		got := collect(doc)
+		f, ok := got["hidden_helper"]
+		if !ok {
+			t.Fatalf("expected hidden_helper in output with IncludeInternal")
+		}
+		if !f.IsInternal {
+			t.Errorf("hidden_helper.IsInternal = false, want true")
+		}
+		if f.Description != "Hidden helper." {
+			t.Errorf("hidden_helper.Description = %q, want %q", f.Description, "Hidden helper.")
+		}
+		// bare_internal (no description) is still dropped without IncludeUndocumented.
+		if _, ok := got["bare_internal"]; ok {
+			t.Errorf("bare_internal should still be dropped without IncludeUndocumented")
+		}
+		// Public function still there, not flagged internal.
+		if pf := got["public_helper"]; pf.IsInternal {
+			t.Errorf("public_helper.IsInternal = true, want false")
+		}
+	})
+
+	t.Run("IncludeInternal + IncludeUndocumented surfaces bare @internal too", func(t *testing.T) {
+		doc, _ := ParseDocumentWithOptions(src, ParseOptions{
+			IncludeInternal:     true,
+			IncludeUndocumented: true,
+		})
+		got := collect(doc)
+		f, ok := got["bare_internal"]
+		if !ok {
+			t.Fatalf("expected bare_internal with both flags set")
+		}
+		if !f.IsInternal {
+			t.Errorf("bare_internal.IsInternal = false, want true (preserved through bare-add path)")
+		}
+		if f.Description != "" {
+			t.Errorf("bare_internal.Description should be empty, got %q", f.Description)
+		}
+	})
+
+	t.Run("IncludeUndocumented alone still excludes @internal", func(t *testing.T) {
+		doc, _ := ParseDocumentWithOptions(src, ParseOptions{IncludeUndocumented: true})
+		got := collect(doc)
+		if _, ok := got["hidden_helper"]; ok {
+			t.Errorf("hidden_helper should remain excluded with IncludeUndocumented alone")
+		}
+		if _, ok := got["bare_internal"]; ok {
+			t.Errorf("bare_internal should remain excluded with IncludeUndocumented alone")
+		}
+	})
+}
+
 func TestExternal(t *testing.T) {
 	shdocCmd := os.Getenv("SHDOC_CMD")
 	if shdocCmd == "" {

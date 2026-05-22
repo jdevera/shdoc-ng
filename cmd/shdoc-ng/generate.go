@@ -16,6 +16,8 @@ var (
 	genOutputFile          string
 	genTemplateFile        string
 	genIncludeUndocumented bool
+	genIncludeInternal     bool
+	genIncludeAll          bool
 )
 
 var defaultTemplates = map[string]string{
@@ -43,6 +45,8 @@ func init() {
 	generateCmd.Flags().StringVarP(&genOutputFile, "output", "o", "-", "Output file (- for stdout)")
 	generateCmd.Flags().StringVar(&genTemplateFile, "template", "", "Use a custom template file instead of the built-in one")
 	generateCmd.Flags().BoolVar(&genIncludeUndocumented, "include-undocumented", false, "List functions with no documentation alongside documented ones")
+	generateCmd.Flags().BoolVar(&genIncludeInternal, "include-internal", false, "Surface @internal functions, marked as internal")
+	generateCmd.Flags().BoolVar(&genIncludeAll, "include-all", false, "Shorthand for --include-undocumented --include-internal")
 	rootCmd.AddCommand(generateCmd)
 }
 
@@ -81,7 +85,8 @@ func runGenerate(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	doc, warns := shdoc.ParseDocumentWithOptions(string(src), shdoc.ParseOptions{
-		IncludeUndocumented: genIncludeUndocumented,
+		IncludeUndocumented: genIncludeUndocumented || genIncludeAll,
+		IncludeInternal:     genIncludeInternal || genIncludeAll,
 	})
 
 	warnFile := genInputFile

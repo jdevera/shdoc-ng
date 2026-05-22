@@ -163,7 +163,7 @@ The "### FuncName" heading, followed by all sections.
 Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the block.
 */ -}}
 {{- define "funcBlock" -}}
-### {{.Name}}
+### {{.Name}}{{if .IsInternal}} _(internal)_{{end}}
 {{- template "secDeprecated"  .}}
 {{- template "secDescription" .}}
 {{- template "secWarnings"    .}}

@@ -57,8 +57,13 @@ type ParseOptions struct {
 	// IncludeUndocumented surfaces functions that have no documentation as
 	// bare FuncDoc entries (Name only) placed in whichever section is
 	// currently active at the point of declaration. @internal functions are
-	// still excluded.
+	// still excluded unless IncludeInternal is also set.
 	IncludeUndocumented bool
+
+	// IncludeInternal surfaces functions marked @internal. They appear in
+	// the output like any documented function but carry IsInternal=true so
+	// consumers and templates can distinguish them.
+	IncludeInternal bool
 }
 
 // ParseDocument parses src and returns the document and any warnings.
@@ -692,7 +697,10 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	}
 
 	if isInternal {
-		return
+		if !bp.opts.IncludeInternal {
+			return
+		}
+		docblock.IsInternal = true
 	}
 
 	finalDesc := cleanDescription(pendingDesc)
@@ -713,7 +721,10 @@ func (bp *blockParser) parseFuncBlock(block ParsedBlock) {
 	if !docblock.hasDocumentation() && docblock.Description == "" {
 		if bp.opts.IncludeUndocumented && block.FuncName != "" {
 			sec := &bp.doc.Sections[bp.currentSection]
-			sec.Functions = append(sec.Functions, FuncDoc{Name: block.FuncName})
+			sec.Functions = append(sec.Functions, FuncDoc{
+				Name:       block.FuncName,
+				IsInternal: docblock.IsInternal,
+			})
 		}
 		return
 	}

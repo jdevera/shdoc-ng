@@ -11,7 +11,7 @@
 <section class="func" id="{{slug .Name}}">
 
   <div class="func-header">
-    <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}{{- if .Labels}}
+    <h3 class="func-name"><span class="func-sigil">fn</span> {{.Name | html}}{{- if .IsInternal}} <em class="func-internal">(internal)</em>{{end}}{{- if .Labels}}
       {{- range .Labels}} <span class="func-label">{{. | html}}</span>{{end}}
     {{- end}}</h3>
     <a href="#{{slug .Name}}" class="func-anchor" aria-label="permalink">¶</a>
