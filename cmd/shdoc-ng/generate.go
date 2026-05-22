@@ -42,7 +42,7 @@ func init() {
 	generateCmd.Flags().StringVarP(&genInputFile, "input", "i", "-", "Input file (- for stdin)")
 	generateCmd.Flags().StringVarP(&genOutputFile, "output", "o", "-", "Output file (- for stdout)")
 	generateCmd.Flags().StringVar(&genTemplateFile, "template", "", "Use a custom template file instead of the built-in one")
-	generateCmd.Flags().BoolVar(&genIncludeUndocumented, "include-undocumented", false, "List functions with no documentation under a synthetic 'Undocumented' section")
+	generateCmd.Flags().BoolVar(&genIncludeUndocumented, "include-undocumented", false, "List functions with no documentation alongside documented ones")
 	rootCmd.AddCommand(generateCmd)
 }
 
