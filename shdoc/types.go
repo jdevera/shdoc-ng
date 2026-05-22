@@ -48,6 +48,7 @@ type FuncDoc struct {
 	Warnings    []string      `json:"warnings,omitempty"          desc:"Warnings about usage or behavior (@warning)"`
 	IsDeprecated    bool          `json:"is_deprecated,omitempty"      desc:"True if the function is deprecated (@deprecated)"`
 	DeprecatedMessage string      `json:"deprecated_message,omitempty" desc:"Deprecation notice, if provided (@deprecated message)"`
+	IsInternal      bool          `json:"is_internal,omitempty"        desc:"True if the function is marked @internal"`
 }
 
 // hasDocumentation returns true if the FuncDoc has any documentation content.

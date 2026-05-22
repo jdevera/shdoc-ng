@@ -132,6 +132,10 @@
                   "description": "True if the function is deprecated (@deprecated)",
                   "type": "boolean"
                 },
+                "is_internal": {
+                  "description": "True if the function is marked @internal",
+                  "type": "boolean"
+                },
                 "is_noargs": {
                   "description": "True if the function explicitly takes no arguments (@noargs)",
                   "type": "boolean"
