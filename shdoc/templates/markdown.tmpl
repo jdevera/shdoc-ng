@@ -12,9 +12,12 @@ Document fields (top-level):
   .FileTitle       string     — @name value
   .FileBrief       string     — brief description on @name line
   .FileDescription string     — @description block at file level
-  .Authors         []string   — @author values
-  .License         string     — @license value
-  .Version         string     — @version value
+  .Authors         []string      — @author values
+  .License         string        — @license value
+  .Version         string        — @version value
+  .Date            string        — @date value
+  .Changes         []ChangeEntry — @changes / @changelog / @change entries
+  .Examples        []string      — repeatable header @example blocks
   .Sections        []Section
 
 Section fields:
@@ -209,6 +212,28 @@ Each sec* call adds "\n\ncontent" or nothing; the final {{"\n"}} closes the bloc
 
 {{.Version}}
 
+{{end -}}
+{{- if .Date}}#### Date
+
+{{.Date}}
+
+{{end -}}
+{{- if .Changes}}#### What Changed
+
+| Version | Date | Changes |
+| --- | --- | --- |
+{{range .Changes -}}
+| `{{replaceAll .Version "|" "\\|"}}` | {{if .Date}}{{replaceAll .Date "|" "\\|"}}{{else}}—{{end}} | {{replaceAll (replaceAll .Description "|" "\\|") "\n" "<br>"}} |
+{{end}}
+{{end -}}
+{{- if .Examples}}#### {{if eq (len .Examples) 1}}Example{{else}}Examples{{end}}
+
+{{range .Examples -}}
+```bash
+{{unindent .}}
+```
+
+{{end -}}
 {{end -}}
 {{- end -}}
 

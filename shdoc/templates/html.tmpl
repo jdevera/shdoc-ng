@@ -418,6 +418,12 @@
       border-radius: 999px;
     }
 
+    .brand-date {
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--theme-text-muted);
+    }
+
     .brand-license {
       font-size: 0.7rem;
       color: var(--theme-text-muted);
@@ -555,8 +561,9 @@
 
     /* ── File header ────────────────────────────────────────────────── */
     .file-header {
-      margin-bottom: 1rem;
-      padding-bottom: 0;
+      margin-bottom: 2rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid var(--theme-border);
     }
 
     .file-title {
@@ -573,9 +580,73 @@
       margin-top: 0.5rem;
     }
 
-    .file-overview { margin-top: 1.5rem; }
+    .file-doc-meta {
+      margin-top: 1.25rem;
+      background: var(--theme-bg-sidebar);
+      border: 1px solid var(--theme-border-faint);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+    }
 
-    .file-overview h2 {
+    .file-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem 1.5rem;
+    }
+
+    .meta-group { display: flex; flex-direction: column; gap: 0.2rem; }
+
+    .meta-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--theme-text-faint);
+    }
+
+    .meta-value { font-size: 0.85rem; color: var(--theme-text); font-weight: 500; }
+
+    .meta-value-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--theme-accent);
+    }
+
+    .file-changes {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--theme-border);
+    }
+
+    .file-changes .meta-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--theme-text-muted);
+    }
+
+    .changes-table { margin-top: 0.25rem; }
+    .changes-table th { padding-left: 0; }
+    .changes-table td { padding: 0.45rem 0.75rem; }
+    .changes-table th:first-child, .changes-table td:first-child { padding-left: 0; }
+
+    .version-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78em;
+      color: var(--theme-accent);
+      background: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+      padding: 0.12em 0.45em;
+      border-radius: 4px;
+    }
+
+    .change-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--theme-text-muted);
+    }
+
+    .file-overview, .file-example { margin-top: 1.5rem; }
+
+    .file-overview h2, .file-example h2 {
       font-size: 0.7rem;
       font-weight: 600;
       letter-spacing: 0.1em;
@@ -589,24 +660,11 @@
       font-size: 0.9rem;
     }
 
-    .file-meta {
+    .file-example-list {
       display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin-top: 1.25rem;
+      flex-direction: column;
+      gap: 0.75rem;
     }
-
-    .meta-group { display: flex; flex-direction: column; gap: 0.15rem; }
-
-    .meta-label {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--theme-text-faint);
-    }
-
-    .meta-value { font-size: 0.82rem; color: var(--theme-text-secondary); }
 
     /* ── Function block ─────────────────────────────────────────────── */
     .func {
@@ -907,9 +965,10 @@
 <aside class="sidebar">
   <div class="sidebar-brand">
     <span class="brand-name">{{if .FileTitle}}{{.FileTitle | html}}{{else}}Shell Docs{{end}}</span>
-    {{if or .Version .License}}
+    {{if or .Version .Date .License}}
     <div class="brand-meta">
       {{- if .Version}}<span class="brand-version">{{.Version | html}}</span>{{end}}
+      {{- if .Date}}<span class="brand-date">{{.Date | html}}</span>{{end}}
       {{- if .License}}<span class="brand-license">{{.License | html}}</span>{{end}}
     </div>
     {{end}}
@@ -951,6 +1010,57 @@
       <h1 class="file-title">{{.FileTitle | html}}</h1>
       {{- if .FileBrief}}<p class="file-brief">{{.FileBrief | md2inline}}</p>{{end}}
 
+      {{- if or .Authors .Version .Date .License .Changes}}
+      <div class="file-doc-meta" aria-label="Document metadata">
+        {{- if or .Authors .Version .Date .License}}
+        <div class="file-meta">
+          {{- if .Authors}}
+          <div class="meta-group">
+            <span class="meta-label">{{if eq (len .Authors) 1}}Author{{else}}Authors{{end}}</span>
+            <span class="meta-value">{{range $i, $a := .Authors}}{{if $i}}, {{end}}{{$a | html}}{{end}}</span>
+          </div>
+          {{- end}}
+          {{- if .Version}}
+          <div class="meta-group">
+            <span class="meta-label">Version</span>
+            <span class="meta-value meta-value-mono">{{.Version | html}}</span>
+          </div>
+          {{- end}}
+          {{- if .Date}}
+          <div class="meta-group">
+            <span class="meta-label">Date</span>
+            <span class="meta-value meta-value-mono">{{.Date | html}}</span>
+          </div>
+          {{- end}}
+          {{- if .License}}
+          <div class="meta-group">
+            <span class="meta-label">License</span>
+            <span class="meta-value">{{.License | html}}</span>
+          </div>
+          {{- end}}
+        </div>
+        {{- end}}
+
+        {{- if .Changes}}
+        <div class="file-changes">
+          <span class="meta-label">What Changed</span>
+          <table class="data-table changes-table">
+            <thead><tr><th>Version</th><th>Date</th><th>Changes</th></tr></thead>
+            <tbody>
+              {{- range .Changes}}
+              <tr>
+                <td><code class="version-badge">{{.Version | html}}</code></td>
+                <td><span class="change-date">{{if .Date}}{{.Date | html}}{{else}}—{{end}}</span></td>
+                <td>{{.Description | md2inline}}</td>
+              </tr>
+              {{- end}}
+            </tbody>
+          </table>
+        </div>
+        {{- end}}
+      </div>
+      {{- end}}
+
       {{- if .FileDescription}}
       <div class="file-overview">
         <h2>Overview</h2>
@@ -958,26 +1068,31 @@
       </div>
       {{- end}}
 
-      {{- if or .Authors .Version .License}}
-      <div class="file-meta">
-        {{- if .Authors}}
-        <div class="meta-group">
-          <span class="meta-label">{{if eq (len .Authors) 1}}Author{{else}}Authors{{end}}</span>
-          {{- range .Authors}}<span class="meta-value">{{. | html}}</span>{{end}}
+      {{- if .Examples}}
+      <div class="file-example">
+        <h2>{{if eq (len .Examples) 1}}Example{{else}}Examples{{end}}</h2>
+        <div class="file-example-list">
+          {{- range .Examples}}
+          <div class="code-block">
+            <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <pre><code>{{highlightCode "bash" (unindent .)}}</code></pre>
+          </div>
+          {{- end}}
         </div>
-        {{- end}}
-        {{- if .Version}}
-        <div class="meta-group">
-          <span class="meta-label">Version</span>
-          <span class="meta-value">{{.Version | html}}</span>
+      </div>
+      {{- else}}
+      <div class="file-example">
+        <h2>Example</h2>
+        <div class="file-example-list">
+          <div class="code-block">
+            <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <pre><code>{{highlightCode "bash" (printf "./%s" .FileTitle)}}</code></pre>
+          </div>
         </div>
-        {{- end}}
-        {{- if .License}}
-        <div class="meta-group">
-          <span class="meta-label">License</span>
-          <span class="meta-value">{{.License | html}}</span>
-        </div>
-        {{- end}}
       </div>
       {{- end}}
     </header>

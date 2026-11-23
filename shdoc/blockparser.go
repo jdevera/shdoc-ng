@@ -94,6 +94,8 @@ func parseBlocksWithOptions(blocks []ParsedBlock, opts ParseOptions) (Document, 
 		}
 	}
 
+	finalizeDocumentChanges(&bp.doc)
+
 	var pruned []Section
 	for _, s := range bp.doc.Sections {
 		if len(s.Functions) == 0 {
@@ -117,16 +119,18 @@ type blockParser struct {
 
 // fileLevelTags are tags that only make sense at the file level (meta blocks).
 // They should be warned about and ignored when they appear in function blocks.
+// Note: @example is intentionally omitted because it is valid at both file and function level.
 var fileLevelTags = map[string]bool{
 	"name": true, "file": true, "brief": true,
 	"author": true, "license": true, "version": true,
+	"date": true, "changes": true, "changelog": true, "change": true,
 }
 
 // fileSingletonTags are file-level tags that should only appear once.
-// @author is excluded because multiple authors are valid (it appends).
+// @author, @changes, and @example are excluded because multiple entries are valid.
 var fileSingletonTags = map[string]bool{
 	"name": true, "file": true, "brief": true,
-	"license": true, "version": true,
+	"license": true, "version": true, "date": true,
 }
 
 func (bp *blockParser) warn(lineNum int, col int, msg string) {
@@ -294,10 +298,12 @@ func stripExample(raw string) string {
 
 // tagShorthands maps shorthand tag names to their canonical form.
 var tagShorthands = map[string]string{
-	"desc": "description",
-	"exit": "exitcode",
-	"opt":  "option",
-	"warn": "warning",
+	"desc":      "description",
+	"exit":      "exitcode",
+	"opt":       "option",
+	"warn":      "warning",
+	"changelog": "changes",
+	"change":    "changes",
 }
 
 // parseTag extracts a tag name and value from a stripped line.
@@ -398,6 +404,85 @@ func (bp *blockParser) parseMetaBlock(block ParsedBlock) {
 			}
 			bp.doc.Version = value
 			i++
+		case "date":
+			if value == "" {
+				bp.warn(lineNum, tagCol(raw), "Empty value: @date requires a value")
+			}
+			bp.doc.Date = value
+			i++
+		case "changes":
+			if value != "" {
+				cont, next := collectContinuation(lines, i+1, tagCol(raw), commentCol(raw))
+				i = next
+				if entry, ok := parseVersionedChangeLine(value); ok {
+					if len(cont) > 0 {
+						entry.Description = entry.Description + "\n" + strings.Join(cont, "\n")
+					}
+					bp.doc.Changes = append(bp.doc.Changes, entry)
+				} else {
+					fullDesc := value
+					if len(cont) > 0 {
+						fullDesc = value + "\n" + strings.Join(cont, "\n")
+					}
+					bp.doc.Changes = append(bp.doc.Changes, ChangeEntry{Description: fullDesc})
+				}
+			} else {
+				cont, next := collectUntilNextTag(lines, i+1)
+				i = next
+				var rawLines []string
+				for _, l := range cont {
+					s := stripDesc(l.Raw)
+					if strings.TrimSpace(s) != "" {
+						rawLines = append(rawLines, s)
+					}
+				}
+				if len(rawLines) == 0 {
+					bp.warn(lineNum, tagCol(raw), "Empty value: @changes requires content")
+					break
+				}
+				parsedEntries := make([]ChangeEntry, 0, len(rawLines))
+				allVersioned := true
+				for _, lineText := range rawLines {
+					entry, ok := parseVersionedChangeLine(lineText)
+					if !ok {
+						allVersioned = false
+						break
+					}
+					parsedEntries = append(parsedEntries, entry)
+				}
+				if allVersioned {
+					bp.doc.Changes = append(bp.doc.Changes, parsedEntries...)
+				} else {
+					allStripped := make([]string, len(cont))
+					for idx, l := range cont {
+						allStripped[idx] = stripDesc(l.Raw)
+					}
+					joined := cleanDescription(strings.Join(allStripped, "\n"))
+					if joined == "" {
+						bp.warn(lineNum, tagCol(raw), "Empty value: @changes requires content")
+					} else {
+						bp.doc.Changes = append(bp.doc.Changes, ChangeEntry{Description: joined})
+					}
+				}
+			}
+		case "example":
+			cont, next := collectExampleLines(lines, i+1)
+			i = next
+			exParts := make([]string, len(cont))
+			for idx, l := range cont {
+				exParts[idx] = stripExample(l.Raw)
+			}
+			if value != "" && len(exParts) == 0 {
+				exParts = append(exParts, value)
+			} else if value != "" && len(exParts) > 0 {
+				exParts = append([]string{"# " + value}, exParts...)
+			}
+			example := strings.Join(exParts, "\n")
+			if strings.TrimSpace(example) == "" {
+				bp.warn(lineNum, tagCol(raw), "Empty value: @example requires content")
+			} else {
+				bp.doc.Examples = append(bp.doc.Examples, example)
+			}
 		case "section":
 			if value == "" {
 				bp.warn(lineNum, tagCol(raw), "Empty value: @section requires a name")

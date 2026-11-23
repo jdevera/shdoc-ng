@@ -106,7 +106,7 @@ The HTML output uses the [Catppuccin](https://catppuccin.com) color palette.
 
 ### Tag shorthands
 
-`@desc` = `@description`, `@exit` = `@exitcode`, `@opt` = `@option`, `@warn` = `@warning`
+`@desc` = `@description`, `@exit` = `@exitcode`, `@opt` = `@option`, `@warn` = `@warning`, `@changelog` = `@changes`, `@change` = `@changes`
 
 ## Commands
 
