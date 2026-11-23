@@ -188,16 +188,16 @@ const fileHoverTemplate = `{{- if .FileTitle}}# {{.FileTitle}}{{end}}
 
 | Version | Date | Changes |
 | --- | --- | --- |
-{{range .Changes}}| `{{.Version}}` | {{if .Date}}{{.Date}}{{else}}—{{end}} | {{replaceAll .Description "\n" " "}} |
+{{range .Changes}}| ` + "`" + `{{.Version}}` + "`" + ` | {{if .Date}}{{.Date}}{{else}}—{{end}} | {{replaceAll .Description "\n" " "}} |
 {{end}}
 {{- end}}
 {{- if .Examples}}
 
 **{{if eq (len .Examples) 1}}Example{{else}}Examples{{end}}:**
 {{range .Examples}}
-```bash
+` + "```bash" + `
 {{unindent .}}
-```
+` + "```" + `
 {{end}}
 {{- end}}
 `
