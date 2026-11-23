@@ -14,9 +14,46 @@
       "description": "One-line summary of the script (@brief)",
       "type": "string"
     },
+    "changes": {
+      "description": "Version changelog entries (@changes / @changelog / @change)",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "description": "Release date for this version",
+            "type": "string"
+          },
+          "description": {
+            "description": "Summary of changes in this version",
+            "type": "string"
+          },
+          "version": {
+            "description": "Version identifier (e.g., 2.4.0)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "description"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "date": {
+      "description": "Release or revision date (@date)",
+      "type": "string"
+    },
     "description": {
       "description": "Extended description of the script (@description)",
       "type": "string"
+    },
+    "examples": {
+      "description": "Script invocation examples in the header (@example, repeatable)",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "license": {
       "description": "License identifier (@license)",

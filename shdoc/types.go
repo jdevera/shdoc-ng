@@ -8,15 +8,25 @@ type Section struct {
 	Functions   []FuncDoc `json:"functions,omitempty"    desc:"Functions in this section"`
 }
 
+// ChangeEntry represents a single versioned changelog item from @changes, @changelog, or @change.
+type ChangeEntry struct {
+	Version     string `json:"version"        desc:"Version identifier (e.g., 2.4.0)"`
+	Date        string `json:"date,omitempty" desc:"Release date for this version"`
+	Description string `json:"description"    desc:"Summary of changes in this version"`
+}
+
 // Document holds the top-level file metadata and documented sections/functions.
 type Document struct {
-	FileTitle       string    `json:"name,omitempty"        desc:"Title or name of the shell script (@file)"`
-	FileBrief       string    `json:"brief,omitempty"       desc:"One-line summary of the script (@brief)"`
-	FileDescription string    `json:"description,omitempty" desc:"Extended description of the script (@description)"`
-	Authors         []string  `json:"authors,omitempty"     desc:"List of authors (@author)"`
-	License         string    `json:"license,omitempty"     desc:"License identifier (@license)"`
-	Version         string    `json:"version,omitempty"     desc:"Version string (@version)"`
-	Sections        []Section `json:"sections,omitempty"    desc:"Documented sections with their functions"`
+	FileTitle       string        `json:"name,omitempty"        desc:"Title or name of the shell script (@file)"`
+	FileBrief       string        `json:"brief,omitempty"       desc:"One-line summary of the script (@brief)"`
+	FileDescription string        `json:"description,omitempty" desc:"Extended description of the script (@description)"`
+	Authors         []string      `json:"authors,omitempty"     desc:"List of authors (@author)"`
+	License         string        `json:"license,omitempty"     desc:"License identifier (@license)"`
+	Version         string        `json:"version,omitempty"     desc:"Version string (@version)"`
+	Date            string        `json:"date,omitempty"        desc:"Release or revision date (@date)"`
+	Changes         []ChangeEntry `json:"changes,omitempty"     desc:"Version changelog entries (@changes / @changelog / @change)"`
+	Examples        []string      `json:"examples,omitempty"    desc:"Script invocation examples in the header (@example, repeatable)"`
+	Sections        []Section     `json:"sections,omitempty"    desc:"Documented sections with their functions"`
 }
 
 // AllFunctions returns a flat list of all functions across all sections.

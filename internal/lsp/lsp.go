@@ -178,6 +178,28 @@ const fileHoverTemplate = `{{- if .FileTitle}}# {{.FileTitle}}{{end}}
 
 **Version:** {{.Version}}
 {{- end}}
+{{- if .Date}}
+
+**Date:** {{.Date}}
+{{- end}}
+{{- if .Changes}}
+
+**What Changed:**
+
+| Version | Date | Changes |
+| --- | --- | --- |
+{{range .Changes}}| `{{.Version}}` | {{if .Date}}{{.Date}}{{else}}—{{end}} | {{replaceAll .Description "\n" " "}} |
+{{end}}
+{{- end}}
+{{- if .Examples}}
+
+**{{if eq (len .Examples) 1}}Example{{else}}Examples{{end}}:**
+{{range .Examples}}
+```bash
+{{unindent .}}
+```
+{{end}}
+{{- end}}
 `
 
 var handler protocol.Handler
@@ -697,7 +719,7 @@ func hover(_ *glsp.Context, p *protocol.HoverParams) (*protocol.Hover, error) {
 
 // Tag lists for completion.
 var metaTags = []string{"name", "file", "brief", "description", "desc", "author",
-	"license", "version", "section"}
+	"license", "version", "date", "changes", "changelog", "change", "example", "section"}
 var funcTags = []string{"description", "desc", "internal", "deprecated", "warning", "warn",
 	"example", "option", "opt", "arg", "noargs", "set", "env", "exitcode", "exit",
 	"stdin", "stdout", "stderr", "see", "label"}

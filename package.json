@@ -1,0 +1,11 @@
+{
+  "name": "shdoc-ng",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node -e \"const http=require('http'),fs=require('fs');http.createServer((_,res)=>{res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});res.end('<!doctype html><title>shdoc-ng</title><body style=\\\"font-family:monospace;background:#1e1e2e;color:#cdd6f4;padding:2rem\\\"><h1>shdoc-ng (Go)</h1><p>Go sources: shdoc/, cmd/shdoc-ng/, internal/lsp/</p><pre>'+fs.readFileSync('examples/deploy.sh','utf8').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre></body>');}).listen(3000,'0.0.0.0',()=>console.log('listening on http://0.0.0.0:3000'))\"",
+    "start": "node -e \"const http=require('http'),fs=require('fs');http.createServer((_,res)=>{res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});res.end('<!doctype html><title>shdoc-ng</title><body style=\\\"font-family:monospace;background:#1e1e2e;color:#cdd6f4;padding:2rem\\\"><h1>shdoc-ng (Go)</h1><p>Go sources: shdoc/, cmd/shdoc-ng/, internal/lsp/</p><pre>'+fs.readFileSync('examples/deploy.sh','utf8').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre></body>');}).listen(3000,'0.0.0.0',()=>console.log('listening on http://0.0.0.0:3000'))\"",
+    "build": "node -e \"JSON.parse(require('fs').readFileSync('schema.json','utf8'))\"",
+    "lint": "node -e \"JSON.parse(require('fs').readFileSync('schema.json','utf8'))\""
+  }
+}
